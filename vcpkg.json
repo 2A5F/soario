@@ -31,5 +31,22 @@
   }, {
     "name" : "d3d12-memory-allocator",
     "version>=" : "2.0.1"
+  }, {
+    "name" : "cppwinrt",
+    "version>=" : "2.0.240111.5"
+  }, {
+    "name" : "stduuid",
+    "version>=" : "1.2.3",
+    "features" : [ "system-gen" ]
+  }, {
+    "name" : "args",
+    "version>=" : "6.4.6"
+  }, {
+    "name" : "spdlog",
+    "version>=" : "1.13.0#1",
+    "features": ["wchar"]
+  }, {
+    "name" : "fmt",
+    "version>=" : "10.2.1#2"
   } ]
 }

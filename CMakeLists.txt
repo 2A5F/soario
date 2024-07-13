@@ -6,26 +6,76 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+set(VCPKG_LIBRARY_LINKAGE static)
+
+add_definitions(-DUNICODE)
+add_definitions(-D_UNICODE)
+set(SPDLOG_FMT_EXTERNAL ON)
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
+set(SDL_VULKAN OFF)
+set(SDL_CAMERA OFF)
+set(SDL_RENDER OFF)
+set(SDL_HAPTIC OFF)
+set(SDL_SENSOR OFF)
+set(SDL_POWER OFF)
+set(SDL_HIDAPI OFF)
+set(SDL_DIALOG OFF)
 
+add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
+find_package(cppwinrt CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(directx12-agility CONFIG REQUIRED)
 find_package(directxmath CONFIG REQUIRED)
 find_package(directxtk12 CONFIG REQUIRED)
 find_package(directx-dxc CONFIG REQUIRED)
-find_package(d3d12-memory-allocator CONFIG REQUIRED)
-find_package(thread-pool CONFIG REQUIRED)
 find_path(PARALLEL_HASHMAP_INCLUDE_DIRS "parallel_hashmap/btree.h")
+find_package(stduuid CONFIG REQUIRED)
+find_package(args CONFIG REQUIRED)
+find_package(spdlog CONFIG REQUIRED)
+find_package(fmt CONFIG REQUIRED)
 
-add_executable(${PROJECT_NAME} src/main.cpp)
+add_executable(${PROJECT_NAME} WIN32 src/main.cpp
+        src/pch.h
+        src/utils/utils.cc
+        src/utils/utils.h
+        src/utils/set_thread_name.cc
+        src/utils/console_utils.cc
+        src/window/Window.cc
+        src/window/Window.h
+        src/utils/sdl_error.cc
+        src/utils/sdl_error.h
+        src/render/RenderContext.cc
+        src/render/RenderContext.h
+        src/Args.cc
+        src/Args.h
+        third_party/D3D12MemoryAllocator/include/D3D12MemAlloc.h
+        third_party/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp
+        src/render/GpuCommands.cc
+        src/render/GpuCommands.h
+        src/render/GpuQueue.cc
+        src/render/GpuQueue.h
+        src/render/FrameContext.cc
+        src/render/FrameContext.h
+        src/render/GpuCommandList.cc
+        src/render/GpuCommandList.h
+        src/render/RenderProperties.cc
+        src/render/RenderProperties.h
+)
+
+target_include_directories(${PROJECT_NAME} PRIVATE third_party/D3D12MemoryAllocator/include)
+
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
+target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::CppWinRT RuntimeObject dwmapi dxgi.lib)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectX-Headers Microsoft::DirectX-Guids Microsoft::DirectX12-Agility)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXMath)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXTK12)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::DirectXShaderCompiler)
-target_link_libraries(${PROJECT_NAME} PRIVATE unofficial::D3D12MemoryAllocator)
-target_link_libraries(${PROJECT_NAME} PRIVATE dp::thread-pool)
 target_include_directories(${PROJECT_NAME} PRIVATE ${PARALLEL_HASHMAP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PRIVATE stduuid)
+target_link_libraries(${PROJECT_NAME} PRIVATE taywee::args)
+target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt-header-only)
+target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog_header_only)
 
 if (TARGET Microsoft::DirectX12-Agility)
     file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/D3D12")
