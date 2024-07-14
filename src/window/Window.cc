@@ -25,6 +25,28 @@ namespace ccc {
         }
     }
 
+    WindowHandle::WindowHandle(SDL_Window *window) : m_window(window) {
+    }
+
+    WindowHandle::~WindowHandle() {
+        SDL_DestroyWindow(m_window);
+    }
+
+    HWND WindowHandle::hwnd() const {
+        const auto props = SDL_GetWindowProperties(m_window);
+        if (props == 0) throw sdl_error();
+        const auto hwnd = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
+        return static_cast<HWND>(hwnd);
+    }
+
+    float2 WindowHandle::size() const {
+        int w, h;
+        if (0 != SDL_GetWindowSizeInPixels(m_window, &w, &h)) {
+            throw sdl_error();
+        }
+        return float2(w, h);
+    }
+
     void WindowSystem::init() {
         s_instance = std::unique_ptr<WindowSystem>(new WindowSystem());
         if (SDL_Init(SDL_INIT_VIDEO)) {
@@ -42,6 +64,7 @@ namespace ccc {
             if (SDL_WaitEvent(&event)) {
                 if (event.type == SDL_EVENT_QUIT) {
                     s_instance->m_exited.store(true);
+                    spdlog::info("quit");
                 }
             } else {
                 throw sdl_error();
@@ -76,15 +99,12 @@ namespace ccc {
                 throw sdl_error();
         }
         auto win = std::make_shared<Window>();
-        win->m_window = sw;
+        win->m_inner = std::make_shared<WindowHandle>(sw);
         const auto hwnd = win->hwnd();
         SetMica(hwnd);
         return win;
     }
 
-    Window::~Window() {
-        SDL_DestroyWindow(m_window);
-    }
 
     const std::shared_ptr<RenderContext> &Window::render_context() {
         if (m_render_context == nullptr) {
@@ -93,18 +113,15 @@ namespace ccc {
         return m_render_context;
     }
 
+    const std::shared_ptr<WindowHandle> &Window::inner() const {
+        return m_inner;
+    }
+
     HWND Window::hwnd() const {
-        const auto props = SDL_GetWindowProperties(m_window);
-        if (props == 0) throw sdl_error();
-        const auto hwnd = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
-        return static_cast<HWND>(hwnd);
+        return m_inner->hwnd();
     }
 
     float2 Window::size() const {
-        int w, h;
-        if (0 != SDL_GetWindowSizeInPixels(m_window, &w, &h)) {
-            throw sdl_error();
-        }
-        return float2(w, h);
+        return m_inner->size();
     }
 } // ccc

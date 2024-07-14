@@ -5,12 +5,26 @@
 #include <SDL3/SDL.h>
 
 #include "../pch.h"
+#include "../utils/IObject.h"
 
 namespace ccc {
     class Window;
     class RenderContext;
 
-    class WindowSystem {
+    class WindowHandle final : public IObject {
+        SDL_Window *m_window{};
+
+    public:
+        explicit WindowHandle(SDL_Window *window);
+
+        ~WindowHandle() override;
+
+        HWND hwnd() const;
+
+        float2 size() const;
+    };
+
+    class WindowSystem final : public IObject {
         std::atomic_bool m_exited{false};
 
         explicit WindowSystem() {
@@ -53,8 +67,8 @@ namespace ccc {
         std::shared_ptr<Window> build() const;
     };
 
-    class Window {
-        SDL_Window *m_window{};
+    class Window final : public IObject {
+        std::shared_ptr<WindowHandle> m_inner{};
         std::shared_ptr<RenderContext> m_render_context{};
 
     public:
@@ -62,10 +76,10 @@ namespace ccc {
 
         static std::shared_ptr<Window> create(const WindowOptions &options);
 
-        ~Window();
-
         // 获取或创建渲染上下文
         const std::shared_ptr<RenderContext> &render_context();
+
+        const std::shared_ptr<WindowHandle> &inner() const;
 
         HWND hwnd() const;
 

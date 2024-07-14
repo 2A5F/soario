@@ -61,6 +61,11 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/GpuCommandList.h
         src/render/RenderProperties.cc
         src/render/RenderProperties.h
+        src/render/IRT.cc
+        src/render/IRT.h
+        src/render/GpuSurface.cc
+        src/render/GpuSurface.h
+        src/utils/IObject.h
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE third_party/D3D12MemoryAllocator/include)

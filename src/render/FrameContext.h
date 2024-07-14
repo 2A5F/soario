@@ -5,9 +5,10 @@
 namespace ccc {
     class RenderContext;
 
-    struct FrameContext {
-        RenderContext& render_context;
+    struct FrameContext final {
+        RenderContext &render_context;
         GpuQueue &queue;
-        GpuCommandList& cmd;
+        GpuCommandList &cmd;
+        const std::shared_ptr<GpuSurface> &surface;
     };
 } // ccc

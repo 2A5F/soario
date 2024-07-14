@@ -1,7 +1,9 @@
 #pragma once
+#include "../utils/IObject.h"
+
 namespace ccc {
 
-class GpuCommands {
+class GpuCommands final : public IObject {
 
 };
 

@@ -2,9 +2,10 @@
 
 #include "parallel_hashmap/phmap.h"
 #include "../pch.h"
+#include "../utils/IObject.h"
 
 namespace ccc {
-    class RenderProperties {
+    class RenderProperties final : public IObject {
         phmap::flat_hash_map<int32_t, int32_t> m_int_properties{};
         phmap::flat_hash_map<int32_t, float4> m_vector_properties{};
         phmap::flat_hash_map<int32_t, float4x4> m_matrix_properties{};

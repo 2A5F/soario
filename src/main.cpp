@@ -78,11 +78,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         std::thread([window] {
             try {
-                auto rdctx = window->render_context();
+                const auto rdctx = window->render_context();
                 while (!ccc::WindowSystem::is_exited()) {
-                    rdctx->record_frame([](ccc::FrameContext ctx) {
-
-
+                    rdctx->record_frame([](const ccc::FrameContext &ctx) {
+                        ctx.cmd.set_rt(ctx.surface);
+                        ctx.cmd.clear(ctx.surface, float4(1, 1, 1, 1));
                     });
                 }
             } catch (std::exception ex) {

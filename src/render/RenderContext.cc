@@ -87,35 +87,17 @@ namespace ccc {
         winrt::check_hresult(device->CreateCommandQueue(&queue_desc_compute, RT_IID_PPV_ARGS(command_queue_compute)));
         winrt::check_hresult(device->CreateCommandQueue(&queue_desc_copy, RT_IID_PPV_ARGS(command_queue_copy)));
 
-        const auto size = window.size();
-
-        DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
-        swap_chain_desc.BufferCount = FrameCount;
-        swap_chain_desc.Width = size.x;
-        swap_chain_desc.Height = size.y;
-        swap_chain_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-        swap_chain_desc.SampleDesc.Count = 1;
-
-        com_ptr<IDXGISwapChain1> swap_chain;
-        winrt::check_hresult(factory->CreateSwapChainForHwnd(
-            command_queue_direct.get(), // Swap chain needs the queue so that it can force a flush on it.
-            window.hwnd(),
-            &swap_chain_desc,
-            nullptr,
-            nullptr,
-            swap_chain.put()
-        ));
 
         auto ctx = std::make_shared<RenderContext>();
+        ctx->m_window = window.inner();
+        ctx->m_factory = std::move(factory);
         ctx->m_debug_controller = std::move(debug_controller);
         ctx->m_info_queue = std::move(info_queue);
         ctx->m_callback_cookie = callback_cookie;
         ctx->m_adapter = std::move(adapter);
         ctx->m_device = std::move(device);
-        swap_chain.as(ctx->m_swap_chain);
-        ctx->m_frame_index = ctx->m_swap_chain->GetCurrentBackBufferIndex();
+
+        ctx->m_surface = std::make_shared<GpuSurface>(ctx->m_factory, ctx->m_device, command_queue_direct, window);
 
         /* 创建分配器 */
         {
@@ -126,29 +108,6 @@ namespace ccc {
                 D3D12MA::ALLOCATOR_FLAG_MSAA_TEXTURES_ALWAYS_COMMITTED |
                 D3D12MA::ALLOCATOR_FLAG_DEFAULT_POOLS_NOT_ZEROED;
             winrt::check_hresult(CreateAllocator(&allocator_desc, ctx->m_gpu_allocator.put()));
-        }
-
-        /* 创建交换链RTV描述符堆 */
-        {
-            D3D12_DESCRIPTOR_HEAP_DESC rtv_heap_desc = {};
-            rtv_heap_desc.NumDescriptors = FrameCount;
-            rtv_heap_desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-            rtv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-            winrt::check_hresult(ctx->m_device->CreateDescriptorHeap(&rtv_heap_desc, RT_IID_PPV_ARGS(ctx->m_rtv_heap)));
-            ctx->m_rtv_descriptor_size = ctx->m_device->
-                GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-        }
-
-        /* 创建帧缓冲区 */
-        {
-            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(ctx->m_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-
-            // 为每一帧创建一个 RTV。
-            for (UINT n = 0; n < FrameCount; n++) {
-                winrt::check_hresult(ctx->m_swap_chain->GetBuffer(n, RT_IID_PPV_ARGS(ctx->m_render_targets[n])));
-                ctx->m_device->CreateRenderTargetView(ctx->m_render_targets[n].get(), nullptr, rtvHandle);
-                rtvHandle.Offset(1, ctx->m_rtv_descriptor_size);
-            }
         }
 
         /* 创建队列 */
@@ -207,21 +166,11 @@ namespace ccc {
             );
         }
 
-        /*创建 fence */
-        {
-            winrt::check_hresult(ctx->m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, RT_IID_PPV_ARGS(ctx->m_fence)));
-            ctx->m_fence_value = 1;
-
-            ctx->m_fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            if (ctx->m_fence_event == nullptr) {
-                winrt::throw_last_error();
-            }
-        }
-
         return ctx;
     }
 
     RenderContext::~RenderContext() {
+        m_surface->wait_frame_when_drop(m_queue_direct->m_command_queue);
         if (m_info_queue.get() != nullptr && m_callback_cookie != 0) {
             m_info_queue->UnregisterMessageCallback(m_callback_cookie);
         }
@@ -277,38 +226,30 @@ namespace ccc {
         }
     }
 
-    void RenderContext::record_frame(std::function<void(FrameContext ctx)> cb) {
+    void RenderContext::record_frame(const std::function<void(const FrameContext &ctx)> &cb) {
         const auto queue = this->m_queue_direct;
         const auto list = queue->m_command_list;
 
         // 等待上一帧
-        {
-            const auto fence = m_fence_value;
-            winrt::check_hresult(queue->m_command_queue->Signal(m_fence.get(), fence));
-            m_fence_value++;
-
-            if (m_fence->GetCompletedValue() < fence) {
-                winrt::check_hresult(m_fence->SetEventOnCompletion(fence, m_fence_event));
-                WaitForSingleObject(m_fence_event,INFINITE);
-            }
-
-            m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
-        }
+        m_surface->wait_frame(queue->m_command_queue);
 
         // 记录命令
-
         winrt::check_hresult(queue->m_command_allocator->Reset());
         winrt::check_hresult(list->Reset(queue->m_command_allocator.get(), nullptr));
 
         GpuCommandList list_box(list);
-        cb(FrameContext{*this, *queue, list_box});
+        cb(FrameContext{*this, *queue, list_box, m_surface});
+
+        if (CD3DX12_RESOURCE_BARRIER barrier; m_surface->require_state(GpuRtState::Present, barrier)) {
+            list->ResourceBarrier(1, &barrier);
+        }
 
         winrt::check_hresult(list->Close());
 
         ID3D12CommandList *lists[] = {list.get()};
-        this->m_queue_direct->m_command_queue->ExecuteCommandLists(1, lists);
+        queue->m_command_queue->ExecuteCommandLists(1, lists);
 
         // 呈现
-        winrt::check_hresult(m_swap_chain->Present(1, 0));
+        m_surface->present();
     }
 } // ccc
