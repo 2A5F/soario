@@ -13,7 +13,9 @@
 
 #include <fmt/chrono.h>
 
+#include "App.h"
 #include "render/RenderContext.h"
+#include "utils/Time.h"
 
 extern "C" {
 __declspec(dllexport) extern const UINT D3D12SDKVersion = 614;
@@ -70,19 +72,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     try {
         ccc::WindowSystem::init();
 
+        auto app = std::make_shared<ccc::App>();
+
         auto window = ccc::Window::builder()
             .title("Soario")
             .size(1280, 720)
             .min_size(640, 360)
             .build();
 
-        std::thread([window] {
+        std::thread([window, app] {
             try {
                 const auto rdctx = window->render_context();
+                ccc::time::init();
                 while (!ccc::WindowSystem::is_exited()) {
-                    rdctx->record_frame([](const ccc::FrameContext &ctx) {
-                        ctx.cmd.set_rt(ctx.surface);
-                        ctx.cmd.clear(ctx.surface, float4(1, 1, 1, 1));
+                    ccc::time::tick();
+                    app->update();
+                    rdctx->record_frame([&app](const ccc::FrameContext &ctx) {
+                        app->render(ctx);
                     });
                 }
             } catch (std::exception ex) {

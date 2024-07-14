@@ -20,7 +20,6 @@ namespace ccc {
 
         static constexpr UINT FrameCount = 2;
 
-
         std::shared_ptr<WindowHandle> m_window;
 
         com_ptr<ID3D12Device> m_device;
@@ -45,7 +44,6 @@ namespace ccc {
 
         // 呈现
         void present();
-
 
     public:
         explicit GpuSurface(

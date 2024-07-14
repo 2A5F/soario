@@ -64,7 +64,6 @@ namespace ccc {
             if (SDL_WaitEvent(&event)) {
                 if (event.type == SDL_EVENT_QUIT) {
                     s_instance->m_exited.store(true);
-                    spdlog::info("quit");
                 }
             } else {
                 throw sdl_error();
