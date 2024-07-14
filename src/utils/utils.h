@@ -1,10 +1,13 @@
 #pragma once
 #include <directxmath.h>
 #include <windows.h>
+#include <string>
 
 void RedirectIOToConsole();
 
 void SetSetThreadName(DWORD dwThreadID, const char *threadName);
+
+std::wstring Utf8ToUtf16(char const* str);
 
 using int2 = DirectX::XMINT2;
 using int3 = DirectX::XMINT3;

@@ -1,0 +1,6 @@
+src: ./line.hlsl
+items:
+  - type: ms
+    main: mesh
+  # - type: ps
+  #   main: pixel

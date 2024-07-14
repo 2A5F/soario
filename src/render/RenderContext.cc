@@ -67,6 +67,18 @@ namespace ccc {
             }
         }
 
+        D3D12_FEATURE_DATA_SHADER_MODEL shader_model = {D3D_SHADER_MODEL_6_6};
+        if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model)))
+            || (shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_6)) {
+            throw std::exception("Shader Model 6.6 is not supported");
+        }
+
+        D3D12_FEATURE_DATA_D3D12_OPTIONS7 features = {};
+        if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &features, sizeof(features)))
+            || (features.MeshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED)) {
+            throw std::exception("Mesh Shaders aren't supported!");
+        }
+
         auto ctx = std::make_shared<RenderContext>();
         ctx->m_window = window.inner();
         ctx->m_factory = std::move(factory);

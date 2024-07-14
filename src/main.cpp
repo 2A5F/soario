@@ -19,6 +19,8 @@
 #include "render/RenderContext.h"
 #include "utils/Time.h"
 
+#include <winrt/Windows.UI.Core.h>
+
 extern "C" {
 __declspec(dllexport) extern const UINT D3D12SDKVersion = 614;
 }
@@ -99,10 +101,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 }
             } catch (std::exception ex) {
                 spdlog::error(ex.what());
+                SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", ex.what(), nullptr);
             } catch (winrt::hresult_error ex) {
                 spdlog::error(ex.message().c_str());
+                MessageBox(nullptr, ex.message().c_str(), nullptr, MB_OK);
             } catch (...) {
                 spdlog::error("Unknown failure occurred. Possible memory corruption");
+                SDL_ShowSimpleMessageBox(
+                    SDL_MESSAGEBOX_ERROR, "Error",
+                    "Unknown failure occurred. Possible memory corruption", nullptr);
             }
             SDL_Event event{
                 .quit = {
@@ -116,12 +123,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         r = ccc::WindowSystem::main_loop();
     } catch (std::exception ex) {
         spdlog::error(ex.what());
+        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", ex.what(), nullptr);
         r = -1;
     } catch (winrt::hresult_error ex) {
         spdlog::error(ex.message().c_str());
+        MessageBox(nullptr, ex.message().c_str(), nullptr, MB_OK);
         r = -1;
     } catch (...) {
         spdlog::error("Unknown failure occurred. Possible memory corruption");
+        SDL_ShowSimpleMessageBox(
+            SDL_MESSAGEBOX_ERROR, "Error",
+            "Unknown failure occurred. Possible memory corruption", nullptr);
         r = -1;
     }
 

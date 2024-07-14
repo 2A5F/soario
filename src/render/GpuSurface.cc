@@ -94,10 +94,9 @@ namespace ccc {
         const auto fence_value = m_fence_values[m_frame_index];
         winrt::check_hresult(command_queue->Signal(fence.get(), fence_value));
 
-        while (fence->GetCompletedValue() < fence_value) {
-            if (WindowSystem::is_exited()) throw std::exception("exited");
+        if (fence->GetCompletedValue() < fence_value) {
             winrt::check_hresult(fence->SetEventOnCompletion(fence_value, m_fence_event));
-            WaitForSingleObjectEx(m_fence_event, 100, false);
+            WaitForSingleObjectEx(m_fence_event, INFINITE, false);
         }
 
         m_fence_values[m_frame_index]++;
@@ -111,10 +110,9 @@ namespace ccc {
                 const auto &fence = m_fences[i];
                 const auto fence_value = ++m_fence_values[i];
                 winrt::check_hresult(command_queue->Signal(fence.get(), fence_value));
-                while (fence->GetCompletedValue() < m_fence_values[i]) {
-                    if (WindowSystem::is_exited()) throw std::exception("exited");
+                if (fence->GetCompletedValue() < m_fence_values[i]) {
                     winrt::check_hresult(fence->SetEventOnCompletion(fence_value, m_fence_event));
-                    WaitForSingleObjectEx(m_fence_event, 100, false);
+                    WaitForSingleObjectEx(m_fence_event, INFINITE, false);
                 }
             }
 
@@ -137,10 +135,9 @@ namespace ccc {
 
             m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
 
-            while (fence->GetCompletedValue() < m_fence_values[m_frame_index]) {
-                if (WindowSystem::is_exited()) throw std::exception("exited");
+            if (fence->GetCompletedValue() < m_fence_values[m_frame_index]) {
                 winrt::check_hresult(fence->SetEventOnCompletion(m_fence_values[m_frame_index], m_fence_event));
-                WaitForSingleObjectEx(m_fence_event, 100, FALSE);
+                WaitForSingleObjectEx(m_fence_event, INFINITE, FALSE);
             }
 
             m_fence_values[m_frame_index] = current_fence_value + 1;

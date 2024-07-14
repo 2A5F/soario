@@ -35,6 +35,10 @@ find_package(args CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
+add_custom_target(shaders)
+
+set(HLSL_ITEMS src/shader/line.meta)
+
 add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/pch.h
         src/utils/utils.cc
@@ -72,6 +76,8 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/utils/Time.h
 )
 
+add_dependencies(${PROJECT_NAME} shaders)
+
 target_include_directories(${PROJECT_NAME} PRIVATE third_party/D3D12MemoryAllocator/include)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
@@ -94,3 +100,12 @@ if (TARGET Microsoft::DirectX12-Agility)
             COMMAND_EXPAND_LISTS
     )
 endif ()
+
+foreach (FILE ${HLSL_ITEMS})
+    get_filename_component(FILE_WE ${FILE} NAME_WE)
+    add_custom_command(TARGET shaders
+            COMMAND deno run -A ./scripts/build_shader.ts ${DIRECTX_DXC_TOOL} ${CMAKE_BINARY_DIR} ${FILE_WE} ${FILE} $<IF:$<CONFIG:DEBUG>,D,R>
+            MAIN_DEPENDENCY ${FILE}
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            VERBATIM)
+endforeach (FILE)
