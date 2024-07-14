@@ -32,6 +32,12 @@ namespace ccc {
         SDL_DestroyWindow(m_window);
     }
 
+    uint32_t WindowHandle::id() const {
+        const auto id = SDL_GetWindowID(m_window);
+        if (id == 0) throw sdl_error();
+        return id;
+    }
+
     HWND WindowHandle::hwnd() const {
         const auto props = SDL_GetWindowProperties(m_window);
         if (props == 0) throw sdl_error();
@@ -39,12 +45,12 @@ namespace ccc {
         return static_cast<HWND>(hwnd);
     }
 
-    float2 WindowHandle::size() const {
+    int2 WindowHandle::size() const {
         int w, h;
         if (0 != SDL_GetWindowSizeInPixels(m_window, &w, &h)) {
             throw sdl_error();
         }
-        return float2(w, h);
+        return int2(w, h);
     }
 
     void WindowSystem::init() {
@@ -59,11 +65,22 @@ namespace ccc {
     }
 
     int WindowSystem::main_loop() {
+        SDL_AddEventWatch([](void *data, SDL_Event *event) {
+            if (event->type == SDL_EVENT_WINDOW_RESIZED) {
+                if (const auto win = s_instance->m_windows[event->window.windowID].lock()) {
+                    win->m_resized = true;
+                }
+            }
+            return 0;
+        }, nullptr);
+
         while (!s_instance->m_exited.load()) {
             SDL_Event event;
             if (SDL_WaitEvent(&event)) {
                 if (event.type == SDL_EVENT_QUIT) {
                     s_instance->m_exited.store(true);
+                } else if (event.type == SDL_EVENT_WINDOW_DESTROYED) {
+                    s_instance->m_windows.erase(event.window.windowID);
                 }
             } else {
                 throw sdl_error();
@@ -101,6 +118,9 @@ namespace ccc {
         win->m_inner = std::make_shared<WindowHandle>(sw);
         const auto hwnd = win->hwnd();
         SetMica(hwnd);
+        const auto id = win->m_inner->id();
+        s_instance->m_windows[id] = win;
+
         return win;
     }
 
@@ -120,7 +140,15 @@ namespace ccc {
         return m_inner->hwnd();
     }
 
-    float2 Window::size() const {
+    int2 Window::size() const {
         return m_inner->size();
+    }
+
+    bool Window::resized() const {
+        return m_resized;
+    }
+
+    void Window::use_resize() {
+        m_resized = false;
     }
 } // ccc

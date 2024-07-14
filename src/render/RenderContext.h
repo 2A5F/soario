@@ -16,7 +16,7 @@
 
 namespace ccc {
     class RenderContext final : public IObject {
-        static constexpr UINT FrameCount = 2;
+        static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
         friend FrameContext;
         friend GpuQueue;
@@ -35,6 +35,8 @@ namespace ccc {
 
         com_ptr<D3D12MA::Allocator> m_gpu_allocator{};
 
+        com_ptr<ID3D12CommandAllocator> m_command_allocators[FrameCount];
+
         std::shared_ptr<GpuQueue> m_queue_direct{};
         std::shared_ptr<GpuQueue> m_queue_compute{};
         std::shared_ptr<GpuQueue> m_queue_copy{};
@@ -43,6 +45,8 @@ namespace ccc {
         ~RenderContext() override;
 
         static std::shared_ptr<RenderContext> create(const Window &window);
+
+        void on_resize(Window &window) const;
 
         // 记录帧
         void record_frame(const std::function<void(const FrameContext &ctx)> &cb);

@@ -12,12 +12,13 @@ namespace ccc {
         m_state = GpuRtState::Present;
 
         const auto size = window.size();
+        m_current_size = size;
 
         DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
         swap_chain_desc.BufferCount = FrameCount;
         swap_chain_desc.Width = size.x;
         swap_chain_desc.Height = size.y;
-        swap_chain_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        swap_chain_desc.Format = m_format;
         swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
         swap_chain_desc.SampleDesc.Count = 1;
@@ -46,59 +47,117 @@ namespace ccc {
         }
 
         /* 创建帧缓冲区 */
-        {
-            CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtv_heap->GetCPUDescriptorHandleForHeapStart());
-
-            // 为每一帧创建一个 RTV。
-            for (UINT n = 0; n < FrameCount; n++) {
-                winrt::check_hresult(m_swap_chain->GetBuffer(n, RT_IID_PPV_ARGS(m_render_targets[n])));
-                m_device->CreateRenderTargetView(m_render_targets[n].get(), nullptr, rtvHandle);
-                rtvHandle.Offset(1, m_rtv_descriptor_size);
-            }
-        }
+        create_rts();
 
         /*创建 fence */
         {
-            winrt::check_hresult(m_device->CreateFence(0, D3D12_FENCE_FLAG_NONE, RT_IID_PPV_ARGS(m_fence)));
-            m_fence_value = 1;
+            for (UINT i = 0; i < FrameCount; ++i) {
+                winrt::check_hresult(m_device->CreateFence(
+                    m_fence_values[m_frame_index], D3D12_FENCE_FLAG_NONE, RT_IID_PPV_ARGS(m_fences[i])));
+                m_fence_values[m_frame_index]++;
+            }
 
             m_fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
             if (m_fence_event == nullptr) {
                 winrt::throw_last_error();
             }
+
+            wait_gpu(command_queue);
         }
     }
 
-    void GpuSurface::wait_frame_when_drop(const com_ptr<ID3D12CommandQueue> &command_queue) {
-        const auto fence = m_fence_value;
-        winrt::check_hresult(command_queue->Signal(m_fence.get(), fence));
+    int2 GpuSurface::size() const {
+        return m_current_size;
+    }
 
-        while (m_fence->GetCompletedValue() < fence) {
-            if (WindowSystem::is_exited()) throw std::exception("exited");
-            winrt::check_hresult(m_fence->SetEventOnCompletion(fence, m_fence_event));
-            WaitForSingleObject(m_fence_event, 100);
+    void GpuSurface::create_rts() {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_rtv_heap->GetCPUDescriptorHandleForHeapStart());
+
+        // 为每一帧创建一个 RTV。
+        for (UINT n = 0; n < FrameCount; n++) {
+            winrt::check_hresult(m_swap_chain->GetBuffer(n, RT_IID_PPV_ARGS(m_render_targets[n])));
+            m_device->CreateRenderTargetView(m_render_targets[n].get(), nullptr, rtvHandle);
+            rtvHandle.Offset(1, m_rtv_descriptor_size);
         }
     }
 
-    void GpuSurface::wait_frame(const com_ptr<ID3D12CommandQueue> &command_queue) {
-        const auto fence = m_fence_value;
-        winrt::check_hresult(command_queue->Signal(m_fence.get(), fence));
-        m_fence_value++;
+    void GpuSurface::set_v_sync(bool v) {
+        m_v_sync = v;
+    }
 
-        while (m_fence->GetCompletedValue() < fence) {
+    UINT GpuSurface::frame_index() const {
+        return m_frame_index;
+    }
+
+    void GpuSurface::wait_gpu(const com_ptr<ID3D12CommandQueue> &command_queue) {
+        const auto &fence = m_fences[m_frame_index];
+        const auto fence_value = m_fence_values[m_frame_index];
+        winrt::check_hresult(command_queue->Signal(fence.get(), fence_value));
+
+        while (fence->GetCompletedValue() < fence_value) {
             if (WindowSystem::is_exited()) throw std::exception("exited");
-            winrt::check_hresult(m_fence->SetEventOnCompletion(fence, m_fence_event));
-            WaitForSingleObject(m_fence_event, 100);
+            winrt::check_hresult(fence->SetEventOnCompletion(fence_value, m_fence_event));
+            WaitForSingleObjectEx(m_fence_event, 100, false);
         }
 
-        m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
+        m_fence_values[m_frame_index]++;
+    }
 
+    void GpuSurface::move_to_next_frame(const com_ptr<ID3D12CommandQueue> &command_queue) {
+        if (m_resized && (m_current_size.x != m_new_size.x || m_current_size.y != m_new_size.y)) {
+            m_current_size = m_new_size;
+
+            for (UINT i = 0; i < FrameCount; ++i) {
+                const auto &fence = m_fences[i];
+                const auto fence_value = ++m_fence_values[i];
+                winrt::check_hresult(command_queue->Signal(fence.get(), fence_value));
+                while (fence->GetCompletedValue() < m_fence_values[i]) {
+                    if (WindowSystem::is_exited()) throw std::exception("exited");
+                    winrt::check_hresult(fence->SetEventOnCompletion(fence_value, m_fence_event));
+                    WaitForSingleObjectEx(m_fence_event, 100, false);
+                }
+            }
+
+            for (UINT n = 0; n < FrameCount; n++) {
+                m_render_targets[n] = nullptr;
+            }
+
+            DXGI_SWAP_CHAIN_DESC1 desc = {};
+            winrt::check_hresult(m_swap_chain->GetDesc1(&desc));
+            winrt::check_hresult(m_swap_chain->ResizeBuffers(
+                FrameCount, m_new_size.x, m_new_size.y, desc.Format, desc.Flags));
+
+            create_rts();
+
+            m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
+        } else {
+            const auto &fence = m_fences[m_frame_index];
+            const UINT64 current_fence_value = m_fence_values[m_frame_index];
+            winrt::check_hresult(command_queue->Signal(fence.get(), current_fence_value));
+
+            m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
+
+            while (fence->GetCompletedValue() < m_fence_values[m_frame_index]) {
+                if (WindowSystem::is_exited()) throw std::exception("exited");
+                winrt::check_hresult(fence->SetEventOnCompletion(m_fence_values[m_frame_index], m_fence_event));
+                WaitForSingleObjectEx(m_fence_event, 100, FALSE);
+            }
+
+            m_fence_values[m_frame_index] = current_fence_value + 1;
+        }
+
+        m_resized = false;
         m_current_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(
             m_rtv_heap->GetCPUDescriptorHandleForHeapStart(), m_frame_index, m_rtv_descriptor_size);
     }
 
+    void GpuSurface::on_resize(const int2 new_size) {
+        m_resized = true;
+        m_new_size = new_size;
+    }
+
     void GpuSurface::present() {
-        winrt::check_hresult(m_swap_chain->Present(1, 0));
+        winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
     }
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE GpuSurface::get_cpu_handle() {

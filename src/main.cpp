@@ -1,6 +1,8 @@
 ﻿#include "pch.h"
 #include <windows.h>
 
+#include <stacktrace>
+
 #include "Args.h"
 #include "args.hxx"
 
@@ -65,7 +67,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     spdlog::info("start");
 
-    if (arg_debug) spdlog::warn("Debug mode enabled");
+    if (arg_debug) {
+        spdlog::warn("Debug mode enabled");
+        spdlog::set_level(spdlog::level::level_enum::debug);
+    }
 
     int r;
 
@@ -86,6 +91,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 ccc::time::init();
                 while (!ccc::WindowSystem::is_exited()) {
                     ccc::time::tick();
+                    if (window->resized()) rdctx->on_resize(*window);
                     app->update();
                     rdctx->record_frame([&app](const ccc::FrameContext &ctx) {
                         app->render(ctx);
@@ -93,6 +99,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                 }
             } catch (std::exception ex) {
                 spdlog::error(ex.what());
+            } catch (winrt::hresult_error ex) {
+                spdlog::error(ex.message().c_str());
             } catch (...) {
                 spdlog::error("Unknown failure occurred. Possible memory corruption");
             }
@@ -108,6 +116,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         r = ccc::WindowSystem::main_loop();
     } catch (std::exception ex) {
         spdlog::error(ex.what());
+        r = -1;
+    } catch (winrt::hresult_error ex) {
+        spdlog::error(ex.message().c_str());
         r = -1;
     } catch (...) {
         spdlog::error("Unknown failure occurred. Possible memory corruption");

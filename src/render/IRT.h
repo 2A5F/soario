@@ -24,5 +24,8 @@ namespace ccc {
         virtual bool require_state(GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) = 0;
 
         virtual CD3DX12_CPU_DESCRIPTOR_HANDLE get_cpu_handle() = 0;
+
+    public:
+        virtual int2 size() const = 0;
     };
 } // ccc

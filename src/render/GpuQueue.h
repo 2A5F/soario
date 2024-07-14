@@ -3,6 +3,7 @@
 #include <winrt/base.h>
 
 #include "D3D12MemAlloc.h"
+#include "GpuSurface.h"
 
 #include "../pch.h"
 #include "../utils/IObject.h"
@@ -12,11 +13,12 @@ namespace ccc {
     struct FrameContext;
 
     class GpuQueue final : public IObject {
+        static constexpr UINT FrameCount = GpuSurface::FrameCount;
+
         com_ptr<ID3D12Device> m_device{};
-        com_ptr<D3D12MA::Allocator> m_gpu_allocator{};
-        com_ptr<ID3D12CommandAllocator> m_command_allocator;
-        com_ptr<ID3D12CommandQueue> m_command_queue;
-        com_ptr<ID3D12GraphicsCommandList> m_command_list;
+        com_ptr<ID3D12CommandAllocator> m_command_allocators[FrameCount]{};
+        com_ptr<ID3D12CommandQueue> m_command_queue{};
+        com_ptr<ID3D12GraphicsCommandList> m_command_list{};
 
         friend FrameContext;
         friend RenderContext;
@@ -24,10 +26,9 @@ namespace ccc {
     public:
         explicit GpuQueue(
             com_ptr<ID3D12Device> device,
-            com_ptr<D3D12MA::Allocator> gpu_allocator,
-            com_ptr<ID3D12CommandAllocator> command_allocator,
-            com_ptr<ID3D12CommandQueue> command_queue,
-            com_ptr<ID3D12GraphicsCommandList> m_command_list
+            D3D12_COMMAND_LIST_TYPE type
         );
+
+        void ready_frame(int frame_index) const;
     };
 } // ccc
