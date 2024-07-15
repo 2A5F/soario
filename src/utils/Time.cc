@@ -1,5 +1,6 @@
 #include "Time.h"
 
+#include <chrono>
 #include <ctime>
 
 namespace ccc {
@@ -8,15 +9,17 @@ namespace ccc {
     }
 
     void Time::init() {
-        start_time = now_time = last_time = clock();
+        start_time = now_time = last_time = std::chrono::steady_clock::now();
         delta_time = total_time = 0;
     }
 
     void Time::tick() {
         last_time = now_time;
-        now_time = clock();
-        delta_time = static_cast<double>(now_time - last_time) / CLOCKS_PER_SEC;
-        total_time = static_cast<double>(now_time - start_time) / CLOCKS_PER_SEC;
+        now_time = std::chrono::steady_clock::now();
+        delta_time_raw = std::chrono::duration(now_time - last_time);
+        total_time_raw = std::chrono::duration(now_time - start_time);
+        delta_time = std::chrono::duration<double>(delta_time_raw).count();
+        total_time = std::chrono::duration<double>(total_time_raw).count();
     }
 
     double Time::delta() const {
@@ -33,6 +36,14 @@ namespace ccc {
 
     void time::tick() {
         s_time.tick();
+    }
+
+    std::chrono::steady_clock::duration time::delta_raw() {
+        return s_time.delta_time_raw;
+    }
+
+    std::chrono::steady_clock::duration time::total_raw() {
+        return s_time.total_time_raw;
     }
 
     double time::delta() {

@@ -89,13 +89,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
         std::thread([window, app] {
             try {
-                const auto rdctx = window->render_context();
+                const auto rd_ctx = window->render_context();
+                ccc::RenderContext::set_global(rd_ctx);
+                app->sync_load();
                 ccc::time::init();
                 while (!ccc::WindowSystem::is_exited()) {
                     ccc::time::tick();
-                    if (window->resized()) rdctx->on_resize(*window);
+                    if (window->resized()) rd_ctx->on_resize(*window);
                     app->update();
-                    rdctx->record_frame([&app](const ccc::FrameContext &ctx) {
+                    rd_ctx->record_frame([&app](const ccc::FrameContext &ctx) {
                         app->render(ctx);
                     });
                 }
@@ -111,6 +113,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
                     SDL_MESSAGEBOX_ERROR, "Error",
                     "Unknown failure occurred. Possible memory corruption", nullptr);
             }
+            ccc::RenderContext::set_global(nullptr);
             SDL_Event event{
                 .quit = {
                     .type = SDL_EVENT_QUIT,

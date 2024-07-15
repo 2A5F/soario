@@ -13,7 +13,7 @@ namespace ccc {
 }
 
 namespace ccc {
-    class GpuCommandList final : public IObject {
+    class GpuCommandList final : public ISingleThreadObject {
         friend RenderContext;
         friend GpuSurface;
         friend IRT;

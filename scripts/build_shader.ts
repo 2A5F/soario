@@ -49,17 +49,13 @@ for (const item of meta.items) {
     tmp_output_path,
     `${file_name}.${main}.re`
   );
-  const rs_output_path = path.resolve(
-    tmp_output_path,
-    `${file_name}.${main}.rs`
-  );
   const meta_output_path = path.resolve(
     tmp_output_path,
     `${file_name}.${main}.json`
   );
   Deno.writeTextFileSync(meta_output_path, JSON.stringify({ type, main, sm }));
 
-  files.push(obj_output_path, re_output_path, rs_output_path, meta_output_path);
+  files.push(obj_output_path, re_output_path, meta_output_path);
 
   const cmd = new Deno.Command(dxc, {
     cwd: Deno.cwd(),
@@ -74,8 +70,6 @@ for (const item of meta.items) {
       obj_output_path,
       "-Fre",
       re_output_path,
-      "-Frs",
-      rs_output_path,
       src_path,
     ],
   });

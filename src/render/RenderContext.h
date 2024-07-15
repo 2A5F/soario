@@ -44,6 +44,11 @@ namespace ccc {
     public:
         ~RenderContext() override;
 
+        static void set_global(std::shared_ptr<RenderContext> ctx);
+
+        // 获取全局的默认渲染上下文
+        static std::shared_ptr<RenderContext> global();
+
         static std::shared_ptr<RenderContext> create(const Window &window);
 
         void on_resize(Window &window) const;

@@ -10,6 +10,8 @@
 
 namespace ccc {
     namespace {
+        std::shared_ptr<RenderContext> s_global;
+
         bool get_adapter(IDXGIFactory1 &factory, com_ptr<IDXGIAdapter1> &adapter);
 
         void debug_callback(
@@ -125,6 +127,14 @@ namespace ccc {
         window.use_resize();
         const auto size = window.size();
         m_surface->on_resize(size);
+    }
+
+    void RenderContext::set_global(std::shared_ptr<RenderContext> ctx) {
+        s_global = std::move(ctx);
+    }
+
+    std::shared_ptr<RenderContext> RenderContext::global() {
+        return s_global;
     }
 
     RenderContext::~RenderContext() {

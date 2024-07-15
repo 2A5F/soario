@@ -1,12 +1,15 @@
 #pragma once
+#include <chrono>
 #include <ctime>
 
 namespace ccc {
     struct Time {
-        clock_t start_time;
-        clock_t last_time;
-        clock_t now_time;
-        float delta_time;
+        std::chrono::steady_clock::time_point start_time;
+        std::chrono::steady_clock::time_point last_time;
+        std::chrono::steady_clock::time_point now_time;
+        std::chrono::steady_clock::duration delta_time_raw;
+        std::chrono::steady_clock::duration total_time_raw;
+        double delta_time;
         double total_time;
 
         void init();
@@ -22,6 +25,10 @@ namespace ccc {
         void init();
 
         void tick();
+
+        std::chrono::steady_clock::duration delta_raw();
+
+        std::chrono::steady_clock::duration total_raw();
 
         double delta();
 

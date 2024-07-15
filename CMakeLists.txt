@@ -74,6 +74,8 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/App.h
         src/utils/Time.cc
         src/utils/Time.h
+        src/render/ShaderPak.cc
+        src/render/ShaderPak.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

@@ -154,7 +154,7 @@ namespace ccc {
     }
 
     void GpuSurface::present() {
-        winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
+        winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 0 : 0, 0));
     }
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE GpuSurface::get_cpu_handle() {
