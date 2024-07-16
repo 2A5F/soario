@@ -3,9 +3,7 @@
 #include "directx/d3dx12.h"
 
 #include "../pch.h"
-#include "../utils/IObject.h"
 #include "IResource.h"
-#include "IResourceOwner.h"
 
 namespace ccc {
     class GpuCommandList;
@@ -25,7 +23,7 @@ namespace ccc {
 
         // 请求新的状态，返回是否需要屏障
         virtual bool require_state(
-            IResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) = 0;
+            ResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) = 0;
 
         virtual CD3DX12_CPU_DESCRIPTOR_HANDLE get_cpu_handle() = 0;
 

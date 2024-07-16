@@ -2,7 +2,7 @@
 
 namespace ccc {
     GpuCommandList::GpuCommandList(
-        std::shared_ptr<IResourceOwner> resource_owner,
+        std::shared_ptr<ResourceOwner> resource_owner,
         com_ptr<ID3D12GraphicsCommandList> command_list
     ) : m_command_list(std::move(command_list)), m_resource_owner(std::move(resource_owner)) {
     }

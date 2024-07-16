@@ -22,10 +22,10 @@ namespace ccc {
 
         std::shared_ptr<IRT> m_current_rt{};
 
-        std::shared_ptr<IResourceOwner> m_resource_owner;
+        std::shared_ptr<ResourceOwner> m_resource_owner;
 
         explicit GpuCommandList(
-        std::shared_ptr<IResourceOwner> resource_owner,
+        std::shared_ptr<ResourceOwner> resource_owner,
             com_ptr<ID3D12GraphicsCommandList> command_list);
 
     public:

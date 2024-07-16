@@ -75,8 +75,6 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/utils/Time.h
         src/render/Shader.cc
         src/render/Shader.h
-        src/render/IResourceOwner.cc
-        src/render/IResourceOwner.h
         src/render/IResource.cc
         src/render/IResource.h
         src/utils/new-delete.cc

@@ -76,6 +76,6 @@ namespace ccc {
         CD3DX12_CPU_DESCRIPTOR_HANDLE get_cpu_handle() override;
 
         bool require_state(
-            IResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) override;
+            ResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) override;
     };
 } // ccc

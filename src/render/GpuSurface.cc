@@ -161,7 +161,7 @@ namespace ccc {
     }
 
     bool GpuSurface::require_state(
-        IResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) {
+        ResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) {
         owner.assert_ownership(this);
         if (target_state == m_state) return false;
         const auto before = to_dx_state(m_state);
