@@ -12,6 +12,11 @@ set(VCPKG_LIBRARY_LINKAGE static)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+if (CMAKE_BUILD_TYPE MATCHES "Release")
+    message(dotnet_use_static)
+    add_definitions(-DNETHOST_USE_AS_STATIC)
+endif ()
+
 add_definitions(-DUNICODE)
 add_definitions(-D_UNICODE)
 set(SPDLOG_FMT_EXTERNAL ON)
@@ -107,7 +112,15 @@ target_link_libraries(${PROJECT_NAME} PRIVATE taywee::args)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt-header-only)
 target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog_header_only)
 target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc-static)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE nethost.lib)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/microsoft.netcore.app.host.win-x64/runtimes/win-x64/native/nethost.dll ${CMAKE_BINARY_DIR}/bin/nethost.dll COPYONLY)
+
+#if (CMAKE_BUILD_TYPE MATCHES "Release")
+#    target_link_libraries(${PROJECT_NAME} PRIVATE libnethost.lib advapi32.lib)
+#else ()
+#    target_link_libraries(${PROJECT_NAME} PRIVATE nethost.lib)
+#endif ()
 
 if (TARGET Microsoft::DirectX12-Agility)
     file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/D3D12")
@@ -121,16 +134,17 @@ endif ()
 foreach (FILE ${HLSL_ITEMS})
     get_filename_component(FILE_WE ${FILE} NAME_WE)
     add_custom_command(TARGET shaders
+            POST_BUILD
             COMMAND deno run -A ./scripts/build_shader.ts ${DIRECTX_DXC_TOOL} ${CMAKE_BINARY_DIR} ${FILE_WE} ${FILE} $<IF:$<CONFIG:DEBUG>,D,R>
             MAIN_DEPENDENCY ${FILE}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             VERBATIM)
 endforeach (FILE)
 
-add_custom_command(TARGET shaders
+add_custom_command(TARGET dotnet
+        POST_BUILD
         COMMAND deno run -A ./scripts/build_dotnet.ts ${DOTNET_EXE}
-            ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/Dotnet/Soario/Soario.csproj $<IF:$<CONFIG:DEBUG>,D,R>
-#        COMMAND ${DOTNET_EXE} build ${CMAKE_CURRENT_SOURCE_DIR}/Dotnet/Soario/Soario.csproj
+        ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/Dotnet/Soario/Soario.csproj $<IF:$<CONFIG:DEBUG>,D,R>
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         VERBATIM
 )

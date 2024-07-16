@@ -1,4 +1,6 @@
-﻿#include "pch.h"
+﻿#include <mimalloc.h>
+
+#include "pch.h"
 #include <windows.h>
 
 #include <stacktrace>
@@ -36,6 +38,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     winrt::init_apartment();
 
+    mi_version();
+
     args::ArgumentParser arg_parser("Soario");
     args::HelpFlag arg_help(arg_parser, "help", "Display this help menu", {'h', "help"});
     args::Flag arg_debug(arg_parser, "debug", "Enable debug mode", {'D', "debug"});
@@ -65,13 +69,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         "", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block);
     set_default_logger(logger);
 
-    ccc::Args::set(ccc::Args{.debug = arg_debug});
+    ccc::Args args;
+    args.exe_path = std::string(__argv[0]);
+    args.debug = arg_debug;
+    ccc::Args::set(args);
 
     spdlog::info("start");
 
     if (arg_debug) {
         spdlog::warn("Debug mode enabled");
         spdlog::set_level(spdlog::level::level_enum::debug);
+        spdlog::debug(std::format("exe path: {}", args.exe_path));
     }
 
     int r;
