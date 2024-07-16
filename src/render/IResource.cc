@@ -1,3 +1,3 @@
-#include "GpuCommands.h"
+#include "IResource.h"
 namespace ccc {
 } // ccc

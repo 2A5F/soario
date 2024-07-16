@@ -13,9 +13,10 @@
 #include "../window/Window.h"
 #include "FrameContext.h"
 #include "GpuSurface.h"
+#include "IResourceOwner.h"
 
 namespace ccc {
-    class RenderContext final : public IObject {
+    class RenderContext final : public virtual IObject {
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
         friend FrameContext;
@@ -40,6 +41,8 @@ namespace ccc {
         std::shared_ptr<GpuQueue> m_queue_direct{};
         std::shared_ptr<GpuQueue> m_queue_compute{};
         std::shared_ptr<GpuQueue> m_queue_copy{};
+
+        std::shared_ptr<IResourceOwner> m_resource_owner = std::make_shared<IResourceOwner>();
 
     public:
         ~RenderContext() override;

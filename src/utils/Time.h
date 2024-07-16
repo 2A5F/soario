@@ -3,7 +3,7 @@
 #include <ctime>
 
 namespace ccc {
-    struct Time {
+    struct Time final {
         std::chrono::steady_clock::time_point start_time;
         std::chrono::steady_clock::time_point last_time;
         std::chrono::steady_clock::time_point now_time;

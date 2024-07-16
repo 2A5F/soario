@@ -12,7 +12,7 @@ namespace ccc {
     class RenderContext;
     struct FrameContext;
 
-    class GpuQueue final : public IObject {
+    class GpuQueue final : public virtual IObject {
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
         com_ptr<ID3D12Device> m_device{};

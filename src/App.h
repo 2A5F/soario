@@ -3,7 +3,7 @@
 #include "render/RenderContext.h"
 
 namespace ccc {
-    class App {
+    class App final {
     public:
         // 同步加载，用于无法异步的部分
         void sync_load();

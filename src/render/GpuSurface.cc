@@ -6,11 +6,10 @@
 
 namespace ccc {
     GpuSurface::GpuSurface(
+        const size_t resource_owner_id,
         const com_ptr<IDXGIFactory4> &factory, com_ptr<ID3D12Device> device,
         const com_ptr<ID3D12CommandQueue> &command_queue, const Window &window
-    ) : m_window(window.inner()), m_device(std::move(device)) {
-        m_state = GpuRtState::Present;
-
+    ) : IRT(GpuRtState::Present), IResource(resource_owner_id), m_window(window.inner()), m_device(std::move(device)) {
         const auto size = window.size();
         m_current_size = size;
 
@@ -161,8 +160,9 @@ namespace ccc {
         return m_current_cpu_handle;
     }
 
-    bool GpuSurface::require_state(GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) {
-        assert_same_thread();
+    bool GpuSurface::require_state(
+        IResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) {
+        owner.assert_ownership(this);
         if (target_state == m_state) return false;
         const auto before = to_dx_state(m_state);
         const auto after = to_dx_state(target_state);

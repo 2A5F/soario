@@ -23,6 +23,7 @@ set(SDL_HIDAPI OFF)
 set(SDL_DIALOG OFF)
 
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
+add_subdirectory(third_party/mimalloc EXCLUDE_FROM_ALL)
 find_package(cppwinrt CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(directx12-agility CONFIG REQUIRED)
@@ -55,8 +56,6 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/Args.h
         third_party/D3D12MemoryAllocator/include/D3D12MemAlloc.h
         third_party/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp
-        src/render/GpuCommands.cc
-        src/render/GpuCommands.h
         src/render/GpuQueue.cc
         src/render/GpuQueue.h
         src/render/FrameContext.cc
@@ -74,8 +73,13 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/App.h
         src/utils/Time.cc
         src/utils/Time.h
-        src/render/ShaderPak.cc
-        src/render/ShaderPak.h
+        src/render/Shader.cc
+        src/render/Shader.h
+        src/render/IResourceOwner.cc
+        src/render/IResourceOwner.h
+        src/render/IResource.cc
+        src/render/IResource.h
+        src/utils/new-delete.cc
 )
 
 add_dependencies(${PROJECT_NAME} shaders)
@@ -93,6 +97,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE stduuid)
 target_link_libraries(${PROJECT_NAME} PRIVATE taywee::args)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt-header-only)
 target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog_header_only)
+target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc-static)
 
 if (TARGET Microsoft::DirectX12-Agility)
     file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/D3D12")

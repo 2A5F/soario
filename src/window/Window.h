@@ -13,7 +13,7 @@ namespace ccc {
     class Window;
     class RenderContext;
 
-    class WindowHandle final : public IObject {
+    class WindowHandle final : public virtual IObject {
         SDL_Window *m_window{};
 
     public:
@@ -28,7 +28,7 @@ namespace ccc {
         int2 size() const;
     };
 
-    class WindowSystem final : public IObject {
+    class WindowSystem final : public virtual IObject {
         friend Window;
 
         std::atomic_bool m_exited{false};
@@ -75,7 +75,7 @@ namespace ccc {
         std::shared_ptr<Window> build() const;
     };
 
-    class Window final : public IObject {
+    class Window final : public virtual IObject {
         friend WindowSystem;
 
         std::shared_ptr<WindowHandle> m_inner{};

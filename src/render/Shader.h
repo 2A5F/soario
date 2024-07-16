@@ -2,10 +2,6 @@
 #include "../utils/IObject.h"
 
 namespace ccc {
-
-class GpuCommands final : public IObject {
-
-};
-
-
+    class Shader final : public virtual IObject {
+    };
 } // ccc

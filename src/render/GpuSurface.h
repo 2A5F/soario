@@ -16,7 +16,7 @@ namespace ccc {
     class WindowHandle;
     class Window;
 
-    class GpuSurface final : public IRT {
+    class GpuSurface final : public virtual IRT {
         friend RenderContext;
         friend GpuQueue;
 
@@ -65,6 +65,7 @@ namespace ccc {
 
     public:
         explicit GpuSurface(
+            size_t resource_owner_id,
             const com_ptr<IDXGIFactory4> &factory, com_ptr<ID3D12Device> device,
             const com_ptr<ID3D12CommandQueue> &command_queue, const Window &window
         );
@@ -74,6 +75,7 @@ namespace ccc {
     protected:
         CD3DX12_CPU_DESCRIPTOR_HANDLE get_cpu_handle() override;
 
-        bool require_state(GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) override;
+        bool require_state(
+            IResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) override;
     };
 } // ccc

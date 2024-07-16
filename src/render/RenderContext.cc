@@ -106,6 +106,7 @@ namespace ccc {
         }
 
         ctx->m_surface = std::make_shared<GpuSurface>(
+            ctx->m_resource_owner->resource_owner_id(),
             ctx->m_factory, ctx->m_device, ctx->m_queue_direct->m_command_queue, window
         );
 
@@ -205,10 +206,11 @@ namespace ccc {
 
         const auto list = queue->m_command_list;
 
-        GpuCommandList list_box(list);
+        GpuCommandList list_box(m_resource_owner, list);
         cb(FrameContext{*this, *queue, list_box, m_surface});
 
-        if (CD3DX12_RESOURCE_BARRIER barrier; m_surface->require_state(GpuRtState::Present, barrier)) {
+        if (CD3DX12_RESOURCE_BARRIER barrier; m_surface->require_state(
+            *m_resource_owner, GpuRtState::Present, barrier)) {
             list->ResourceBarrier(1, &barrier);
         }
 

@@ -13,7 +13,7 @@ namespace ccc {
 }
 
 namespace ccc {
-    class GpuCommandList final : public ISingleThreadObject {
+    class GpuCommandList final : public virtual IObject {
         friend RenderContext;
         friend GpuSurface;
         friend IRT;
@@ -22,7 +22,11 @@ namespace ccc {
 
         std::shared_ptr<IRT> m_current_rt{};
 
-        explicit GpuCommandList(com_ptr<ID3D12GraphicsCommandList> command_list);
+        std::shared_ptr<IResourceOwner> m_resource_owner;
+
+        explicit GpuCommandList(
+        std::shared_ptr<IResourceOwner> resource_owner,
+            com_ptr<ID3D12GraphicsCommandList> command_list);
 
     public:
         // 设置渲染目标

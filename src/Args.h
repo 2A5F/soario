@@ -1,6 +1,6 @@
 #pragma once
 namespace ccc {
-    struct Args {
+    struct Args final {
         bool debug;
 
         static void set(Args args);
