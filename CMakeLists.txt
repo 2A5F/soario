@@ -1,12 +1,16 @@
 cmake_minimum_required(VERSION 3.28)
 project(soario)
 
+include(FetchContent)
+
 set(CMAKE_CXX_STANDARD 23)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(VCPKG_LIBRARY_LINKAGE static)
+
+LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 add_definitions(-DUNICODE)
 add_definitions(-D_UNICODE)
@@ -24,6 +28,7 @@ set(SDL_DIALOG OFF)
 
 add_subdirectory(third_party/SDL EXCLUDE_FROM_ALL)
 add_subdirectory(third_party/mimalloc EXCLUDE_FROM_ALL)
+find_package(Dotnet 8.0 REQUIRED)
 find_package(cppwinrt CONFIG REQUIRED)
 find_package(directx-headers CONFIG REQUIRED)
 find_package(directx12-agility CONFIG REQUIRED)
@@ -37,6 +42,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(fmt CONFIG REQUIRED)
 
 add_custom_target(shaders)
+add_custom_target(dotnet)
 
 set(HLSL_ITEMS src/shader/line.meta)
 
@@ -78,11 +84,16 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/IResource.cc
         src/render/IResource.h
         src/utils/new-delete.cc
+        src/utils/dotnet.cc
+        src/utils/dotnet.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)
+add_dependencies(${PROJECT_NAME} dotnet)
 
 target_include_directories(${PROJECT_NAME} PRIVATE third_party/D3D12MemoryAllocator/include)
+target_include_directories(${PROJECT_NAME} PRIVATE third_party/microsoft.netcore.app.host.win-x64/runtimes/win-x64/native)
+target_link_directories(${PROJECT_NAME} PRIVATE third_party/microsoft.netcore.app.host.win-x64/runtimes/win-x64/native)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE SDL3::SDL3)
 target_link_libraries(${PROJECT_NAME} PRIVATE Microsoft::CppWinRT RuntimeObject dwmapi dxgi.lib)
@@ -96,6 +107,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE taywee::args)
 target_link_libraries(${PROJECT_NAME} PRIVATE fmt::fmt-header-only)
 target_link_libraries(${PROJECT_NAME} PRIVATE spdlog::spdlog_header_only)
 target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc-static)
+target_link_libraries(${PROJECT_NAME} PRIVATE nethost.lib)
 
 if (TARGET Microsoft::DirectX12-Agility)
     file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/D3D12")
@@ -114,3 +126,11 @@ foreach (FILE ${HLSL_ITEMS})
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             VERBATIM)
 endforeach (FILE)
+
+add_custom_command(TARGET shaders
+        COMMAND deno run -A ./scripts/build_dotnet.ts ${DOTNET_EXE}
+            ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/Dotnet/Soario/Soario.csproj $<IF:$<CONFIG:DEBUG>,D,R>
+#        COMMAND ${DOTNET_EXE} build ${CMAKE_CURRENT_SOURCE_DIR}/Dotnet/Soario/Soario.csproj
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        VERBATIM
+)

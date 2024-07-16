@@ -3,6 +3,10 @@ import yaml from "npm:yaml";
 import { compress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
 import { existsSync } from "https://deno.land/std@0.224.0/fs/exists.ts";
 
+console.log(
+  "================================================== start build shader =================================================="
+);
+
 const [dxc, build_output, file_name, file_path, debug] = Deno.args;
 
 const is_debug = debug.toLowerCase() == "d";
@@ -66,12 +70,15 @@ for (const item of meta.items) {
       main,
       is_debug ? "-Od" : "-O3",
       "-Zi",
+      "-Qembed_debug",
       "-Fo",
       obj_output_path,
       "-Fre",
       re_output_path,
       src_path,
     ],
+    stdout: "inherit",
+    stderr: "inherit",
   });
   cmd.outputSync();
 }
@@ -80,7 +87,6 @@ const output_dir_path = path.resolve(build_output, "bin", "shader");
 Deno.mkdirSync(output_dir_path, { recursive: true });
 const output_path_zip = path.resolve(output_dir_path, `${file_name}.zip`);
 const output_path = path.resolve(output_dir_path, `${file_name}.shader`);
-console.log(output_path);
 
 await compress(
   files.filter((path) => existsSync(path)),
@@ -88,3 +94,7 @@ await compress(
 );
 
 Deno.renameSync(output_path_zip, output_path);
+
+console.log(
+  "================================================== end build shader =================================================="
+);

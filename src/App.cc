@@ -3,10 +3,12 @@
 #include "pch.h"
 #include "utils/utils.h"
 #include "time.h"
+#include "utils/dotnet.h"
 #include "utils/Time.h"
 
 namespace ccc {
     void App::sync_load() {
+        load_dotnet();
     }
 
     void App::update() {
