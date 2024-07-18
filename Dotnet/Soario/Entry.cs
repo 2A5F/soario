@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Soario.Native;
 using Soario.Utils;
+using Soario.Windowing;
 
 namespace Soario;
 
@@ -14,9 +15,12 @@ public class Entry
         Time.p_time_data = init_params->p_time_data;
         init_result->fn_vtb = new AppFnVtb
         {
-            p_fn_utf16_get_utf8_max_len = &GetUtf8MaxLength,
-            p_fn_utf16_to_utf8 = &Utf16ToUtf8,
-            p_fn_start = &Start,
+            utf16_get_utf8_max_len = &GetUtf8MaxLength,
+            utf16_to_utf8 = &Utf16ToUtf8,
+
+            start = &Start,
+
+            window_event_handle = &Window.EventHandle,
         };
         Console.WriteLine("Init Dotnet");
     }

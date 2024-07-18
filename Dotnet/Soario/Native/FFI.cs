@@ -5,38 +5,26 @@ namespace Soario.Native
 {
     public unsafe partial struct FObject
     {
-        public Vtbl* lpVtbl;
+        public void** lpVtbl;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            lpVtbl->Dispose((FObject*)Unsafe.AsPointer(ref this));
+            ((delegate* unmanaged[Thiscall]<FObject*, void>)(lpVtbl[0]))((FObject*)Unsafe.AsPointer(ref this));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("size_t")]
         public nuint AddRef()
         {
-            return lpVtbl->AddRef((FObject*)Unsafe.AsPointer(ref this));
+            return ((delegate* unmanaged[Thiscall]<FObject*, nuint>)(lpVtbl[1]))((FObject*)Unsafe.AsPointer(ref this));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("size_t")]
         public nuint Release()
         {
-            return lpVtbl->Release((FObject*)Unsafe.AsPointer(ref this));
-        }
-
-        public partial struct Vtbl
-        {
-            [NativeTypeName("void ()")]
-            public delegate* unmanaged[Thiscall]<FObject*, void> Dispose;
-
-            [NativeTypeName("size_t () const")]
-            public delegate* unmanaged[Thiscall]<FObject*, nuint> AddRef;
-
-            [NativeTypeName("size_t ()")]
-            public delegate* unmanaged[Thiscall]<FObject*, nuint> Release;
+            return ((delegate* unmanaged[Thiscall]<FObject*, nuint>)(lpVtbl[2]))((FObject*)Unsafe.AsPointer(ref this));
         }
     }
 
@@ -100,13 +88,16 @@ namespace Soario.Native
     public unsafe partial struct AppFnVtb
     {
         [NativeTypeName("ccc::fn_func__FrStr16__size_t *")]
-        public delegate* unmanaged[Cdecl]<FrStr16, nuint> p_fn_utf16_get_utf8_max_len;
+        public delegate* unmanaged[Cdecl]<FrStr16, nuint> utf16_get_utf8_max_len;
 
         [NativeTypeName("ccc::fn_func__FrStr16_FmStr8__size_t *")]
-        public delegate* unmanaged[Cdecl]<FrStr16, FmStr8, nuint> p_fn_utf16_to_utf8;
+        public delegate* unmanaged[Cdecl]<FrStr16, FmStr8, nuint> utf16_to_utf8;
 
         [NativeTypeName("ccc::fn_action *")]
-        public delegate* unmanaged[Cdecl]<void> p_fn_start;
+        public delegate* unmanaged[Cdecl]<void> start;
+
+        [NativeTypeName("ccc::fn_action__voidp_FWindowEventType_voidp *")]
+        public delegate* unmanaged[Cdecl]<void*, FWindowEventType, void*, void> window_event_handle;
     }
 
     public partial struct TimeData
@@ -146,45 +137,46 @@ namespace Soario.Native
         public int has_min_size;
     }
 
+    public enum FWindowEventType
+    {
+        None = 0,
+        Close = 1,
+        Resize = 2,
+    }
+
     [NativeTypeName("struct FWindow : ccc::FObject")]
     public unsafe partial struct FWindow
     {
-        public Vtbl* lpVtbl;
+        public void** lpVtbl;
 
         [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?create@FWindow@ccc@@SAPEAU12@AEBUWindowCreateOptions@2@@Z", ExactSpelling = true)]
         [return: NativeTypeName("ccc::FWindow *")]
         public static extern FWindow* create([NativeTypeName("const WindowCreateOptions &")] WindowCreateOptions* options);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose()
-        {
-            lpVtbl->Dispose((FWindow*)Unsafe.AsPointer(ref this));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("size_t")]
         public nuint AddRef()
         {
-            return lpVtbl->AddRef((FWindow*)Unsafe.AsPointer(ref this));
+            return ((delegate* unmanaged[Thiscall]<FWindow*, nuint>)(lpVtbl[1]))((FWindow*)Unsafe.AsPointer(ref this));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("size_t")]
         public nuint Release()
         {
-            return lpVtbl->Release((FWindow*)Unsafe.AsPointer(ref this));
+            return ((delegate* unmanaged[Thiscall]<FWindow*, nuint>)(lpVtbl[2]))((FWindow*)Unsafe.AsPointer(ref this));
         }
 
-        public partial struct Vtbl
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void set_gc_handle(void* handle)
         {
-            [NativeTypeName("void () noexcept")]
-            public delegate* unmanaged[Thiscall]<FWindow*, void> Dispose;
-
-            [NativeTypeName("size_t () const")]
-            public delegate* unmanaged[Thiscall]<FWindow*, nuint> AddRef;
-
-            [NativeTypeName("size_t ()")]
-            public delegate* unmanaged[Thiscall]<FWindow*, nuint> Release;
+            ((delegate* unmanaged[Thiscall]<FWindow*, void*, void>)(lpVtbl[3]))((FWindow*)Unsafe.AsPointer(ref this), handle);
         }
+    }
+
+    public static partial class FFI
+    {
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?exit@ccc@@YAXH@Z", ExactSpelling = true)]
+        public static extern void exit(int code);
     }
 }

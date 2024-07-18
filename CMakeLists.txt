@@ -95,14 +95,15 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/api/Time.h
         src/api/App.h
         src/api/FnPtrs.h
-        src/api/IWindow.cc
-        src/api/IWindow.h
+        src/api/FWindow.cc
+        src/api/FWindow.h
         src/api/Api.h
         src/utils/utf8_utf16.cc
         src/utils/utf8_utf16.h
         src/utils/String.cc
         src/utils/String.h
         src/utils/Rc.h
+        src/api/Api.cc
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

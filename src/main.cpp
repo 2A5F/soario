@@ -98,7 +98,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ccc::app_fn_vtb() = init_result.fn_vtb;
 
         std::thread([] {
-            ccc::app_fn_vtb().p_fn_start();
+            ccc::app_fn_vtb().start();
 
             SDL_Event event{
                 .quit = {

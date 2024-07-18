@@ -1,4 +1,4 @@
-#include "IWindow.h"
+#include "FWindow.h"
 
 #include "../utils/utf8_utf16.h"
 #include "../window/Window.h"
@@ -33,6 +33,7 @@ namespace ccc {
         SDL_DestroySemaphore(param_pack.semaphore);
         if (r != 0) throw sdl_error();
 
-        return param_pack.window.leak();
+        FWindow *win = param_pack.window.leak();
+        return win;
     }
 } // ccc

@@ -10,5 +10,12 @@ public static class App
     {
         Console.WriteLine("Start");
         MainWindow = new Window(new() { Title = "测试", Size = new(1280, 720), MinSize = new(640, 360) });
+        
+        while (true)
+        {
+            Thread.Sleep(100);
+            MainWindow.Dispose();
+            Application.Exit();
+        }
     }
 }

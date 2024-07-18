@@ -3,6 +3,8 @@
 #include <atomic>
 
 namespace ccc {
+    __declspec(dllexport) void exit(int code);
+
     struct FObject {
         virtual ~FObject() = default;
 

@@ -62,7 +62,7 @@ private: \
         size_t cur = m_weak.load(std::memory_order_relaxed); \
     re_try: \
         if (cur == 0) return false; \
-        if (m_strong.compare_exchange_weak(cur, cur + 1, std::memory_order_acquire, std::memory_order_relaxed)) { \
+        if (m_weak.compare_exchange_weak(cur, cur + 1, std::memory_order_acquire, std::memory_order_relaxed)) { \
             return true; \
         } \
         goto re_try; \

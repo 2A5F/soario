@@ -5,7 +5,7 @@
 #include <SDL3/SDL.h>
 
 #include "../pch.h"
-#include "../api/IWindow.h"
+#include "../api/FWindow.h"
 #include "../utils/Object.h"
 #include "../utils/Rc.h"
 #include "../utils/String.h"
@@ -18,17 +18,24 @@ namespace ccc {
 
     class WindowHandle final : public virtual Object {
         SDL_Window *m_window{};
+        void *m_gc_handle{};
 
     public:
         explicit WindowHandle(SDL_Window *window);
 
         ~WindowHandle() override;
 
+        void set_gc_handle(void *handle);
+
+        void *gc_handle() const;
+
         uint32_t id() const;
 
         HWND hwnd() const;
 
         int2 size() const;
+
+        void close() const;
     };
 
     enum class SoarMsgEvent {
@@ -43,15 +50,17 @@ namespace ccc {
         int2 size;
         std::optional<int2> min_size;
         Rc<Window> window;
-        SDL_Semaphore  *semaphore;
+        SDL_Semaphore *semaphore;
 
-        void create() ;
+        void create();
     };
 
     class WindowSystem final : public virtual Object {
         friend Window;
 
         std::atomic_bool m_exited{false};
+
+        int m_exit_code{0};
 
         phmap::parallel_flat_hash_map<uint32_t, Weak<Window> > m_windows{};
 
@@ -66,6 +75,8 @@ namespace ccc {
         static int main_loop();
 
         static bool is_exited();
+
+        static void exit(int code);
     };
 
     struct WindowOptions {
@@ -95,7 +106,7 @@ namespace ccc {
         Rc<Window> build() const;
     };
 
-    class Window final : public virtual Object, public virtual FWindow {
+    class Window final : public FWindow {
         IMPL_RC(Window)
 
         friend WindowSystem;
@@ -124,5 +135,9 @@ namespace ccc {
 
         // 消除大小改变事件
         void use_resize();
+
+        void set_gc_handle(void *handle) override;
+
+        void *gc_handle() const;
     };
 } // ccc

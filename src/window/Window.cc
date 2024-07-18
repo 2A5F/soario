@@ -4,6 +4,7 @@
 #include <SDL3/SDL.h>
 
 #include "dwmapi.h"
+#include "../App.h"
 #include "../render/RenderContext.h"
 
 #include "../utils/sdl_error.h"
@@ -29,16 +30,28 @@ namespace ccc {
     }
 
     WindowHandle::~WindowHandle() {
-        SDL_DestroyWindow(m_window);
+        if (const auto window = std::exchange(m_window, nullptr)) {
+            SDL_DestroyWindow(window);
+        }
+    }
+
+    void WindowHandle::set_gc_handle(void *handle) {
+        m_gc_handle = handle;
+    }
+
+    void *WindowHandle::gc_handle() const {
+        return m_gc_handle;
     }
 
     uint32_t WindowHandle::id() const {
+        if (!m_window) throw std::exception("m_window is null");
         const auto id = SDL_GetWindowID(m_window);
         if (id == 0) throw sdl_error();
         return id;
     }
 
     HWND WindowHandle::hwnd() const {
+        if (!m_window) throw std::exception("m_window is null");
         const auto props = SDL_GetWindowProperties(m_window);
         if (props == 0) throw sdl_error();
         const auto hwnd = SDL_GetPointerProperty(props, SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr);
@@ -46,6 +59,7 @@ namespace ccc {
     }
 
     int2 WindowHandle::size() const {
+        if (!m_window) throw std::exception("m_window is null");
         int w, h;
         if (0 != SDL_GetWindowSizeInPixels(m_window, &w, &h)) {
             throw sdl_error();
@@ -59,6 +73,7 @@ namespace ccc {
             .size(size.x, size.y);
         if (min_size.has_value()) builder.min_size(min_size.value().x, min_size.value().y);
         window = builder.build();
+        if (SDL_PostSemaphore(semaphore) != 0) throw sdl_error();
     }
 
     void WindowSystem::init() {
@@ -77,12 +92,15 @@ namespace ccc {
             if (event->type == SDL_EVENT_WINDOW_RESIZED) {
                 if (const auto win = s_instance->m_windows[event->window.windowID].upgrade()) {
                     win->m_resized = true;
+                    app_fn_vtb().window_event_handle(win->gc_handle(), FWindowEventType::Resize, nullptr);
+                }
+            } else if (event->type == SDL_EVENT_WINDOW_CLOSE_REQUESTED) {
+                if (const auto win = s_instance->m_windows[event->window.windowID].upgrade()) {
+                    app_fn_vtb().window_event_handle(win->gc_handle(), FWindowEventType::Close, nullptr);
                 }
             }
-            // spdlog::debug(std::format("{}", std::this_thread::get_id()));
             return 0;
         }, nullptr);
-        // spdlog::debug(std::format("main {}", std::this_thread::get_id()));
 
         while (!s_instance->m_exited.load()) {
             SDL_Event event;
@@ -103,11 +121,16 @@ namespace ccc {
                 }
             }
         }
-        return 0;
+        return s_instance->m_exit_code;
     }
 
     bool WindowSystem::is_exited() {
         return s_instance->m_exited.load();
+    }
+
+    void WindowSystem::exit(int code) {
+        s_instance->m_exited = true;
+        s_instance->m_exit_code = code;
     }
 
     Rc<Window> WindowBuilder::build() const {
@@ -141,7 +164,6 @@ namespace ccc {
         return win;
     }
 
-
     const std::shared_ptr<RenderContext> &Window::render_context() {
         if (m_render_context == nullptr) {
             m_render_context = RenderContext::create(*this);
@@ -167,5 +189,13 @@ namespace ccc {
 
     void Window::use_resize() {
         m_resized = false;
+    }
+
+    void Window::set_gc_handle(void *handle) {
+        m_inner->set_gc_handle(handle);
+    }
+
+    void *Window::gc_handle() const {
+        return m_inner->gc_handle();
     }
 } // ccc
