@@ -1,16 +1,11 @@
 #pragma once
 #include <chrono>
 #include <ctime>
+#include "../api/Time.h"
 
 namespace ccc {
     struct Time final {
-        std::chrono::steady_clock::time_point start_time;
-        std::chrono::steady_clock::time_point last_time;
-        std::chrono::steady_clock::time_point now_time;
-        std::chrono::steady_clock::duration delta_time_raw;
-        std::chrono::steady_clock::duration total_time_raw;
-        double delta_time;
-        double total_time;
+        TimeData data;
 
         void init();
 
@@ -22,6 +17,8 @@ namespace ccc {
     };
 
     namespace time {
+        TimeData *get_data_ptr();
+
         void init();
 
         void tick();

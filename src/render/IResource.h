@@ -1,8 +1,11 @@
 #pragma once
-#include "../utils/IObject.h"
+#include <concepts>
+#include <exception>
+
+#include "../utils/Object.h"
 
 namespace ccc {
-    class IResource : public virtual IObject {
+    class IResource : public virtual Object {
         size_t m_resource_owner_id;
 
     public:
@@ -16,7 +19,7 @@ namespace ccc {
         }
     };
 
-    class ResourceOwner final : public virtual IObject {
+    class ResourceOwner final : public virtual Object {
         size_t m_resource_owner_id;
 
     public:

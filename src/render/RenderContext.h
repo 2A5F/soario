@@ -15,7 +15,7 @@
 #include "GpuSurface.h"
 
 namespace ccc {
-    class RenderContext final : public virtual IObject {
+    class RenderContext final : public virtual Object {
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
         friend FrameContext;

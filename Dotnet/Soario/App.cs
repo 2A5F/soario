@@ -1,9 +1,14 @@
-﻿using System.Runtime.InteropServices;
+﻿using Soario.Utils;
+using Soario.Windowing;
 
 namespace Soario;
 
-public class App
+public static class App
 {
-    [UnmanagedCallersOnly]
-    public static int Add(int a, int b) => a + b;
+    public static Window MainWindow = null!;
+    public static void Start()
+    {
+        Console.WriteLine("Start");
+        MainWindow = new Window(new() { Title = "测试", Size = new(1280, 720), MinSize = new(640, 360) });
+    }
 }

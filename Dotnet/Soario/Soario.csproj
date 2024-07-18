@@ -6,6 +6,17 @@
         <Nullable>enable</Nullable>
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <OutDir Condition=" '$(Configuration)' == 'Debug' ">../../build/debug/bin/managed</OutDir>
+        <OutDir Condition=" '$(Configuration)' == 'Release' ">../../build/release/bin/managed</OutDir>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Coplt.Mathematics" Version="0.0.0" />
+    </ItemGroup>
+
+    <Target Name="FFI" BeforeTargets="PrepareForBuild" Outputs="Native/FFI.cs">
+        <Exec Command="ClangSharpPInvokeGenerator @GenerateBinding.rsp" />
+    </Target>
+    
 </Project>

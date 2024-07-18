@@ -6,7 +6,9 @@
 #include <coreclr_delegates.h>
 #include <hostfxr.h>
 
+#include "Time.h"
 #include "../Args.h"
+#include "../api/Init.h"
 #include "../render/FrameContext.h"
 
 namespace ccc {
@@ -26,7 +28,7 @@ namespace ccc {
         void *get_export(void *, const char *);
     }
 
-    void load_dotnet() {
+    void load_dotnet(InitParams& init_params, InitResult& result) {
         const auto &args = Args::get();
         auto path = std::filesystem::path(args.exe_path);
         path = path.parent_path();
@@ -48,27 +50,25 @@ namespace ccc {
         load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path.c_str());
         assert(load_assembly_and_get_function_pointer != nullptr && "Failure: get_dotnet_load_assembly()");
 
-        const char_t *dotnet_type = L"Soario.App, Soario";
-        const char_t *dotnet_type_method = L"Add";
+        const char_t *dotnet_type = L"Soario.Entry, Soario";
+        const char_t *dotnet_type_method = L"Init";
 
-        typedef int32_t (CORECLR_DELEGATE_CALLTYPE *custom_entry_point_fn)(int32_t a, int32_t b);
-        custom_entry_point_fn add = nullptr;
-        int rc = load_assembly_and_get_function_pointer(
+        typedef void (CORECLR_DELEGATE_CALLTYPE *custom_entry_point_fn)(InitParams *, InitResult *);
+        custom_entry_point_fn init = nullptr;
+        const int rc = load_assembly_and_get_function_pointer(
             dll_path.c_str(),
             dotnet_type,
             dotnet_type_method,
             UNMANAGEDCALLERSONLY_METHOD /*delegate_type_name*/,
             nullptr,
-            (void **) &add);
+            (void **) &init);
 
-        spdlog::info(std::format("{}", rc));
-
-        if (rc != 0 || add == nullptr) {
+        if (rc != 0 || init == nullptr) {
             throw std::exception("Failed to load dotnet runtime2");
         }
 
-        auto r = add(123, 456);
-        spdlog::info(std::format("{}", r));
+        init_params.p_time_data = time::get_data_ptr();
+        init(&init_params, &result);
     }
 
     namespace {

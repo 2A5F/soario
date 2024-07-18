@@ -5,7 +5,10 @@
 #include <SDL3/SDL.h>
 
 #include "../pch.h"
-#include "../utils/IObject.h"
+#include "../api/IWindow.h"
+#include "../utils/Object.h"
+#include "../utils/Rc.h"
+#include "../utils/String.h"
 
 #include "parallel_hashmap/phmap.h"
 
@@ -13,7 +16,7 @@ namespace ccc {
     class Window;
     class RenderContext;
 
-    class WindowHandle final : public virtual IObject {
+    class WindowHandle final : public virtual Object {
         SDL_Window *m_window{};
 
     public:
@@ -28,12 +31,29 @@ namespace ccc {
         int2 size() const;
     };
 
-    class WindowSystem final : public virtual IObject {
+    enum class SoarMsgEvent {
+        // 无操作，忽略
+        None = 0,
+        // 创建窗口 data1 包含窗口创建参数
+        CreateWindow = 1,
+    };
+
+    struct WindowCreateParamPack {
+        String title;
+        int2 size;
+        std::optional<int2> min_size;
+        Rc<Window> window;
+        SDL_Semaphore  *semaphore;
+
+        void create() ;
+    };
+
+    class WindowSystem final : public virtual Object {
         friend Window;
 
         std::atomic_bool m_exited{false};
 
-        phmap::parallel_flat_hash_map<uint32_t, std::weak_ptr<Window> > m_windows{};
+        phmap::parallel_flat_hash_map<uint32_t, Weak<Window> > m_windows{};
 
         explicit WindowSystem() {
         }
@@ -49,7 +69,7 @@ namespace ccc {
     };
 
     struct WindowOptions {
-        std::string title;
+        const char *title;
         int2 size;
         std::optional<int2> min_size;
     };
@@ -57,8 +77,8 @@ namespace ccc {
     struct WindowBuilder {
         WindowOptions options;
 
-        WindowBuilder &title(std::string &&title) {
-            options.title = std::move(title);
+        WindowBuilder &title(const char *title) {
+            options.title = title;
             return *this;
         }
 
@@ -72,10 +92,12 @@ namespace ccc {
             return *this;
         }
 
-        std::shared_ptr<Window> build() const;
+        Rc<Window> build() const;
     };
 
-    class Window final : public virtual IObject {
+    class Window final : public virtual Object, public virtual FWindow {
+        IMPL_RC(Window)
+
         friend WindowSystem;
 
         std::shared_ptr<WindowHandle> m_inner{};
@@ -86,7 +108,7 @@ namespace ccc {
     public:
         static WindowBuilder builder();
 
-        static std::shared_ptr<Window> create(const WindowOptions &options);
+        static Rc<Window> create(const WindowOptions &options);
 
         // 获取或创建渲染上下文
         const std::shared_ptr<RenderContext> &render_context();

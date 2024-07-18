@@ -1,4 +1,7 @@
 #include "IResource.h"
+
+#include <atomic>
+
 namespace ccc {
     namespace {
         std::atomic_size_t s_resource_owner_id_inc;

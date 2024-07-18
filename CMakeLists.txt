@@ -79,7 +79,7 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/IRT.h
         src/render/GpuSurface.cc
         src/render/GpuSurface.h
-        src/utils/IObject.h
+        src/utils/Object.h
         src/App.cc
         src/App.h
         src/utils/Time.cc
@@ -91,6 +91,18 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/utils/new-delete.cc
         src/utils/dotnet.cc
         src/utils/dotnet.h
+        src/api/Init.h
+        src/api/Time.h
+        src/api/App.h
+        src/api/FnPtrs.h
+        src/api/IWindow.cc
+        src/api/IWindow.h
+        src/api/Api.h
+        src/utils/utf8_utf16.cc
+        src/utils/utf8_utf16.h
+        src/utils/String.cc
+        src/utils/String.h
+        src/utils/Rc.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

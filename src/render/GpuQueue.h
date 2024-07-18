@@ -6,13 +6,13 @@
 #include "GpuSurface.h"
 
 #include "../pch.h"
-#include "../utils/IObject.h"
+#include "../utils/Object.h"
 
 namespace ccc {
     class RenderContext;
     struct FrameContext;
 
-    class GpuQueue final : public virtual IObject {
+    class GpuQueue final : public virtual Object {
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
         com_ptr<ID3D12Device> m_device{};

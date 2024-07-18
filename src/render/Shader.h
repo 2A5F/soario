@@ -1,7 +1,7 @@
 #pragma once
-#include "../utils/IObject.h"
+#include "../utils/Object.h"
 
 namespace ccc {
-    class Shader final : public virtual IObject {
+    class Shader final : public virtual Object {
     };
 } // ccc

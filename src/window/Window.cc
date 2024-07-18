@@ -53,6 +53,14 @@ namespace ccc {
         return int2(w, h);
     }
 
+    void WindowCreateParamPack::create() {
+        auto builder = Window::builder()
+            .title(title.c_str())
+            .size(size.x, size.y);
+        if (min_size.has_value()) builder.min_size(min_size.value().x, min_size.value().y);
+        window = builder.build();
+    }
+
     void WindowSystem::init() {
         s_instance = std::unique_ptr<WindowSystem>(new WindowSystem());
         if (SDL_Init(SDL_INIT_VIDEO)) {
@@ -67,23 +75,32 @@ namespace ccc {
     int WindowSystem::main_loop() {
         SDL_AddEventWatch([](void *data, SDL_Event *event) {
             if (event->type == SDL_EVENT_WINDOW_RESIZED) {
-                if (const auto win = s_instance->m_windows[event->window.windowID].lock()) {
+                if (const auto win = s_instance->m_windows[event->window.windowID].upgrade()) {
                     win->m_resized = true;
                 }
             }
+            // spdlog::debug(std::format("{}", std::this_thread::get_id()));
             return 0;
         }, nullptr);
+        // spdlog::debug(std::format("main {}", std::this_thread::get_id()));
 
         while (!s_instance->m_exited.load()) {
             SDL_Event event;
-            if (SDL_WaitEvent(&event)) {
+            if (SDL_WaitEventTimeout(&event, 100)) {
                 if (event.type == SDL_EVENT_QUIT) {
                     s_instance->m_exited.store(true);
                 } else if (event.type == SDL_EVENT_WINDOW_DESTROYED) {
                     s_instance->m_windows.erase(event.window.windowID);
+                } else if (event.type == SDL_EVENT_USER) {
+                    switch (static_cast<SoarMsgEvent>(event.user.code)) {
+                        case SoarMsgEvent::CreateWindowW: {
+                            const auto pack = static_cast<WindowCreateParamPack *>(event.user.data1);
+                            pack->create();
+                            break;
+                        }
+                        default: ;
+                    }
                 }
-            } else {
-                throw sdl_error();
             }
         }
         return 0;
@@ -93,7 +110,7 @@ namespace ccc {
         return s_instance->m_exited.load();
     }
 
-    std::shared_ptr<Window> WindowBuilder::build() const {
+    Rc<Window> WindowBuilder::build() const {
         return Window::create(options);
     }
 
@@ -101,9 +118,9 @@ namespace ccc {
         return WindowBuilder();
     }
 
-    std::shared_ptr<Window> Window::create(const WindowOptions &options) {
+    Rc<Window> Window::create(const WindowOptions &options) {
         const auto sw = SDL_CreateWindow(
-            options.title.c_str(), options.size.x, options.size.y,
+            options.title, options.size.x, options.size.y,
             SDL_WINDOW_RESIZABLE
         );
         if (!sw) {
@@ -114,7 +131,7 @@ namespace ccc {
             if (const auto r = SDL_SetWindowMinimumSize(sw, size.x, size.y); r != 0)
                 throw sdl_error();
         }
-        auto win = std::make_shared<Window>();
+        Rc win(new Window());
         win->m_inner = std::make_shared<WindowHandle>(sw);
         const auto hwnd = win->hwnd();
         SetMica(hwnd);
