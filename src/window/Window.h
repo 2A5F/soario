@@ -5,7 +5,7 @@
 #include <SDL3/SDL.h>
 
 #include "../pch.h"
-#include "../api/FWindow.h"
+#include "../ffi/FWindow.h"
 #include "../utils/Object.h"
 #include "../utils/Rc.h"
 #include "../utils/String.h"
@@ -36,6 +36,8 @@ namespace ccc
         HWND hwnd() const;
 
         int2 size() const;
+
+        void get_size(FError* err, FInt2* size) const;
     };
 
     enum class SoarMsgEvent
@@ -146,8 +148,10 @@ namespace ccc
         // 消除大小改变事件
         void use_resize();
 
-        void set_gc_handle(void* handle) override;
+        void set_gc_handle(void* handle) noexcept override;
 
         void* gc_handle() const;
+
+        void get_size(FError* err, FInt2* size) const noexcept override;
     };
 } // ccc

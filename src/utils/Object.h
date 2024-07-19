@@ -2,7 +2,7 @@
 #include <atomic>
 #include <winrt/base.h>
 
-#include "../api/Api.h"
+#include "../ffi/FFI.h"
 
 namespace ccc
 {

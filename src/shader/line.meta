@@ -1,6 +1,8 @@
-src: ./line.hlsl
+type: shader
+id: deda5ee8-a569-4c9b-8677-27adb25eb056
 items:
-  - type: ms
+  - name: mesh
+    type: ms
     main: mesh
   # - type: ps
   #   main: pixel

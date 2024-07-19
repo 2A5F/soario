@@ -2,12 +2,13 @@
 
 #include "../utils/utf8_utf16.h"
 #include "../window/Window.h"
-#include "Api.h"
+#include "FFI.h"
+#include "../utils/Err.h"
 #include "../utils/sdl_error.h"
 
 namespace ccc
 {
-    FWindow* FWindow::create(const WindowCreateOptions& options)
+    FWindow* FWindow::create(FError& err, const WindowCreateOptions& options) noexcept
     {
         auto title = utf16_to_utf8(
             std::wstring_view(reinterpret_cast<const wchar_t*>(options.title.ptr), options.title.len)
@@ -20,7 +21,10 @@ namespace ccc
             param_pack.min_size = int2(options.min_size.X, options.min_size.Y);
         param_pack.semaphore = SDL_CreateSemaphore(0);
         if (param_pack.semaphore == nullptr)
-            throw sdl_error();
+        {
+            err = make_sdl_error();
+            return nullptr;
+        }
 
         SDL_Event event{
             .user = {
@@ -31,12 +35,18 @@ namespace ccc
             }
         };
         if (SDL_PushEvent(&event) < 0)
-            throw sdl_error();
+        {
+            err = make_sdl_error();
+            return nullptr;
+        }
 
         const int r = SDL_WaitSemaphore(param_pack.semaphore);
         SDL_DestroySemaphore(param_pack.semaphore);
         if (r != 0)
-            throw sdl_error();
+        {
+            err = make_sdl_error();
+            return nullptr;
+        }
 
         FWindow* win = param_pack.window.leak();
         return win;

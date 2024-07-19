@@ -8,6 +8,7 @@
 #include "../render/RenderContext.h"
 
 #include "../utils/sdl_error.h"
+#include "../utils/Err.h"
 
 namespace ccc
 {
@@ -71,13 +72,21 @@ namespace ccc
 
     int2 WindowHandle::size() const
     {
-        if (!m_window) throw std::exception("m_window is null");
+        if (!m_window) throw std::exception("The window was destroyed");
         int w, h;
         if (0 != SDL_GetWindowSizeInPixels(m_window, &w, &h))
         {
             throw sdl_error();
         }
         return int2(w, h);
+    }
+
+    void WindowHandle::get_size(FError* err, FInt2* size) const
+    {
+        if (!m_window) *err = make_error(FErrorType::Common, u"The window was destroyed");
+        else if (0 != SDL_GetWindowSizeInPixels(m_window, &size->X, &size->Y))
+            *err = make_sdl_error();
+        else *err = make_error_ok();
     }
 
     void WindowCreateParamPack::create()
@@ -240,7 +249,7 @@ namespace ccc
         m_resized = false;
     }
 
-    void Window::set_gc_handle(void* handle)
+    void Window::set_gc_handle(void* handle) noexcept
     {
         m_inner->set_gc_handle(handle);
     }
@@ -248,5 +257,10 @@ namespace ccc
     void* Window::gc_handle() const
     {
         return m_inner->gc_handle();
+    }
+
+    void Window::get_size(FError* err, FInt2* size) const noexcept
+    {
+        m_inner->get_size(err, size);
     }
 } // ccc

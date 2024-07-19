@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#include "Api.h"
+#include "FFI.h"
 
 namespace ccc
 {
@@ -26,8 +26,10 @@ namespace ccc
 
     struct FWindow : FObject
     {
-        __declspec(dllexport) static FWindow* create(const WindowCreateOptions& options);
+        __declspec(dllexport) static FWindow* create(FError& err, const WindowCreateOptions& options) noexcept;
 
-        virtual void set_gc_handle(void* handle) = 0;
+        virtual void set_gc_handle(void* handle) noexcept = 0;
+
+        virtual void get_size(FError* err, FInt2* size) const noexcept = 0;
     };
 } // ccc

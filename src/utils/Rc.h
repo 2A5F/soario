@@ -11,12 +11,12 @@
     mutable std::atomic_size_t m_weak{1}; \
     \
 public: \
-    size_t AddRef() const override \
+    size_t AddRef() const noexcept override \
     { \
         return strong_clone(); \
     } \
     \
-    size_t Release() override \
+    size_t Release() noexcept override \
     { \
         return strong_drop(); \
     } \

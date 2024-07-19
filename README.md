@@ -11,6 +11,10 @@
     ```
     deno 1.45.2
     ```
+- 需要环境安装 [ClangSharpPInvokeGenerator](https://github.com/dotnet/ClangSharp)
+  ```
+  dotnet tool install --global ClangSharpPInvokeGenerator --version <版本>
+  ```
 
 ## 备注 
 - 命名空间 `ccc`只是方便敲，没有特殊意义

@@ -23,6 +23,7 @@
 
 #include <winrt/Windows.UI.Core.h>
 
+#include "render/Gpu.h"
 #include "utils/dotnet.h"
 
 extern "C" {
@@ -99,10 +100,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     {
         ccc::WindowSystem::init();
 
+        ccc::Gpu::set_global(new ccc::Gpu());
+
+        auto gpu = ccc::Gpu::global();
+
         ccc::time::init();
         ccc::time::tick();
         ccc::InitParams init_params{};
         init_params.p_time_data = ccc::time::get_data_ptr();
+        init_params.p_gpu = gpu.leak();
         ccc::InitResult init_result;
         load_dotnet(init_params, init_result);
         ccc::app_fn_vtb() = init_result.fn_vtb;

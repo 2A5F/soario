@@ -7,16 +7,21 @@
         <EnableDynamicLoading>true</EnableDynamicLoading>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+        <NoWarn>CS0169</NoWarn>
         <OutDir Condition=" '$(Configuration)' == 'Debug' ">../../build/debug/bin/managed</OutDir>
         <OutDir Condition=" '$(Configuration)' == 'Release' ">../../build/release/bin/managed</OutDir>
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Coplt.Mathematics" Version="0.0.0" />
+        <PackageReference Include="Coplt.Mathematics" Version="0.0.0"/>
     </ItemGroup>
 
-    <Target Name="FFI" BeforeTargets="PrepareForBuild" Outputs="Native/FFI.cs">
-        <Exec Command="ClangSharpPInvokeGenerator @GenerateBinding.rsp" />
+    <ItemGroup>
+        <ApiHeads Include="../../src/api/**/*.h" Visible="false"/>
+    </ItemGroup>
+
+    <Target Name="FFI" BeforeTargets="PrepareForBuild" Inputs="@(ApiHeads)" Outputs="Native/FFI.cs">
+        <Exec Command="ClangSharpPInvokeGenerator @GenerateBinding.rsp"/>
     </Target>
-    
+
 </Project>

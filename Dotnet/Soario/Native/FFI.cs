@@ -73,10 +73,95 @@ namespace Soario.Native
         public int Y;
     }
 
+    public partial struct FFloat2
+    {
+        [NativeTypeName("int32_t")]
+        public int X;
+
+        [NativeTypeName("int32_t")]
+        public int Y;
+    }
+
+    public partial struct FFloat3
+    {
+        public float X;
+
+        public float Y;
+
+        public float Z;
+
+        private float _pad;
+    }
+
+    public partial struct FFloat4
+    {
+        public float X;
+
+        public float Y;
+
+        public float Z;
+
+        public float W;
+    }
+
+    public enum FErrorType
+    {
+        None,
+        Common,
+        Sdl,
+        HResult,
+    }
+
+    public enum FErrorMsgType
+    {
+        Utf8c,
+        Utf16c,
+        Utf8s,
+        Utf16s,
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public unsafe partial struct FErrorMsg
+    {
+        [FieldOffset(0)]
+        [NativeTypeName("const char *")]
+        public sbyte* u8c;
+
+        [FieldOffset(0)]
+        [NativeTypeName("const wchar_t *")]
+        public ushort* u16c;
+
+        [FieldOffset(0)]
+        [NativeTypeName("ccc::FrStr8")]
+        public FrStr8 u8s;
+
+        [FieldOffset(0)]
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 u16s;
+    }
+
+    public partial struct FError
+    {
+        [NativeTypeName("ccc::FErrorType")]
+        public FErrorType type;
+
+        [NativeTypeName("ccc::FErrorMsgType")]
+        public FErrorMsgType msg_type;
+
+        [NativeTypeName("ccc::FErrorMsg")]
+        public FErrorMsg msg;
+
+        [NativeTypeName("uint64_t")]
+        public ulong data;
+    }
+
     public unsafe partial struct InitParams
     {
         [NativeTypeName("ccc::TimeData *")]
         public TimeData* p_time_data;
+
+        [NativeTypeName("ccc::FGpu *")]
+        public FGpu* p_gpu;
     }
 
     public partial struct InitResult
@@ -149,9 +234,9 @@ namespace Soario.Native
     {
         public void** lpVtbl;
 
-        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?create@FWindow@ccc@@SAPEAU12@AEBUWindowCreateOptions@2@@Z", ExactSpelling = true)]
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?create@FWindow@ccc@@SAPEAU12@AEAUFError@2@AEBUWindowCreateOptions@2@@Z", ExactSpelling = true)]
         [return: NativeTypeName("ccc::FWindow *")]
-        public static extern FWindow* create([NativeTypeName("const WindowCreateOptions &")] WindowCreateOptions* options);
+        public static extern FWindow* create([NativeTypeName("ccc::FError &")] FError* err, [NativeTypeName("const WindowCreateOptions &")] WindowCreateOptions* options);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("size_t")]
@@ -171,6 +256,32 @@ namespace Soario.Native
         public void set_gc_handle(void* handle)
         {
             ((delegate* unmanaged[Thiscall]<FWindow*, void*, void>)(lpVtbl[3]))((FWindow*)Unsafe.AsPointer(ref this), handle);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void get_size([NativeTypeName("ccc::FError *")] FError* err, [NativeTypeName("ccc::FInt2 *")] FInt2* size)
+        {
+            ((delegate* unmanaged[Thiscall]<FWindow*, FError*, FInt2*, void>)(lpVtbl[4]))((FWindow*)Unsafe.AsPointer(ref this), err, size);
+        }
+    }
+
+    [NativeTypeName("struct FGpu : ccc::FObject")]
+    public unsafe partial struct FGpu
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpu*, nuint>)(lpVtbl[1]))((FGpu*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpu*, nuint>)(lpVtbl[2]))((FGpu*)Unsafe.AsPointer(ref this));
         }
     }
 

@@ -8,7 +8,7 @@
 
 #include "Time.h"
 #include "../Args.h"
-#include "../api/Init.h"
+#include "../ffi/Init.h"
 #include "../render/FrameContext.h"
 
 namespace ccc

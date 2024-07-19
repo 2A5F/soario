@@ -91,19 +91,26 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/utils/new-delete.cc
         src/utils/dotnet.cc
         src/utils/dotnet.h
-        src/api/Init.h
-        src/api/Time.h
-        src/api/App.h
-        src/api/FnPtrs.h
-        src/api/FWindow.cc
-        src/api/FWindow.h
-        src/api/Api.h
+        src/ffi/Init.h
+        src/ffi/Time.h
+        src/ffi/App.h
+        src/ffi/FnPtrs.h
+        src/ffi/FWindow.cc
+        src/ffi/FWindow.h
+        src/ffi/FFI.h
         src/utils/utf8_utf16.cc
         src/utils/utf8_utf16.h
         src/utils/String.cc
         src/utils/String.h
         src/utils/Rc.h
-        src/api/Api.cc
+        src/ffi/FFI.cc
+        src/render/Gpu.cc
+        src/render/Gpu.h
+        src/ffi/gpu/FGpu.h
+        src/ffi/gpu/FGpu.cc
+        src/utils/Err.h
+        src/ffi/gpu/FShader.cc
+        src/ffi/gpu/FShader.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)
@@ -148,7 +155,7 @@ foreach (FILE ${HLSL_ITEMS})
     get_filename_component(FILE_WE ${FILE} NAME_WE)
     add_custom_command(TARGET shaders
             POST_BUILD
-            COMMAND deno run -A ./scripts/build_shader.ts ${DIRECTX_DXC_TOOL} ${CMAKE_BINARY_DIR} ${FILE_WE} ${FILE} $<IF:$<CONFIG:DEBUG>,D,R>
+            COMMAND deno run -A ./scripts/build_shader.ts ${DIRECTX_DXC_TOOL} ${CMAKE_BINARY_DIR} ${FILE_WE} ${FILE} $<IF:$<CONFIG:DEBUG>,D,R> ${CMAKE_CURRENT_SOURCE_DIR}/src/
             MAIN_DEPENDENCY ${FILE}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             VERBATIM)

@@ -7,8 +7,8 @@ namespace Soario.Windowing;
 
 public class Window : IDisposable
 {
-    internal unsafe FWindow* inner;
-    internal GCHandle self_handle;
+    internal unsafe FWindow* m_inner;
+    internal GCHandle m_self_handle;
 
     #region Create
 
@@ -31,12 +31,15 @@ public class Window : IDisposable
                 has_min_size = options.MinSize.HasValue ? 1 : 0,
             };
 
-            inner = FWindow.create(&f_options);
+            FError err;
+            m_inner = FWindow.create(&err, &f_options);
 
-            if (inner == null) throw new WindowException("创建窗口失败");
+            if (err) err.Throw();
 
-            self_handle = GCHandle.Alloc(this, GCHandleType.Weak);
-            inner->set_gc_handle((void*)GCHandle.ToIntPtr(self_handle));
+            if (m_inner == null) throw new WindowException("创建窗口失败");
+
+            m_self_handle = GCHandle.Alloc(this, GCHandleType.Weak);
+            m_inner->set_gc_handle((void*)GCHandle.ToIntPtr(m_self_handle));
         }
     }
 
@@ -46,11 +49,11 @@ public class Window : IDisposable
 
     private unsafe void ReleaseUnmanagedResources()
     {
-        if (inner == null) return;
-        inner->Release();
-        inner = null;
-        self_handle.Free();
-        self_handle = default;
+        if (m_inner == null) return;
+        m_inner->Release();
+        m_inner = null;
+        m_self_handle.Free();
+        m_self_handle = default;
     }
 
     protected virtual void Dispose(bool disposing)
@@ -65,6 +68,26 @@ public class Window : IDisposable
     }
 
     ~Window() => Dispose(false);
+
+    #endregion
+
+    #region GetSize
+
+    /// <summary>
+    /// 获取窗口大小
+    /// </summary>
+    public unsafe int2 Size
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            FError err;
+            FInt2 f_size;
+            m_inner->get_size(&err, &f_size);
+            if (err) err.Throw();
+            return Unsafe.BitCast<FInt2, int2>(f_size);
+        }
+    }
 
     #endregion
 

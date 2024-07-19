@@ -22,8 +22,10 @@ namespace ccc
         friend RenderContext;
         friend GpuQueue;
 
+    public:
         static constexpr UINT FrameCount = 2;
 
+    private:
         std::shared_ptr<WindowHandle> m_window;
 
         com_ptr<ID3D12Device> m_device;

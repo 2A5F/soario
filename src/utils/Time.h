@@ -1,7 +1,7 @@
 #pragma once
 #include <chrono>
 #include <ctime>
-#include "../api/Time.h"
+#include "../ffi/Time.h"
 
 namespace ccc
 {

@@ -1,4 +1,5 @@
 ﻿#pragma once
+
 #include <memory>
 
 #include <dxgi1_2.h>
@@ -7,23 +8,20 @@
 #include "directx/d3d12.h"
 
 #include "D3D12MemAlloc.h"
-#include "GpuQueue.h"
 
 #include "../pch.h"
-#include "../window/Window.h"
-#include "FrameContext.h"
+#include "../ffi/gpu/FGpu.h"
+#include "../utils/Rc.h"
 #include "GpuSurface.h"
+#include "GpuQueue.h"
 
 namespace ccc
 {
-    class RenderContext final : public virtual Object
+    class Gpu final : public FGpu
     {
+        IMPL_RC(Gpu)
+
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
-
-        friend FrameContext;
-        friend GpuQueue;
-
-        std::shared_ptr<WindowHandle> m_window{};
 
         com_ptr<ID3D12Debug> m_debug_controller{};
         com_ptr<ID3D12InfoQueue1> m_info_queue{};
@@ -32,8 +30,6 @@ namespace ccc
         com_ptr<IDXGIFactory4> m_factory{};
         com_ptr<IDXGIAdapter1> m_adapter{};
         com_ptr<ID3D12Device> m_device{};
-
-        std::shared_ptr<GpuSurface> m_surface{};
 
         com_ptr<D3D12MA::Allocator> m_gpu_allocator{};
 
@@ -44,18 +40,14 @@ namespace ccc
         std::shared_ptr<ResourceOwner> m_resource_owner = std::make_shared<ResourceOwner>();
 
     public:
-        ~RenderContext() override;
+        ~Gpu() override;
 
-        static void set_global(std::shared_ptr<RenderContext> ctx);
+        explicit Gpu();
 
-        // 获取全局的默认渲染上下文
-        static std::shared_ptr<RenderContext> global();
+        // 获取全局默认的 Gpu 实例
+        static void set_global(Rc<Gpu> gpu);
 
-        static std::shared_ptr<RenderContext> create(const Window& window);
-
-        void on_resize(Window& window) const;
-
-        // 记录帧
-        void record_frame(const std::function<void(const FrameContext& ctx)>& cb);
+        // 获取全局默认的 Gpu 实例
+        static const Rc<Gpu>& global();
     };
 } // ccc

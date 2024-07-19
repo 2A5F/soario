@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../api/Init.h"
+#include "../ffi/Init.h"
 
 namespace ccc
 {
