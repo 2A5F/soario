@@ -155,6 +155,8 @@ namespace ccc
             throw std::exception("Mesh Shaders aren't supported!");
         }
 
+        winrt::check_hresult(DxcCreateInstance(CLSID_DxcUtils, RT_IID_PPV_ARGS(m_dxc_utils)));
+
         /* 创建队列 */
         {
             m_queue_direct = std::make_shared<GpuQueue>(

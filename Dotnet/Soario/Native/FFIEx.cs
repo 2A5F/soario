@@ -39,4 +39,10 @@ public unsafe partial struct FrStr8
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override string ToString() => Encoding.UTF8.GetString(AsSpan());
+
+    public FrStr8(byte* ptr, int len)
+    {
+        this.ptr = ptr;
+        this.len = (nuint)len;
+    }
 }

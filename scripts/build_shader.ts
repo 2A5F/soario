@@ -2,7 +2,7 @@ import * as path from "https://deno.land/std@0.224.0/path/mod.ts";
 import yaml from "npm:yaml";
 import { compress } from "https://deno.land/x/zip@v1.2.5/mod.ts";
 import { existsSync } from "https://deno.land/std@0.224.0/fs/exists.ts";
-import { ShaderMeta, ShaderMetaItem } from "./meta.ts";
+import { ShaderMeta, ShaderMetaPass } from "./meta.ts";
 
 console.log(
   "================================================== start build shader =================================================="
@@ -18,7 +18,9 @@ const is_debug = debug.toLowerCase() == "d";
 
 const meta_fiel_full_path = path.resolve(Deno.cwd(), file_path);
 
-const meta: ShaderMeta = yaml.parse(Deno.readTextFileSync(meta_fiel_full_path));
+const meta = yaml.parse(
+  Deno.readTextFileSync(meta_fiel_full_path)
+) as ShaderMeta;
 
 const tmp_output_path = path.resolve(build_output, "./shader/tmp", meta.id);
 Deno.mkdirSync(tmp_output_path, { recursive: true });
@@ -29,53 +31,70 @@ const meta_output_path = path.resolve(tmp_output_path, `meta.json`);
 const output_meta: {
   id: string;
   path: string;
-  items: Record<string, Omit<ShaderMetaItem, "src" | "main" | "name">>;
+  pass: Record<string, Omit<ShaderMetaPass, "src" | "main" | "name">>;
 } = {
   id: meta.id,
   path: shader_path,
-  items: {},
+  pass: {},
 };
 
 const files: string[] = [meta_output_path];
 
-for (const item of meta.items) {
-  const src = item.src || meta.src || `./${file_name}.hlsl`;
-  const src_path = path.resolve(meta_fiel_full_path, "..", src);
-  const name = item.name;
-  const type = item.type;
-  const sm = item.sm || "6_6";
+const stages = ["ps", "vs", "gs", "hs", "ds", "cs", "lib", "ms", "as"] as const;
 
-  const obj_output_path = path.resolve(tmp_output_path, `${name}.o`);
-  const re_output_path = path.resolve(tmp_output_path, `${name}.re`);
+for (const [name, pass] of Object.entries(meta.pass)) {
+  const src = pass.src || meta.src || `./${file_name}.hlsl`;
+  const src_path = path.resolve(meta_fiel_full_path, "..", src);
+  const sm = pass.sm || "6_6";
+
   // deno-lint-ignore no-explicit-any
-  const obj: any = { ...item };
+  const obj: any = { ...pass, stages: [] };
+  obj.sm = sm;
   delete obj.src;
   delete obj.name;
-  delete obj.main;
-  output_meta.items[name] = obj;
+  output_meta.pass[name] = obj;
 
-  files.push(obj_output_path, re_output_path);
+  for (const stage of stages) {
+    if (!(stage in pass)) continue;
 
-  const cmd = new Deno.Command(dxc, {
-    cwd: Deno.cwd(),
-    args: [
-      "-T",
-      `${type}_${sm}`,
-      "-E",
-      item.main,
-      is_debug ? "-Od" : "-O3",
-      "-Zi",
-      "-Qembed_debug",
-      "-Fo",
-      obj_output_path,
-      "-Fre",
-      re_output_path,
-      src_path,
-    ],
-    stdout: "inherit",
-    stderr: "inherit",
-  });
-  cmd.outputSync();
+    delete obj[stage];
+    obj.stages.push(stage);
+
+    const main = pass[stage];
+
+    const obj_output_path = path.resolve(tmp_output_path, `${name}.${stage}.o`);
+    const re_output_path = path.resolve(tmp_output_path, `${name}.${stage}.re`);
+    const asm_output_path = path.resolve(
+      tmp_output_path,
+      `${name}.${stage}.asm`
+    );
+
+    files.push(obj_output_path, re_output_path);
+
+    if (is_debug) files.push(asm_output_path);
+
+    const cmd = new Deno.Command(dxc, {
+      cwd: Deno.cwd(),
+      args: [
+        "-T",
+        `${stage}_${sm}`,
+        "-E",
+        main,
+        is_debug ? "-Od" : "-O3",
+        is_debug ? "-Zi" : "-Zs",
+        "-Qembed_debug",
+        "-Fo",
+        obj_output_path,
+        "-Fre",
+        re_output_path,
+        ...(is_debug ? ["-Fc", asm_output_path] : []),
+        src_path,
+      ],
+      stdout: "inherit",
+      stderr: "inherit",
+    });
+    cmd.outputSync();
+  }
 }
 
 Deno.writeTextFileSync(meta_output_path, JSON.stringify(output_meta));

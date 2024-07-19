@@ -7,6 +7,9 @@
 
 #include "directx/d3d12.h"
 
+#include <dxcapi.h>
+#include "directx/d3d12shader.h"
+
 #include "D3D12MemAlloc.h"
 
 #include "../pch.h"
@@ -21,7 +24,12 @@ namespace ccc
     {
         IMPL_RC(Gpu)
 
+    public:
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
+
+    private:
+        friend class ShaderPass;
+        friend struct ShaderModule;
 
         com_ptr<ID3D12Debug> m_debug_controller{};
         com_ptr<ID3D12InfoQueue1> m_info_queue{};
@@ -30,6 +38,9 @@ namespace ccc
         com_ptr<IDXGIFactory4> m_factory{};
         com_ptr<IDXGIAdapter1> m_adapter{};
         com_ptr<ID3D12Device> m_device{};
+
+        // todo 移到构建工具，运行时不携带 dxc
+        com_ptr<IDxcUtils> m_dxc_utils;
 
         com_ptr<D3D12MA::Allocator> m_gpu_allocator{};
 

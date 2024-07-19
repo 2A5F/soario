@@ -1,14 +1,10 @@
-﻿namespace Soario.Shading;
+﻿namespace Soario.Rendering;
 
 public enum ShaderStage
 {
     Ps = 1,
     Vs,
-    Gs,
-    Hs,
-    Ds,
     Cs,
-    Lin,
     Ms,
     As,
 }
@@ -17,10 +13,10 @@ public record struct ShaderMeta
 {
     public Guid Id { get; set; }
     public string Path { get; set; }
-    public Dictionary<string, ShaderPassMeta> Items { get; set; } 
+    public Dictionary<string, ShaderPassMeta> Pass { get; set; }
 }
 
 public record struct ShaderPassMeta
 {
-    public ShaderStage Type { get; set; }
+    public List<string> Stages { get; set; }
 }

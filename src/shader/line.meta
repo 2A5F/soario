@@ -1,8 +1,7 @@
-type: shader
 id: deda5ee8-a569-4c9b-8677-27adb25eb056
-items:
-  - name: mesh
-    type: ms
-    main: mesh
-  # - type: ps
-  #   main: pixel
+type: shader
+
+pass:
+  mesh:
+    ms: mesh
+    ps: pixel

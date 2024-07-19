@@ -1,6 +1,8 @@
 #pragma once
 #include "../ffi/FFI.h"
 
+#include "SDL3/SDL.h"
+
 namespace ccc
 {
     inline FError make_error_ok()

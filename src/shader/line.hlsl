@@ -21,3 +21,7 @@ void mesh(
    VertexOut o;
    verts[gtid] = o;
 }
+
+float4 pixel(VertexOut input) : SV_TARGET {
+   return 1;
+}

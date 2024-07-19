@@ -111,6 +111,8 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/utils/Err.h
         src/ffi/gpu/FShader.cc
         src/ffi/gpu/FShader.h
+        src/ffi/FMemory.cc
+        src/ffi/FMemory.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

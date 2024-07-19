@@ -1,6 +1,6 @@
 ﻿using Soario.Resources;
 
-namespace Soario.Shading;
+namespace Soario.Rendering;
 
 public static class Shaders
 {
