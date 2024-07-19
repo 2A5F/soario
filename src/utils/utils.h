@@ -5,7 +5,7 @@
 
 void RedirectIOToConsole();
 
-void SetSetThreadName(DWORD dwThreadID, const char *threadName);
+void SetSetThreadName(DWORD dwThreadID, const char* threadName);
 
 std::wstring Utf8ToUtf16(char const* str);
 

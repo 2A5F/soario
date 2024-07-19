@@ -26,16 +26,17 @@
 #include "utils/dotnet.h"
 
 extern "C" {
-__declspec(dllexport) extern const UINT D3D12SDKVersion = 614;
+    __declspec(dllexport) extern const UINT D3D12SDKVersion = 614;
 }
 
 extern "C" {
-__declspec(dllexport) extern const char *D3D12SDKPath = ".\\D3D12\\";
+    __declspec(dllexport) extern const char* D3D12SDKPath = ".\\D3D12\\";
 }
 
 _Use_decl_annotations_
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd) {
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nShowCmd)
+{
     RedirectIOToConsole();
 
     winrt::init_apartment();
@@ -45,16 +46,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     args::ArgumentParser arg_parser("Soario");
     args::HelpFlag arg_help(arg_parser, "help", "Display this help menu", {'h', "help"});
     args::Flag arg_debug(arg_parser, "debug", "Enable debug mode", {'D', "debug"});
-    try {
+    try
+    {
         arg_parser.ParseCLI(__argc, __argv);
-    } catch (const args::Help &) {
+    }
+    catch (const args::Help&)
+    {
         std::cout << arg_parser;
         return 0;
-    } catch (const args::ParseError &e) {
+    } catch (const args::ParseError& e)
+    {
         std::cerr << e.what() << std::endl;
         std::cerr << arg_parser;
         return 1;
-    } catch (args::ValidationError e) {
+    } catch (args::ValidationError e)
+    {
         std::cerr << e.what() << std::endl;
         std::cerr << arg_parser;
         return 1;
@@ -65,10 +71,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     spdlog::init_thread_pool(8192, 1);
     auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
     auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-        fmt::format("logs/{:%Y.%m.%d}.log", now), 1024 * 1024 * 10, 3);
+        fmt::format("logs/{:%Y.%m.%d}.log", now), 1024 * 1024 * 10, 3
+    );
     std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
     auto logger = std::make_shared<spdlog::async_logger>(
-        "", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block);
+        "", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block
+    );
     set_default_logger(logger);
 
     ccc::Args args;
@@ -78,7 +86,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     spdlog::info("start");
 
-    if (arg_debug) {
+    if (arg_debug)
+    {
         spdlog::warn("Debug mode enabled");
         spdlog::set_level(spdlog::level::level_enum::debug);
         spdlog::debug(std::format("exe path: {}", args.exe_path));
@@ -86,7 +95,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     int r;
 
-    try {
+    try
+    {
         ccc::WindowSystem::init();
 
         ccc::time::init();
@@ -97,17 +107,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         load_dotnet(init_params, init_result);
         ccc::app_fn_vtb() = init_result.fn_vtb;
 
-        std::thread([] {
-            ccc::app_fn_vtb().start();
+        std::thread(
+            []
+            {
+                ccc::app_fn_vtb().start();
 
-            SDL_Event event{
-                .quit = {
-                    .type = SDL_EVENT_QUIT,
-                    .timestamp = SDL_GetTicksNS(),
-                }
-            };
-            SDL_PushEvent(&event);
-        }).detach();
+                SDL_Event event{
+                    .quit = {
+                        .type = SDL_EVENT_QUIT,
+                        .timestamp = SDL_GetTicksNS(),
+                    }
+                };
+                SDL_PushEvent(&event);
+            }
+        ).detach();
 
         // auto app = std::make_shared<ccc::App>();
 
@@ -153,19 +166,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         // }).detach();
 
         r = ccc::WindowSystem::main_loop();
-    } catch (std::exception ex) {
+    }
+    catch (std::exception ex)
+    {
         spdlog::error(ex.what());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", ex.what(), nullptr);
         r = -1;
-    } catch (winrt::hresult_error ex) {
+    } catch (winrt::hresult_error ex)
+    {
         spdlog::error(ex.message().c_str());
         MessageBox(nullptr, ex.message().c_str(), nullptr, MB_OK);
         r = -1;
-    } catch (...) {
+    } catch (...)
+    {
         spdlog::error("Unknown failure occurred. Possible memory corruption");
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR, "Error",
-            "Unknown failure occurred. Possible memory corruption", nullptr);
+            "Unknown failure occurred. Possible memory corruption", nullptr
+        );
         r = -1;
     }
 

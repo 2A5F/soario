@@ -3,8 +3,10 @@
 #include <ctime>
 #include "../api/Time.h"
 
-namespace ccc {
-    struct Time final {
+namespace ccc
+{
+    struct Time final
+    {
         TimeData data;
 
         void init();
@@ -16,8 +18,9 @@ namespace ccc {
         double total() const;
     };
 
-    namespace time {
-        TimeData *get_data_ptr();
+    namespace time
+    {
+        TimeData* get_data_ptr();
 
         void init();
 

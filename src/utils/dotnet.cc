@@ -11,25 +11,28 @@
 #include "../api/Init.h"
 #include "../render/FrameContext.h"
 
-namespace ccc {
-    namespace {
+namespace ccc
+{
+    namespace
+    {
         hostfxr_initialize_for_dotnet_command_line_fn init_for_cmd_line_fptr;
         hostfxr_initialize_for_runtime_config_fn init_for_config_fptr;
         hostfxr_get_runtime_delegate_fn get_delegate_fptr;
         hostfxr_run_app_fn run_app_fptr;
         hostfxr_close_fn close_fptr;
 
-        bool load_hostfxr(const std::filesystem::path &assembly_path);
+        bool load_hostfxr(const std::filesystem::path& assembly_path);
 
-        load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t *assembly);
+        load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t* assembly);
 
-        void *load_library(const char_t *);
+        void* load_library(const char_t*);
 
-        void *get_export(void *, const char *);
+        void* get_export(void*, const char*);
     }
 
-    void load_dotnet(InitParams& init_params, InitResult& result) {
-        const auto &args = Args::get();
+    void load_dotnet(InitParams& init_params, InitResult& result)
+    {
+        const auto& args = Args::get();
         auto path = std::filesystem::path(args.exe_path);
         path = path.parent_path();
         path.append("managed");
@@ -42,7 +45,8 @@ namespace ccc {
         spdlog::debug(std::format("dll path: {}", dll_path.string()));
         spdlog::debug(std::format("dll runtimeconfig path: {}", config_path.string()));
 
-        if (!load_hostfxr(path)) {
+        if (!load_hostfxr(path))
+        {
             throw std::exception("Failed to load dotnet runtime");
         }
 
@@ -50,10 +54,10 @@ namespace ccc {
         load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path.c_str());
         assert(load_assembly_and_get_function_pointer != nullptr && "Failure: get_dotnet_load_assembly()");
 
-        const char_t *dotnet_type = L"Soario.Entry, Soario";
-        const char_t *dotnet_type_method = L"Init";
+        const char_t* dotnet_type = L"Soario.Entry, Soario";
+        const char_t* dotnet_type_method = L"Init";
 
-        typedef void (CORECLR_DELEGATE_CALLTYPE *custom_entry_point_fn)(InitParams *, InitResult *);
+        typedef void (CORECLR_DELEGATE_CALLTYPE *custom_entry_point_fn)(InitParams*, InitResult*);
         custom_entry_point_fn init = nullptr;
         const int rc = load_assembly_and_get_function_pointer(
             dll_path.c_str(),
@@ -61,9 +65,11 @@ namespace ccc {
             dotnet_type_method,
             UNMANAGEDCALLERSONLY_METHOD /*delegate_type_name*/,
             nullptr,
-            (void **) &init);
+            (void**)&init
+        );
 
-        if (rc != 0 || init == nullptr) {
+        if (rc != 0 || init == nullptr)
+        {
             throw std::exception("Failed to load dotnet runtime2");
         }
 
@@ -71,8 +77,10 @@ namespace ccc {
         init(&init_params, &result);
     }
 
-    namespace {
-        bool load_hostfxr(const std::filesystem::path &assembly_path) {
+    namespace
+    {
+        bool load_hostfxr(const std::filesystem::path& assembly_path)
+        {
             get_hostfxr_parameters params{sizeof(get_hostfxr_parameters), assembly_path.c_str(), nullptr};
 
             // Pre-allocate a large buffer for the path to hostfxr
@@ -85,36 +93,42 @@ namespace ccc {
             // Load hostfxr and get desired exports
             // NOTE: The .NET Runtime does not support unloading any of its native libraries. Running
             // dlclose/FreeLibrary on any .NET libraries produces undefined behavior.
-            void *lib = load_library(buffer);
-            init_for_cmd_line_fptr = (hostfxr_initialize_for_dotnet_command_line_fn) get_export(
-                lib, "hostfxr_initialize_for_dotnet_command_line");
-            init_for_config_fptr = (hostfxr_initialize_for_runtime_config_fn) get_export(
-                lib, "hostfxr_initialize_for_runtime_config");
-            get_delegate_fptr = (hostfxr_get_runtime_delegate_fn) get_export(lib, "hostfxr_get_runtime_delegate");
-            run_app_fptr = (hostfxr_run_app_fn) get_export(lib, "hostfxr_run_app");
-            close_fptr = (hostfxr_close_fn) get_export(lib, "hostfxr_close");
+            void* lib = load_library(buffer);
+            init_for_cmd_line_fptr = (hostfxr_initialize_for_dotnet_command_line_fn)get_export(
+                lib, "hostfxr_initialize_for_dotnet_command_line"
+            );
+            init_for_config_fptr = (hostfxr_initialize_for_runtime_config_fn)get_export(
+                lib, "hostfxr_initialize_for_runtime_config"
+            );
+            get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)get_export(lib, "hostfxr_get_runtime_delegate");
+            run_app_fptr = (hostfxr_run_app_fn)get_export(lib, "hostfxr_run_app");
+            close_fptr = (hostfxr_close_fn)get_export(lib, "hostfxr_close");
 
             return (init_for_config_fptr && get_delegate_fptr && close_fptr);
         }
 
-        void *load_library(const char_t *path) {
+        void* load_library(const char_t* path)
+        {
             HMODULE h = ::LoadLibraryW(path);
             assert(h != nullptr);
-            return (void *) h;
+            return (void*)h;
         }
 
-        void *get_export(void *h, const char *name) {
-            void *f = ::GetProcAddress((HMODULE) h, name);
+        void* get_export(void* h, const char* name)
+        {
+            void* f = ::GetProcAddress((HMODULE)h, name);
             assert(f != nullptr);
             return f;
         }
 
-        load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t *config_path) {
+        load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t* config_path)
+        {
             // Load .NET Core
-            void *load_assembly_and_get_function_pointer = nullptr;
+            void* load_assembly_and_get_function_pointer = nullptr;
             hostfxr_handle cxt = nullptr;
             int rc = init_for_config_fptr(config_path, nullptr, &cxt);
-            if (rc != 0 || cxt == nullptr) {
+            if (rc != 0 || cxt == nullptr)
+            {
                 std::cerr << "Init failed: " << std::hex << std::showbase << rc << std::endl;
                 close_fptr(cxt);
                 return nullptr;
@@ -124,12 +138,13 @@ namespace ccc {
             rc = get_delegate_fptr(
                 cxt,
                 hdt_load_assembly_and_get_function_pointer,
-                &load_assembly_and_get_function_pointer);
+                &load_assembly_and_get_function_pointer
+            );
             if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
                 std::cerr << "Get delegate failed: " << std::hex << std::showbase << rc << std::endl;
 
             close_fptr(cxt);
-            return (load_assembly_and_get_function_pointer_fn) load_assembly_and_get_function_pointer;
+            return (load_assembly_and_get_function_pointer_fn)load_assembly_and_get_function_pointer;
         }
     }
 }

@@ -5,12 +5,17 @@
 
 #include <SDL3/SDL.h>
 
-namespace ccc {
-    struct sdl_error final : std::runtime_error {
-        explicit sdl_error(char const *const msg)
-            : std::runtime_error(std::format("SDL Error: {}", msg)) {
+namespace ccc
+{
+    struct sdl_error final : std::runtime_error
+    {
+        explicit sdl_error(char const* const msg)
+            : std::runtime_error(std::format("SDL Error: {}", msg))
+        {
         }
 
-        explicit sdl_error() : sdl_error(SDL_GetError()) {}
+        explicit sdl_error() : sdl_error(SDL_GetError())
+        {
+        }
     };
 } // ccc

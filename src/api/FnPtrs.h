@@ -3,7 +3,8 @@
 
 #include "Api.h"
 
-namespace ccc {
+namespace ccc
+{
     using fn_action = void();
 
     using fn_func__FrStr16__size_t = size_t (FrStr16);

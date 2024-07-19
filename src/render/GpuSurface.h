@@ -10,13 +10,15 @@
 
 #include "../pch.h"
 
-namespace ccc {
+namespace ccc
+{
     class GpuQueue;
     class RenderContext;
     class WindowHandle;
     class Window;
 
-    class GpuSurface final : public virtual IRT {
+    class GpuSurface final : public virtual IRT
+    {
         friend RenderContext;
         friend GpuQueue;
 
@@ -54,9 +56,9 @@ namespace ccc {
 
         UINT frame_index() const;
 
-        void wait_gpu(const com_ptr<ID3D12CommandQueue> &command_queue);
+        void wait_gpu(const com_ptr<ID3D12CommandQueue>& command_queue);
 
-        void move_to_next_frame(const com_ptr<ID3D12CommandQueue> &command_queue);
+        void move_to_next_frame(const com_ptr<ID3D12CommandQueue>& command_queue);
 
         void on_resize(int2 new_size);
 
@@ -66,8 +68,8 @@ namespace ccc {
     public:
         explicit GpuSurface(
             size_t resource_owner_id,
-            const com_ptr<IDXGIFactory4> &factory, com_ptr<ID3D12Device> device,
-            const com_ptr<ID3D12CommandQueue> &command_queue, const Window &window
+            const com_ptr<IDXGIFactory4>& factory, com_ptr<ID3D12Device> device,
+            const com_ptr<ID3D12CommandQueue>& command_queue, const Window& window
         );
 
         int2 size() const override;
@@ -76,6 +78,7 @@ namespace ccc {
         CD3DX12_CPU_DESCRIPTOR_HANDLE get_cpu_handle() override;
 
         bool require_state(
-            ResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) override;
+            ResourceOwner& owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER& barrier
+        ) override;
     };
 } // ccc

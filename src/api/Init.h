@@ -2,12 +2,15 @@
 #include "App.h"
 #include "Time.h"
 
-namespace ccc {
-    struct InitParams {
+namespace ccc
+{
+    struct InitParams
+    {
         TimeData* p_time_data;
     };
 
-    struct InitResult {
+    struct InitResult
+    {
         AppFnVtb fn_vtb;
     };
 }

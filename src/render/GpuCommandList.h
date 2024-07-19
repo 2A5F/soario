@@ -4,16 +4,20 @@
 #include "IRT.h"
 #include "../pch.h"
 
-namespace ccc {
+namespace ccc
+{
     class GpuSurface;
 }
 
-namespace ccc {
+namespace ccc
+{
     class RenderContext;
 }
 
-namespace ccc {
-    class GpuCommandList final : public virtual Object {
+namespace ccc
+{
+    class GpuCommandList final : public virtual Object
+    {
         friend RenderContext;
         friend GpuSurface;
         friend IRT;
@@ -25,8 +29,9 @@ namespace ccc {
         std::shared_ptr<ResourceOwner> m_resource_owner;
 
         explicit GpuCommandList(
-        std::shared_ptr<ResourceOwner> resource_owner,
-            com_ptr<ID3D12GraphicsCommandList> command_list);
+            std::shared_ptr<ResourceOwner> resource_owner,
+            com_ptr<ID3D12GraphicsCommandList> command_list
+        );
 
     public:
         // 设置渲染目标
@@ -36,6 +41,6 @@ namespace ccc {
         void clear(float4 color);
 
         // 清除指定 RT 上的颜色
-        void clear(const std::shared_ptr<IRT> &rt, float4 color);
+        void clear(const std::shared_ptr<IRT>& rt, float4 color);
     };
 } // ccc

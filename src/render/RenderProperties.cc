@@ -1,3 +1,5 @@
 #include "RenderProperties.h"
-namespace ccc {
+
+namespace ccc
+{
 } // ccc

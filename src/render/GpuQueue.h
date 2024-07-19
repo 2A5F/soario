@@ -8,11 +8,13 @@
 #include "../pch.h"
 #include "../utils/Object.h"
 
-namespace ccc {
+namespace ccc
+{
     class RenderContext;
     struct FrameContext;
 
-    class GpuQueue final : public virtual Object {
+    class GpuQueue final : public virtual Object
+    {
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
         com_ptr<ID3D12Device> m_device{};

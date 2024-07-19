@@ -1,3 +1,5 @@
 #include "sdl_error.h"
-namespace ccc {
+
+namespace ccc
+{
 } // ccc

@@ -1,3 +1,5 @@
 #include "Shader.h"
-namespace ccc {
+
+namespace ccc
+{
 } // ccc

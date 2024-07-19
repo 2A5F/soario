@@ -14,8 +14,10 @@
 #include "FrameContext.h"
 #include "GpuSurface.h"
 
-namespace ccc {
-    class RenderContext final : public virtual Object {
+namespace ccc
+{
+    class RenderContext final : public virtual Object
+    {
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
         friend FrameContext;
@@ -51,11 +53,11 @@ namespace ccc {
         // 获取全局的默认渲染上下文
         static std::shared_ptr<RenderContext> global();
 
-        static std::shared_ptr<RenderContext> create(const Window &window);
+        static std::shared_ptr<RenderContext> create(const Window& window);
 
-        void on_resize(Window &window) const;
+        void on_resize(Window& window) const;
 
         // 记录帧
-        void record_frame(const std::function<void(const FrameContext &ctx)> &cb);
+        void record_frame(const std::function<void(const FrameContext& ctx)>& cb);
     };
 } // ccc

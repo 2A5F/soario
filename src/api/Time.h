@@ -1,8 +1,10 @@
 #pragma once
 #include <cstdint>
 
-namespace ccc {
-    struct TimeData {
+namespace ccc
+{
+    struct TimeData
+    {
         int64_t start_time;
         int64_t last_time;
         int64_t now_time;

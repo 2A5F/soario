@@ -1,3 +1,5 @@
 #include "FrameContext.h"
-namespace ccc {
+
+namespace ccc
+{
 } // ccc

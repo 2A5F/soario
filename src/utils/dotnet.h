@@ -2,6 +2,7 @@
 
 #include "../api/Init.h"
 
-namespace ccc {
+namespace ccc
+{
     void load_dotnet(InitParams& init_params, InitResult& result);
 }

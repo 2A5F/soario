@@ -14,5 +14,5 @@ namespace winrt_thread = winrt::Windows::System::Threading;
 
 #define RT_IID_PPV_ARGS(comtptr) __uuidof(comtptr), comtptr.put_void()
 
-template<class T>
+template <class T>
 using com_ptr = winrt::com_ptr<T>;

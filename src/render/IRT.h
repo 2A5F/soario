@@ -5,17 +5,20 @@
 #include "../pch.h"
 #include "IResource.h"
 
-namespace ccc {
+namespace ccc
+{
     class GpuCommandList;
 
-    enum class GpuRtState {
+    enum class GpuRtState
+    {
         Present,
         RenderTarget,
     };
 
     D3D12_RESOURCE_STATES to_dx_state(GpuRtState state);
 
-    class IRT : public virtual IResource {
+    class IRT : public virtual IResource
+    {
         friend GpuCommandList;
 
     protected:
@@ -23,12 +26,14 @@ namespace ccc {
 
         // 请求新的状态，返回是否需要屏障
         virtual bool require_state(
-            ResourceOwner &owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER &barrier) = 0;
+            ResourceOwner& owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER& barrier
+        ) = 0;
 
         virtual CD3DX12_CPU_DESCRIPTOR_HANDLE get_cpu_handle() = 0;
 
     public:
-        explicit IRT(const GpuRtState state) : m_state(state) {
+        explicit IRT(const GpuRtState state) : m_state(state)
+        {
         }
 
         virtual int2 size() const = 0;
