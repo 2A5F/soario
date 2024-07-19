@@ -1,5 +1,7 @@
 # soario
 
+- 计划是搞一个工厂游戏
+
 ## 构建
 - 使用了 gitmodule，需要 clone submodule
 - 需要 .net8 环境
