@@ -117,7 +117,7 @@ public sealed class Shader : AAsset, IEquatable<Shader>
         await using var meta_stream = meta_file.Open();
         var meta = await JsonSerializer.DeserializeAsync<ShaderMeta>(meta_stream, s_json_serializer_options);
         var passes = new List<PassData>();
-        foreach (var (name, pass) in meta.Pass)
+        foreach (var (name, pass) in meta!.Pass)
         {
             var stages = await Task.WhenAll(pass.Stages.Select(async stage =>
             {
