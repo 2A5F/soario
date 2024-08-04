@@ -2,10 +2,10 @@
 using System.Collections.Frozen;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Coplt.Mathematics;
-using Soario.Native;
+using Coplt.ShaderReflections;
 using Soario.Resources;
 
 namespace Soario.Rendering;
@@ -24,13 +24,22 @@ public sealed class Shader : AAsset, IEquatable<Shader>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public int GetPassIndex(string name) => m_name_2_index.GetValueOrDefault(name, -1);
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ShaderPass GetPass(int index) => m_passes[index];
+
+    public ReadOnlySpan<ShaderPass> Passes
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => CollectionsMarshal.AsSpan(m_passes);
+    }
+
     #endregion
 
     #region Ctor
 
     internal Shader(Guid id, string? path, List<PassData> passes) : base(id, path)
     {
-        m_passes = passes.Select(ShaderPass.Load).ToList();
+        m_passes = passes.Select(static p => new ShaderPass(p)).ToList();
         m_name_2_index = m_passes
             .Select(static (p, i) => (p.Name, i))
             .ToFrozenDictionary(static a => a.Name, a => a.i);
@@ -83,18 +92,18 @@ public sealed class Shader : AAsset, IEquatable<Shader>
         #region Prop
 
         public byte[] Blob { get; }
-        public byte[] ReflectionBlob { get; }
+        public ShaderMeta Reflection { get; }
         public ShaderStage ShaderStage { get; }
 
         #endregion
 
         #region Ctor
 
-        internal StageData(ShaderStage shader_stage, byte[] blob, byte[] reflection_blob)
+        internal StageData(ShaderStage shader_stage, byte[] blob, ShaderMeta reflection)
         {
             ShaderStage = shader_stage;
             Blob = blob;
-            ReflectionBlob = reflection_blob;
+            Reflection = reflection;
         }
 
         #endregion
@@ -113,9 +122,9 @@ public sealed class Shader : AAsset, IEquatable<Shader>
     public static async Task<Shader> Load(string path)
     {
         using var zip = ZipFile.OpenRead(path);
-        var meta_file = zip.GetEntry("meta.json")!;
+        var meta_file = zip.GetEntry(".meta")!;
         await using var meta_stream = meta_file.Open();
-        var meta = await JsonSerializer.DeserializeAsync<ShaderMeta>(meta_stream, s_json_serializer_options);
+        var meta = await JsonSerializer.DeserializeAsync<ShaderAssetMeta>(meta_stream, s_json_serializer_options);
         var passes = new List<PassData>();
         foreach (var (name, pass) in meta!.Pass)
         {
@@ -129,15 +138,15 @@ public sealed class Shader : AAsset, IEquatable<Shader>
                 var reflection_file = zip.GetEntry($"{name}.{stage}.re")!;
 
                 var blob = GC.AllocateUninitializedArray<byte>((int)obj_file.Length);
-                var reflection_blob = GC.AllocateUninitializedArray<byte>((int)reflection_file.Length);
 
                 await using var obj_stream = obj_file.Open();
                 await obj_stream.ReadExactlyAsync(blob);
 
                 await using var reflection_stream = reflection_file.Open();
-                await reflection_stream.ReadExactlyAsync(reflection_blob);
+                var reflection =
+                    await JsonSerializer.DeserializeAsync<ShaderMeta>(reflection_stream, s_json_serializer_options);
 
-                return new StageData(shader_stage, blob, reflection_blob);
+                return new StageData(shader_stage, blob, reflection!);
             }));
 
             var pa = new PassData { Name = name };

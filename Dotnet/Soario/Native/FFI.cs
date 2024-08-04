@@ -285,57 +285,6 @@ namespace Soario.Native
         }
     }
 
-    public partial struct FShaderStageData
-    {
-        [NativeTypeName("ccc::FrStr8")]
-        public FrStr8 blob;
-
-        [NativeTypeName("ccc::FrStr8")]
-        public FrStr8 reflection;
-    }
-
-    public unsafe partial struct FShaderPassData
-    {
-        [NativeTypeName("ccc::FShaderStageData *")]
-        public FShaderStageData* Ps;
-
-        [NativeTypeName("ccc::FShaderStageData *")]
-        public FShaderStageData* Vs;
-
-        [NativeTypeName("ccc::FShaderStageData *")]
-        public FShaderStageData* Cs;
-
-        [NativeTypeName("ccc::FShaderStageData *")]
-        public FShaderStageData* Ms;
-
-        [NativeTypeName("ccc::FShaderStageData *")]
-        public FShaderStageData* As;
-    }
-
-    [NativeTypeName("struct FShaderPass : ccc::FObject")]
-    public unsafe partial struct FShaderPass
-    {
-        public void** lpVtbl;
-
-        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?load@FShaderPass@ccc@@SAPEAU12@AEAUFError@2@AEBUFGpu@2@AEBUFShaderPassData@2@@Z", ExactSpelling = true)]
-        [return: NativeTypeName("ccc::FShaderPass *")]
-        public static extern FShaderPass* load([NativeTypeName("ccc::FError &")] FError* err, [NativeTypeName("const FGpu &")] FGpu* gpu, [NativeTypeName("const FShaderPassData &")] FShaderPassData* pass_data);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [return: NativeTypeName("size_t")]
-        public nuint AddRef()
-        {
-            return ((delegate* unmanaged[Thiscall]<FShaderPass*, nuint>)(lpVtbl[1]))((FShaderPass*)Unsafe.AsPointer(ref this));
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        [return: NativeTypeName("size_t")]
-        public nuint Release()
-        {
-            return ((delegate* unmanaged[Thiscall]<FShaderPass*, nuint>)(lpVtbl[2]))((FShaderPass*)Unsafe.AsPointer(ref this));
-        }
-    }
-
     public static unsafe partial class FFI
     {
         [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?exit@ccc@@YAXH@Z", ExactSpelling = true)]
@@ -346,5 +295,12 @@ namespace Soario.Native
 
         [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?free@ccc@@YAXPEAX@Z", ExactSpelling = true)]
         public static extern void free(void* ptr);
+
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?alloc_str@ccc@@YA?AUFmStr8@1@_K@Z", ExactSpelling = true)]
+        [return: NativeTypeName("ccc::FmStr8")]
+        public static extern FmStr8 alloc_str([NativeTypeName("size_t")] nuint size);
+
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?free_str@ccc@@YAXUFmStr8@1@@Z", ExactSpelling = true)]
+        public static extern void free_str([NativeTypeName("ccc::FmStr8")] FmStr8 str);
     }
 }

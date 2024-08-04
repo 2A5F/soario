@@ -5,7 +5,6 @@ include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 23)
 
-set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 set(VCPKG_LIBRARY_LINKAGE static)
@@ -138,12 +137,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE mimalloc-static)
 target_link_libraries(${PROJECT_NAME} PRIVATE nethost.lib)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/third_party/microsoft.netcore.app.host.win-x64/runtimes/win-x64/native/nethost.dll ${CMAKE_BINARY_DIR}/bin/nethost.dll COPYONLY)
 
-#if (CMAKE_BUILD_TYPE MATCHES "Release")
-#    target_link_libraries(${PROJECT_NAME} PRIVATE libnethost.lib advapi32.lib)
-#else ()
-#    target_link_libraries(${PROJECT_NAME} PRIVATE nethost.lib)
-#endif ()
-
 if (TARGET Microsoft::DirectX12-Agility)
     file(MAKE_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/D3D12")
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
@@ -157,7 +150,7 @@ foreach (FILE ${HLSL_ITEMS})
     get_filename_component(FILE_WE ${FILE} NAME_WE)
     add_custom_command(TARGET shaders
             POST_BUILD
-            COMMAND deno run -A ./scripts/build_shader.ts ${DIRECTX_DXC_TOOL} ${CMAKE_BINARY_DIR} ${FILE_WE} ${FILE} $<IF:$<CONFIG:DEBUG>,D,R> ${CMAKE_CURRENT_SOURCE_DIR}/src/
+            COMMAND deno run -A ./scripts/build_shader.ts ${DIRECTX_DXC_TOOL} ${CMAKE_BINARY_DIR} ${FILE_WE} ${FILE} $<IF:$<CONFIG:DEBUG>,D,R> ${CMAKE_CURRENT_SOURCE_DIR}/src/ ${CMAKE_CURRENT_SOURCE_DIR}/tools/Coplt.ShaderReflections.Dxc/Coplt.ShaderReflections.Dxc.exe
             MAIN_DEPENDENCY ${FILE}
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             VERBATIM)

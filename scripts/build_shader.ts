@@ -8,7 +8,15 @@ console.log(
   "================================================== start build shader =================================================="
 );
 
-const [dxc, build_output, file_name, file_path, debug, root_path] = Deno.args;
+const [
+  dxc,
+  build_output,
+  file_name,
+  file_path,
+  debug,
+  root_path,
+  re_tool_path,
+] = Deno.args;
 
 const shader_path = path
   .relative(root_path, path.join(file_path, "..", file_name))
@@ -27,7 +35,7 @@ Deno.mkdirSync(tmp_output_path, { recursive: true });
 Deno.removeSync(tmp_output_path, { recursive: true });
 Deno.mkdirSync(tmp_output_path, { recursive: true });
 
-const meta_output_path = path.resolve(tmp_output_path, `meta.json`);
+const meta_output_path = path.resolve(tmp_output_path, `.meta`);
 const output_meta: {
   id: string;
   path: string;
@@ -63,13 +71,20 @@ for (const [name, pass] of Object.entries(meta.pass)) {
     const main = pass[stage];
 
     const obj_output_path = path.resolve(tmp_output_path, `${name}.${stage}.o`);
-    const re_output_path = path.resolve(tmp_output_path, `${name}.${stage}.re`);
+    const re_output_path = path.resolve(
+      tmp_output_path,
+      `${name}.${stage}.re.bin`
+    );
+    const re_json_output_path = path.resolve(
+      tmp_output_path,
+      `${name}.${stage}.re`
+    );
     const asm_output_path = path.resolve(
       tmp_output_path,
       `${name}.${stage}.asm`
     );
 
-    files.push(obj_output_path, re_output_path);
+    files.push(obj_output_path, re_json_output_path);
 
     if (is_debug) files.push(asm_output_path);
 
@@ -82,7 +97,7 @@ for (const [name, pass] of Object.entries(meta.pass)) {
         main,
         is_debug ? "-Od" : "-O3",
         is_debug ? "-Zi" : "-Zs",
-        "-Qembed_debug",
+        ...(is_debug ? ["-Qembed_debug"] : []),
         "-Fo",
         obj_output_path,
         "-Fre",
@@ -94,6 +109,12 @@ for (const [name, pass] of Object.entries(meta.pass)) {
       stderr: "inherit",
     });
     cmd.outputSync();
+
+    const cmd_re = new Deno.Command(re_tool_path, {
+      cwd: Deno.cwd(),
+      args: [re_output_path, re_json_output_path],
+    });
+    cmd_re.outputSync();
   }
 }
 

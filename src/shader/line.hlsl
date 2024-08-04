@@ -6,6 +6,11 @@ struct VertexOut
    uint   MeshletIndex : COLOR0;
 };
 
+cbuffer Foo
+{       
+    float4 foo;
+}
+
 [NumThreads(128, 1, 1)]
 [OutputTopology("triangle")]
 void mesh(
@@ -19,6 +24,7 @@ void mesh(
 
    tris[gtid] = int3(0, 0, 0);
    VertexOut o;
+   o.Normal = foo.xyz;
    verts[gtid] = o;
 }
 
