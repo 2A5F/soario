@@ -15,7 +15,6 @@
 namespace ccc
 {
     class Window;
-    class RenderContext;
 
     class WindowHandle final : public virtual Object
     {
@@ -124,7 +123,6 @@ namespace ccc
         friend WindowSystem;
 
         std::shared_ptr<WindowHandle> m_inner{};
-        std::shared_ptr<RenderContext> m_render_context{};
 
         bool m_resized{false};
 
@@ -132,9 +130,6 @@ namespace ccc
         static WindowBuilder builder();
 
         static Rc<Window> create(const WindowOptions& options);
-
-        // 获取或创建渲染上下文
-        const std::shared_ptr<RenderContext>& render_context();
 
         const std::shared_ptr<WindowHandle>& inner() const;
 

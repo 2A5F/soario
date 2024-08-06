@@ -1,4 +1,5 @@
-﻿using Soario.Native;
+﻿using System.Runtime.CompilerServices;
+using Soario.Native;
 
 namespace Soario.Rendering;
 
@@ -16,6 +17,18 @@ public sealed class Gpu : IDisposable
 
     internal unsafe FGpu* m_inner;
 
+    internal GpuDevice m_main_device = null!;
+
+    #endregion
+
+    #region Getter
+
+    public GpuDevice MainDevice
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => m_main_device;
+    }
+
     #endregion
 
     #region Ctor
@@ -23,6 +36,10 @@ public sealed class Gpu : IDisposable
     internal unsafe Gpu(FGpu* inner)
     {
         m_inner = inner;
+        if (m_inner != null)
+        {
+            m_main_device = new GpuDevice(this, "Main Device");
+        }
     }
 
     #endregion
@@ -43,6 +60,13 @@ public sealed class Gpu : IDisposable
     }
 
     ~Gpu() => ReleaseUnmanagedResources();
+
+    #endregion
+
+    #region CreateDevice
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuDevice CreateDevice(string? name = null) => new(this, name);
 
     #endregion
 }

@@ -7,6 +7,11 @@ void* ccc::alloc(const size_t size) noexcept
     return mi_malloc(size);
 }
 
+void* ccc::realloc(void* old, const size_t size) noexcept
+{
+    return mi_realloc(old, size);
+}
+
 void ccc::free(void* ptr) noexcept
 {
     mi_free(ptr);

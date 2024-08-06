@@ -18,13 +18,13 @@
 #include <fmt/chrono.h>
 
 #include "App.h"
-#include "render/RenderContext.h"
 #include "utils/Time.h"
 
 #include <winrt/Windows.UI.Core.h>
 
 #include "render/Gpu.h"
 #include "utils/dotnet.h"
+#include "utils/logger.h"
 
 extern "C" {
     __declspec(dllexport) extern const UINT D3D12SDKVersion = 614;
@@ -67,32 +67,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         return 1;
     }
 
-    /* 初始化日志 */
-    auto now = std::chrono::current_zone()->to_local(std::chrono::system_clock::now());
-    spdlog::init_thread_pool(8192, 1);
-    auto stdout_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto rotating_sink = std::make_shared<spdlog::sinks::rotating_file_sink_mt>(
-        fmt::format("logs/{:%Y.%m.%d}.log", now), 1024 * 1024 * 10, 3
-    );
-    std::vector<spdlog::sink_ptr> sinks{stdout_sink, rotating_sink};
-    auto logger = std::make_shared<spdlog::async_logger>(
-        "", sinks.begin(), sinks.end(), spdlog::thread_pool(), spdlog::async_overflow_policy::block
-    );
-    set_default_logger(logger);
-
     ccc::Args args;
     args.exe_path = std::string(__argv[0]);
     args.debug = arg_debug;
     ccc::Args::set(args);
-
-    spdlog::info("start");
-
-    if (arg_debug)
-    {
-        spdlog::warn("Debug mode enabled");
-        spdlog::set_level(spdlog::level::level_enum::debug);
-        spdlog::debug(std::format("exe path: {}", args.exe_path));
-    }
 
     int r;
 
@@ -112,6 +90,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
         ccc::InitResult init_result;
         load_dotnet(init_params, init_result);
         ccc::app_fn_vtb() = init_result.fn_vtb;
+
+        if (arg_debug)
+        {
+            ccc::logger::warn("Debug mode enabled");
+            ccc::logger::debug(std::format("exe path: {}", args.exe_path));
+        }
 
         std::thread(
             []
@@ -175,17 +159,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
     catch (std::exception ex)
     {
-        spdlog::error(ex.what());
+        ccc::logger::error(ex.what());
         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", ex.what(), nullptr);
         r = -1;
     } catch (winrt::hresult_error ex)
     {
-        spdlog::error(ex.message().c_str());
+        ccc::logger::error(ex.message());
         MessageBox(nullptr, ex.message().c_str(), nullptr, MB_OK);
         r = -1;
     } catch (...)
     {
-        spdlog::error("Unknown failure occurred. Possible memory corruption");
+        ccc::logger::error("Unknown failure occurred. Possible memory corruption");
         SDL_ShowSimpleMessageBox(
             SDL_MESSAGEBOX_ERROR, "Error",
             "Unknown failure occurred. Possible memory corruption", nullptr
@@ -195,7 +179,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     SDL_Quit();
 
-    spdlog::info("exited");
-    logger->flush();
+    ccc::app_fn_vtb().exit();
+
     return r;
 }

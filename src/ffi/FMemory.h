@@ -7,6 +7,8 @@ namespace ccc
 {
     __declspec(dllexport) void* alloc(size_t size) noexcept;
 
+    __declspec(dllexport) void* realloc(void* old, size_t size) noexcept;
+
     __declspec(dllexport) void free(void* ptr) noexcept;
 
     __declspec(dllexport) FmStr8 alloc_str(size_t size) noexcept;

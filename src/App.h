@@ -1,7 +1,6 @@
 ﻿#pragma once
 
 #include "ffi/App.h"
-#include "render/RenderContext.h"
 
 namespace ccc
 {

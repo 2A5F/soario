@@ -3,34 +3,40 @@
 #include <winrt/base.h>
 
 #include "D3D12MemAlloc.h"
+#include "GpuDevice.h"
 #include "GpuSurface.h"
 
 #include "../pch.h"
+#include "../ffi/gpu/FGpuQueue.h"
 #include "../utils/Object.h"
+#include "../utils/Rc.h"
 
 namespace ccc
 {
-    class RenderContext;
     struct FrameContext;
 
-    class GpuQueue final : public virtual Object
+    class GpuQueue final : public FGpuQueue
     {
+        IMPL_RC(GpuQueue);
+
         static constexpr UINT FrameCount = GpuSurface::FrameCount;
 
-        com_ptr<ID3D12Device> m_device{};
+        Rc<GpuDevice> m_device;
+
+        com_ptr<ID3D12Device> m_dx_device{};
         com_ptr<ID3D12CommandAllocator> m_command_allocators[FrameCount]{};
         com_ptr<ID3D12CommandQueue> m_command_queue{};
         com_ptr<ID3D12GraphicsCommandList> m_command_list{};
 
         friend FrameContext;
-        friend RenderContext;
 
     public:
         explicit GpuQueue(
-            com_ptr<ID3D12Device> device,
-            D3D12_COMMAND_LIST_TYPE type
+            Rc<GpuDevice> gpu_device,
+            const FGpuQueueCreateOptions& options
         );
 
-        void ready_frame(int frame_index) const;
+        static Rc<GpuQueue> Create(Rc<GpuDevice> gpu_device, const FGpuQueueCreateOptions& options, FError& err) noexcept;
+
     };
 } // ccc

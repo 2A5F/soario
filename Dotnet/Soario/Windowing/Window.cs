@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Coplt.Mathematics;
+using Serilog;
 using Soario.Native;
 
 namespace Soario.Windowing;
@@ -104,14 +105,14 @@ public class Window : IDisposable
         }
         catch (Exception e)
         {
-            Console.WriteLine(e); //todo logger
+            Log.Error(e, "");
         }
     }
 
     private unsafe void EventHandle(FWindowEventType type, void* data)
     {
         // todo
-        Console.WriteLine(type);
+        Log.Debug("{Type}", type);
     }
 
     #endregion

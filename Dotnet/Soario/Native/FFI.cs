@@ -110,6 +110,7 @@ namespace Soario.Native
         Common,
         Sdl,
         HResult,
+        Gpu,
     }
 
     public enum FErrorMsgType
@@ -155,6 +156,16 @@ namespace Soario.Native
         public ulong data;
     }
 
+    public enum FLogLevel
+    {
+        Fatal,
+        Error,
+        Warn,
+        Info,
+        Debug,
+        Trace,
+    }
+
     public unsafe partial struct InitParams
     {
         [NativeTypeName("ccc::TimeData *")]
@@ -181,8 +192,23 @@ namespace Soario.Native
         [NativeTypeName("ccc::fn_action *")]
         public delegate* unmanaged[Cdecl]<void> start;
 
+        [NativeTypeName("ccc::fn_action *")]
+        public delegate* unmanaged[Cdecl]<void> exit;
+
         [NativeTypeName("ccc::fn_action__voidp_FWindowEventType_voidp *")]
         public delegate* unmanaged[Cdecl]<void*, FWindowEventType, void*, void> window_event_handle;
+
+        [NativeTypeName("ccc::fn_func__FLogLevel_charp__void *")]
+        public delegate* unmanaged[Cdecl]<FLogLevel, sbyte*, void> logger_cstr;
+
+        [NativeTypeName("ccc::fn_func__FLogLevel_wcharp__void *")]
+        public delegate* unmanaged[Cdecl]<FLogLevel, ushort*, void> logger_wstr;
+
+        [NativeTypeName("ccc::fn_func__FLogLevel_FrStr8__void *")]
+        public delegate* unmanaged[Cdecl]<FLogLevel, FrStr8, void> logger_str8;
+
+        [NativeTypeName("ccc::fn_func__FLogLevel_FrStr16__void *")]
+        public delegate* unmanaged[Cdecl]<FLogLevel, FrStr16, void> logger_str16;
     }
 
     public partial struct TimeData
@@ -265,6 +291,55 @@ namespace Soario.Native
         }
     }
 
+    public partial struct FGpuDeviceCreateOptions
+    {
+    }
+
+    public unsafe partial struct FGpuDeviceCreateOptions
+    {
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 name;
+
+        [NativeTypeName("ccc::fn_func__voidp_FLogLevel_charp__void *")]
+        public delegate* unmanaged[Cdecl]<void*, FLogLevel, sbyte*, void> logger;
+
+        public void* logger_object;
+
+        [NativeTypeName("ccc::fn_func__voidp__void *")]
+        public delegate* unmanaged[Cdecl]<void*, void> logger_drop_object;
+    }
+
+    public partial struct FGpuDevice
+    {
+    }
+
+    [NativeTypeName("struct FGpuDevice : ccc::FObject")]
+    public unsafe partial struct FGpuDevice
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuDevice*, nuint>)(lpVtbl[1]))((FGpuDevice*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuDevice*, nuint>)(lpVtbl[2]))((FGpuDevice*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("ccc::FGpuQueue *")]
+        public FGpuQueue* CreateQueue([NativeTypeName("const FGpuQueueCreateOptions &")] FGpuQueueCreateOptions* options, [NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuDevice*, FGpuQueueCreateOptions*, FError*, FGpuQueue*>)(lpVtbl[3]))((FGpuDevice*)Unsafe.AsPointer(ref this), options, err);
+        }
+    }
+
     [NativeTypeName("struct FGpu : ccc::FObject")]
     public unsafe partial struct FGpu
     {
@@ -283,6 +358,57 @@ namespace Soario.Native
         {
             return ((delegate* unmanaged[Thiscall]<FGpu*, nuint>)(lpVtbl[2]))((FGpu*)Unsafe.AsPointer(ref this));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("ccc::FGpuDevice *")]
+        public FGpuDevice* CreateDevice([NativeTypeName("const FGpuDeviceCreateOptions &")] FGpuDeviceCreateOptions* options, [NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpu*, FGpuDeviceCreateOptions*, FError*, FGpuDevice*>)(lpVtbl[3]))((FGpu*)Unsafe.AsPointer(ref this), options, err);
+        }
+    }
+
+    public partial struct FGpuQueue
+    {
+    }
+
+    [NativeTypeName("struct FGpuQueue : ccc::FObject")]
+    public unsafe partial struct FGpuQueue
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuQueue*, nuint>)(lpVtbl[1]))((FGpuQueue*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuQueue*, nuint>)(lpVtbl[2]))((FGpuQueue*)Unsafe.AsPointer(ref this));
+        }
+    }
+
+    public partial struct FGpuQueueCreateOptions
+    {
+    }
+
+    public partial struct FGpuQueueCreateOptions
+    {
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 name;
+
+        [NativeTypeName("ccc::FGpuQueueType")]
+        public FGpuQueueType type;
+    }
+
+    public enum FGpuQueueType
+    {
+        Common,
+        Compute,
+        Copy,
     }
 
     public static unsafe partial class FFI
@@ -292,6 +418,9 @@ namespace Soario.Native
 
         [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?alloc@ccc@@YAPEAX_K@Z", ExactSpelling = true)]
         public static extern void* alloc([NativeTypeName("size_t")] nuint size);
+
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?realloc@ccc@@YAPEAXPEAX_K@Z", ExactSpelling = true)]
+        public static extern void* realloc(void* old, [NativeTypeName("size_t")] nuint size);
 
         [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?free@ccc@@YAXPEAX@Z", ExactSpelling = true)]
         public static extern void free(void* ptr);

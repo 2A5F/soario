@@ -5,7 +5,6 @@
 
 #include "dwmapi.h"
 #include "../App.h"
-#include "../render/RenderContext.h"
 
 #include "../utils/sdl_error.h"
 #include "../utils/Err.h"
@@ -213,15 +212,6 @@ namespace ccc
         s_instance->m_windows[id] = win;
 
         return win;
-    }
-
-    const std::shared_ptr<RenderContext>& Window::render_context()
-    {
-        if (m_render_context == nullptr)
-        {
-            m_render_context = RenderContext::create(*this);
-        }
-        return m_render_context;
     }
 
     const std::shared_ptr<WindowHandle>& Window::inner() const

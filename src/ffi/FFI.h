@@ -85,6 +85,8 @@ namespace ccc
         Sdl,
         // HResult FrStr16 字符串错误消息
         HResult,
+        // 图形错误
+        Gpu,
     };
 
     enum class FErrorMsgType

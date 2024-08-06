@@ -60,8 +60,6 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/window/Window.h
         src/utils/sdl_error.cc
         src/utils/sdl_error.h
-        src/render/RenderContext.cc
-        src/render/RenderContext.h
         src/Args.cc
         src/Args.h
         third_party/D3D12MemoryAllocator/include/D3D12MemAlloc.h
@@ -112,6 +110,14 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/ffi/gpu/FShader.h
         src/ffi/FMemory.cc
         src/ffi/FMemory.h
+        src/ffi/gpu/FGpuQueue.cc
+        src/ffi/gpu/FGpuQueue.h
+        src/ffi/gpu/FGpuDevice.cc
+        src/ffi/gpu/FGpuDevice.h
+        src/render/GpuDevice.cc
+        src/render/GpuDevice.h
+        src/ffi/FLogLevel.h
+        src/utils/logger.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

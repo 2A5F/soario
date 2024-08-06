@@ -20,14 +20,14 @@
 
 namespace ccc
 {
+    class GpuDevice;
+
     class Gpu final : public FGpu
     {
         IMPL_RC(Gpu)
 
-    public:
-        static constexpr UINT FrameCount = GpuSurface::FrameCount;
-
     private:
+        friend class GpuDevice;
         friend class ShaderPass;
         friend struct ShaderModule;
 
@@ -37,18 +37,8 @@ namespace ccc
 
         com_ptr<IDXGIFactory4> m_factory{};
         com_ptr<IDXGIAdapter1> m_adapter{};
-        com_ptr<ID3D12Device> m_device{};
 
-        // todo 移到构建工具，运行时不携带 dxc
-        com_ptr<IDxcUtils> m_dxc_utils;
 
-        com_ptr<D3D12MA::Allocator> m_gpu_allocator{};
-
-        std::shared_ptr<GpuQueue> m_queue_direct{};
-        std::shared_ptr<GpuQueue> m_queue_compute{};
-        std::shared_ptr<GpuQueue> m_queue_copy{};
-
-        std::shared_ptr<ResourceOwner> m_resource_owner = std::make_shared<ResourceOwner>();
 
     public:
         ~Gpu() override;
@@ -60,5 +50,7 @@ namespace ccc
 
         // 获取全局默认的 Gpu 实例
         static const Rc<Gpu>& global();
+
+        FGpuDevice* CreateDevice(const FGpuDeviceCreateOptions& options, FError& err) override;
     };
 } // ccc
