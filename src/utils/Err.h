@@ -19,7 +19,7 @@ namespace ccc
         err.type = type;
         err.msg_type = FErrorMsgType::Utf8s;
         err.msg.u8s.ptr = reinterpret_cast<const uint8_t*>(&*msg);
-        err.msg.u8s.len = sizeof(msg) - 1;
+        err.msg.u8s.len = N - 1;
         // ReSharper disable once CppSomeObjectMembersMightNotBeInitialized
         return err;
     }
@@ -31,7 +31,7 @@ namespace ccc
         err.type = type;
         err.msg_type = FErrorMsgType::Utf16s;
         err.msg.u16s.ptr = reinterpret_cast<const uint16_t*>(&*msg);
-        err.msg.u16s.len = sizeof(msg) - 1;
+        err.msg.u16s.len = N - 1;
         // ReSharper disable once CppSomeObjectMembersMightNotBeInitialized
         return err;
     }

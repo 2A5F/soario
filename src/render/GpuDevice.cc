@@ -1,5 +1,6 @@
 ﻿#include "./GpuDevice.h"
 #include "./Gpu.h"
+#include "GpuBindLessPipelineLayout.h"
 #include "GpuSurfaceHwnd.h"
 #include "../Args.h"
 #include "../utils/Err.h"
@@ -168,6 +169,14 @@ namespace ccc
     FGpuQueue* GpuDevice::CreateQueue(const FGpuQueueCreateOptions& options, FError& err) noexcept
     {
         Rc r = GpuQueue::Create(Rc<GpuDevice>::UnsafeClone(this), options, err);
+        return r.leak();
+    }
+
+    FGpuPipelineLayout* GpuDevice::CreateBindLessPipelineLayout(
+        const FGpuBindLessPipelineLayoutCreateOptions& options, FError& err
+    ) noexcept
+    {
+        auto r = GpuBindLessPipelineLayout::Create(Rc<GpuDevice>::UnsafeClone(this), options, err);
         return r.leak();
     }
 } // ccc

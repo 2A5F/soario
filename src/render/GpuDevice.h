@@ -12,6 +12,7 @@ namespace ccc
     class Gpu;
     class GpuQueue;
     class GpuSurfaceHwnd;
+    class GpuBindLessPipelineLayout;
 
     class GpuDevice final : public FGpuDevice
     {
@@ -19,6 +20,7 @@ namespace ccc
 
         friend GpuQueue;
         friend GpuSurfaceHwnd;
+        friend GpuBindLessPipelineLayout;
 
         Rc<Gpu> m_gpu;
 
@@ -53,5 +55,9 @@ namespace ccc
         ) noexcept override;
 
         FGpuQueue* CreateQueue(const FGpuQueueCreateOptions& options, FError& err) noexcept override;
+
+        FGpuPipelineLayout* CreateBindLessPipelineLayout(
+            const FGpuBindLessPipelineLayoutCreateOptions& options, FError& err
+        ) noexcept override;
     };
 } // ccc

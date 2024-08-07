@@ -2,11 +2,13 @@
 using System.Collections.Frozen;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Runtime.InteropServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Coplt.ShaderReflections;
 using Soario.Resources;
+using ZipFile = ICSharpCode.SharpZipLib.Zip.ZipFile;
 
 namespace Soario.Rendering;
 
@@ -135,59 +137,68 @@ public sealed class Shader : AAsset, IEquatable<Shader>
 
     public static async Task<Shader> Load(string path)
     {
-        using var zip = ZipFile.OpenRead(path);
+        using var zip = new ZipFile(path);
         var meta_file = zip.GetEntry(".meta")!;
-        await using var meta_stream = meta_file.Open();
+        await using var meta_stream = zip.GetInputStream(meta_file);
         var meta = await JsonSerializer.DeserializeAsync<ShaderAssetMeta>(meta_stream, s_json_serializer_options);
         var passes = new List<PassData>();
         foreach (var (name, pass) in meta!.Pass)
         {
-            var stages = await Task.WhenAll(pass.Stages.Select(async stage =>
+            try
             {
-                var shader_stage = Enum.Parse<ShaderStage>(stage, ignoreCase: true);
-
-                // ReSharper disable once AccessToDisposedClosure
-                var obj_file = zip.GetEntry($"{name}.{stage}.o")!;
-                // ReSharper disable once AccessToDisposedClosure
-                var reflection_file = zip.GetEntry($"{name}.{stage}.re")!;
-
-                var blob = GC.AllocateUninitializedArray<byte>((int)obj_file.Length);
-
-                await using var obj_stream = obj_file.Open();
-                await obj_stream.ReadExactlyAsync(blob);
-
-                await using var reflection_stream = reflection_file.Open();
-                var reflection =
-                    await JsonSerializer.DeserializeAsync<ShaderMeta>(reflection_stream, s_json_serializer_options);
-
-                return new StageData(shader_stage, blob, reflection!);
-            }));
-
-            var pa = new PassData { Name = name };
-            foreach (var stage in stages)
-            {
-                switch (stage.ShaderStage)
+                var stages = await Task.WhenAll(pass.Stages.Select(async stage =>
                 {
-                    case ShaderStage.Ps:
-                        pa.Ps = stage;
-                        break;
-                    case ShaderStage.Vs:
-                        pa.Vs = stage;
-                        break;
-                    case ShaderStage.Cs:
-                        pa.Cs = stage;
-                        break;
-                    case ShaderStage.Ms:
-                        pa.Ms = stage;
-                        break;
-                    case ShaderStage.As:
-                        pa.As = stage;
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
+                    var shader_stage = Enum.Parse<ShaderStage>(stage, ignoreCase: true);
+
+                    // ReSharper disable once AccessToDisposedClosure
+                    var obj_file = zip.GetEntry($"{name}.{stage}.o")!;
+                    // ReSharper disable once AccessToDisposedClosure
+                    var reflection_file = zip.GetEntry($"{name}.{stage}.re")!;
+
+                    var blob = GC.AllocateUninitializedArray<byte>((int)obj_file.Size);
+
+                    // ReSharper disable once AccessToDisposedClosure
+                    await using var obj_stream = zip.GetInputStream(obj_file);
+                    await obj_stream.ReadExactlyAsync(blob);
+
+                    // ReSharper disable once AccessToDisposedClosure
+                    await using var reflection_stream = zip.GetInputStream(reflection_file);
+                    var reflection =
+                        await JsonSerializer.DeserializeAsync<ShaderMeta>(reflection_stream, s_json_serializer_options);
+
+                    return new StageData(shader_stage, blob, reflection!);
+                }));
+
+                var pa = new PassData { Name = name };
+                foreach (var stage in stages)
+                {
+                    switch (stage.ShaderStage)
+                    {
+                        case ShaderStage.Ps:
+                            pa.Ps = stage;
+                            break;
+                        case ShaderStage.Vs:
+                            pa.Vs = stage;
+                            break;
+                        case ShaderStage.Cs:
+                            pa.Cs = stage;
+                            break;
+                        case ShaderStage.Ms:
+                            pa.Ms = stage;
+                            break;
+                        case ShaderStage.As:
+                            pa.As = stage;
+                            break;
+                        default:
+                            throw new ArgumentOutOfRangeException();
+                    }
                 }
+                passes.Add(pa);
             }
-            passes.Add(pa);
+            catch (Exception e)
+            {
+                ExceptionDispatchInfo.Throw(e);
+            }
         }
         return new(meta.Id, meta.Path, passes);
     }

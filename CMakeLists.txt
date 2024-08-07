@@ -125,6 +125,12 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/ffi/gpu/FGpuRes.h
         src/render/State.cc
         src/render/State.h
+        src/ffi/gpu/FGpuPipelineLayout.cc
+        src/ffi/gpu/FGpuPipelineLayout.h
+        src/render/GpuBindLessPipelineLayout.cc
+        src/render/GpuBindLessPipelineLayout.h
+        src/render/GpuPipelineLayout.cc
+        src/render/GpuPipelineLayout.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

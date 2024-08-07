@@ -364,7 +364,7 @@ namespace Soario.Native
     public partial struct FGpuConsts
     {
         [NativeTypeName("const uint32_t")]
-        public const uint FrameCount = 2;
+        public const uint FrameCount = 3;
     }
 
     public partial struct FGpuSurface
@@ -519,6 +519,13 @@ namespace Soario.Native
         public FGpuQueue* CreateQueue([NativeTypeName("const FGpuQueueCreateOptions &")] FGpuQueueCreateOptions* options, [NativeTypeName("ccc::FError &")] FError* err)
         {
             return ((delegate* unmanaged[Thiscall]<FGpuDevice*, FGpuQueueCreateOptions*, FError*, FGpuQueue*>)(lpVtbl[5]))((FGpuDevice*)Unsafe.AsPointer(ref this), options, err);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("ccc::FGpuPipelineLayout *")]
+        public FGpuPipelineLayout* CreateBindLessPipelineLayout([NativeTypeName("const FGpuBindLessPipelineLayoutCreateOptions &")] FGpuBindLessPipelineLayoutCreateOptions* options, [NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuDevice*, FGpuBindLessPipelineLayoutCreateOptions*, FError*, FGpuPipelineLayout*>)(lpVtbl[6]))((FGpuDevice*)Unsafe.AsPointer(ref this), options, err);
         }
     }
 
@@ -814,6 +821,38 @@ namespace Soario.Native
         Common,
         Compute,
         Copy,
+    }
+
+    public partial struct FGpuBindLessPipelineLayoutCreateOptions
+    {
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 name;
+    }
+
+    [NativeTypeName("struct FGpuPipelineLayout : ccc::FObject")]
+    public unsafe partial struct FGpuPipelineLayout
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineLayout*, nuint>)(lpVtbl[1]))((FGpuPipelineLayout*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineLayout*, nuint>)(lpVtbl[2]))((FGpuPipelineLayout*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void* get_raw_ptr()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineLayout*, void*>)(lpVtbl[3]))((FGpuPipelineLayout*)Unsafe.AsPointer(ref this));
+        }
     }
 
     public static unsafe partial class FFI

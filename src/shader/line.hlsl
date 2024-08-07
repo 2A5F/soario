@@ -1,3 +1,10 @@
+#include "./bindless.hlsl"
+
+struct RootData 
+{
+   float3 a;
+};
+
 struct VertexOut
 {
    float4 PositionHS   : SV_Position;
@@ -5,11 +12,6 @@ struct VertexOut
    float3 Normal       : NORMAL0;
    uint   MeshletIndex : COLOR0;
 };
-
-cbuffer Foo
-{       
-    float4 foo;
-}
 
 [NumThreads(128, 1, 1)]
 [OutputTopology("triangle")]
@@ -22,12 +24,17 @@ void mesh(
 {
    SetMeshOutputCounts(0, 0);
 
+   ConstantBuffer<RootData> root = LoadRoot< ConstantBuffer<RootData> >();
+
    tris[gtid] = int3(0, 0, 0);
    VertexOut o;
-   o.Normal = foo.xyz;
+   o.Normal = root.a;
    verts[gtid] = o;
 }
 
 float4 pixel(VertexOut input) : SV_TARGET {
-   return 1;
+   ConstantBuffer<RootData> root = LoadRoot< ConstantBuffer<RootData> >();
+   Texture2D<float> some = LoadRoot< Texture2D<float> >();
+
+   return float4(root.a, 1) * some.Sample(_sampler_point_wrap, 0);
 }

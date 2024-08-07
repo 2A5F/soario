@@ -3,6 +3,8 @@ export type Meta = ShaderMeta; // todo other
 export type MetaBase<T extends string> = {
   type: T;
   id: string;
+  /** 默认为 on */
+  bindless: "on" | "off";
 };
 
 export type ShaderMeta = MetaBase<"shader"> & {

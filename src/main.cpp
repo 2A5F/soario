@@ -112,49 +112,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
             }
         ).detach();
 
-        // auto app = std::make_shared<ccc::App>();
-
-        // auto window = ccc::Window::builder()
-        //     .title("Soario")
-        //     .size(1280, 720)
-        //     .min_size(640, 360)
-        //     .build();
-        //
-        // std::thread([window] {
-        //     try {
-        //         const auto rd_ctx = window->render_context();
-        //         ccc::RenderContext::set_global(rd_ctx);
-        //         // app->sync_load();
-        //         while (!ccc::WindowSystem::is_exited()) {
-        //             ccc::time::tick();
-        //             if (window->resized()) rd_ctx->on_resize(*window);
-        //             // app->update();
-        //             // rd_ctx->record_frame([&app](const ccc::FrameContext &ctx) {
-        //             //     app->render(ctx);
-        //             // });
-        //         }
-        //     } catch (std::exception ex) {
-        //         spdlog::error(ex.what());
-        //         SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", ex.what(), nullptr);
-        //     } catch (winrt::hresult_error ex) {
-        //         spdlog::error(ex.message().c_str());
-        //         MessageBox(nullptr, ex.message().c_str(), nullptr, MB_OK);
-        //     } catch (...) {
-        //         spdlog::error("Unknown failure occurred. Possible memory corruption");
-        //         SDL_ShowSimpleMessageBox(
-        //             SDL_MESSAGEBOX_ERROR, "Error",
-        //             "Unknown failure occurred. Possible memory corruption", nullptr);
-        //     }
-        //     ccc::RenderContext::set_global(nullptr);
-        //     SDL_Event event{
-        //         .quit = {
-        //             .type = SDL_EVENT_QUIT,
-        //             .timestamp = SDL_GetTicksNS(),
-        //         }
-        //     };
-        //     SDL_PushEvent(&event);
-        // }).detach();
-
         r = ccc::WindowSystem::main_loop();
     }
     catch (std::exception ex)

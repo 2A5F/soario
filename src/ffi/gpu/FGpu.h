@@ -8,7 +8,7 @@ namespace ccc
 
     struct FGpuConsts
     {
-        static constexpr uint32_t FrameCount = 2;
+        static constexpr uint32_t FrameCount = 3;
     };
 
     struct FGpuSurface;

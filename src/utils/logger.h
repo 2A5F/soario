@@ -9,13 +9,13 @@ namespace ccc
         template <const size_t N>
         void write(const FLogLevel level, const char (&msg)[N])
         {
-            app_fn_vtb().logger_str8(level, {reinterpret_cast<const uint8_t*>(&*msg), sizeof(msg) - 1});
+            app_fn_vtb().logger_str8(level, {reinterpret_cast<const uint8_t*>(&*msg), N - 1});
         }
 
         template <const size_t N>
         void write(const FLogLevel level, const char16_t (&msg)[N])
         {
-            app_fn_vtb().logger_str16(level, {reinterpret_cast<const uint16_t*>(&*msg), sizeof(msg) - 1});
+            app_fn_vtb().logger_str16(level, {reinterpret_cast<const uint16_t*>(&*msg), N - 1});
         }
 
         inline void write(const FLogLevel level, const char* msg)

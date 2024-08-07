@@ -99,21 +99,6 @@ namespace ccc
             throw std::exception(
                 "Unable to create render context, no graphics device or graphics device does not support"
             );
-
-        // /* 创建队列 */
-        // {
-        //     m_queue_direct = std::make_shared<GpuQueue>(
-        //         m_device, D3D12_COMMAND_LIST_TYPE_DIRECT
-        //     );
-        //
-        //     m_queue_compute = std::make_shared<GpuQueue>(
-        //         m_device, D3D12_COMMAND_LIST_TYPE_COMPUTE
-        //     );
-        //
-        //     m_queue_copy = std::make_shared<GpuQueue>(
-        //         m_device, D3D12_COMMAND_LIST_TYPE_COPY
-        //     );
-        // }
     }
 
     void Gpu::set_global(Rc<Gpu> gpu)

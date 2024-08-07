@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Serilog;
-using Serilog.Events;
+using Serilog.Exceptions;
 using Soario.Native;
 using Soario.Rendering;
 using Soario.Utils;
@@ -80,6 +80,9 @@ public class Entry
             }
         }
         Log.Logger = new LoggerConfiguration()
+            .Enrich.WithThreadId()
+            .Enrich.WithThreadName()
+            .Enrich.WithExceptionDetails()
             .WriteTo.Console()
             .WriteTo.Async(c => c.File("./logs/latest.log"))
             .CreateLogger();
@@ -95,7 +98,14 @@ public class Entry
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static void Start()
     {
-        App.Start();
+        try
+        {
+            App.Start();
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "");
+        }
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]

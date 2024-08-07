@@ -20,6 +20,8 @@ public sealed unsafe class GpuDevice : IDisposable
     private GpuQueue m_queue_compute;
     private GpuQueue m_queue_copy;
 
+    private GpuPipelineLayout m_bindless_pipeline_layout;
+
     #endregion
 
     #region Props
@@ -78,6 +80,8 @@ public sealed unsafe class GpuDevice : IDisposable
         m_queue_common = new GpuQueue(this, GpuQueue.Kind.Common, $"{m_name} Common Queue");
         m_queue_compute = new GpuQueue(this, GpuQueue.Kind.Common, $"{m_name} Compute Queue");
         m_queue_copy = new GpuQueue(this, GpuQueue.Kind.Common, $"{m_name} Copy Queue");
+
+        m_bindless_pipeline_layout = CreateBindLessPipelineLayout($"{m_name} BindLess Pipeline Layout");
     }
 
     #endregion
@@ -118,10 +122,19 @@ public sealed unsafe class GpuDevice : IDisposable
 
     #region CreateSurface
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GpuSurface CreateSurface(Window window, GpuSurfaceCreateOptions options) => new(this, window, options);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GpuSurface CreateSurfaceFromHwnd(Window window, nuint hwnd, GpuSurfaceCreateOptions options) =>
         new(this, hwnd, options);
+
+    #endregion
+
+    #region BindLessGpuPipelineLayout
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuPipelineLayout CreateBindLessPipelineLayout(string? name = null) => new BindLessGpuPipelineLayout(this, name);
 
     #endregion
 }
