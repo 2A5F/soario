@@ -10,7 +10,7 @@ public record struct GpuSurfaceCreateOptions()
     public bool VSync { get; set; } = false;
 }
 
-public sealed unsafe class GpuSurface : IDisposable
+public sealed unsafe class GpuSurface : IDisposable, IRt
 {
     #region Fields
 
@@ -107,6 +107,57 @@ public sealed unsafe class GpuSurface : IDisposable
     #region ToString
 
     public override string ToString() => $"GpuSurface({m_name})";
+
+    #endregion
+
+    #region Frame
+
+    public void ReadyFrame(GpuQueue queue)
+    {
+        FError err;
+        m_inner->ready_frame(queue.m_inner, &err);
+        if (err.type != FErrorType.None) err.Throw();
+    }
+
+    public void PresentFrame()
+    {
+        FError err;
+        m_inner->present_frame(&err);
+        if (err.type != FErrorType.None) err.Throw();
+    }
+
+    public void PresentFrame(GpuCmdList list, GpuQueue queue)
+    {
+        list.Present(this);
+        queue.Submit(list);
+        PresentFrame();
+    }
+
+    #endregion
+
+    #region Rt
+
+    public ResourceState State
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal set;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public ResourceState ReqState(ResourceState new_state)
+    {
+        var old = State;
+        State = new_state;
+        return old;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public FGpuRes* AsResPointer()=> (FGpuRes*)m_inner;
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public FGpuRt* AsRtPointer() => (FGpuRt*)m_inner;
 
     #endregion
 }

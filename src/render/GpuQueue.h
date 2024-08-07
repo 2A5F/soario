@@ -26,7 +26,7 @@ namespace ccc
         Rc<GpuDevice> m_device;
 
         com_ptr<ID3D12Device> m_dx_device{};
-        com_ptr<ID3D12CommandAllocator> m_command_allocators[FrameCount]{};
+        com_ptr<ID3D12CommandAllocator> m_command_allocators{};
         com_ptr<ID3D12CommandQueue> m_command_queue{};
         com_ptr<ID3D12GraphicsCommandList> m_command_list{};
 
@@ -40,5 +40,8 @@ namespace ccc
 
         static Rc<GpuQueue> Create(Rc<GpuDevice> gpu_device, const FGpuQueueCreateOptions& options, FError& err) noexcept;
 
+        void submit(const FGpuCmdList* cmd_list, FError& err) noexcept override;
+
+        void submit_inner(const FGpuCmdList* cmd_list, FError& err) ;
     };
 } // ccc

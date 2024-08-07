@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Soario.Native;
 
 namespace Soario.Rendering;
@@ -96,6 +97,33 @@ public sealed unsafe class GpuQueue : IDisposable
     #region ToString
 
     public override string ToString() => $"GpuQueue({m_name})";
+
+    #endregion
+
+    #region Submit
+
+    /// <summary>
+    /// 提交命令
+    /// </summary>
+    public void Submit(GpuCmdList cmds)
+    {
+        fixed (byte* datas = CollectionsMarshal.AsSpan(cmds.datas))
+        {
+            fixed (int* indexes = CollectionsMarshal.AsSpan(cmds.indexes))
+            {
+                var list = new FGpuCmdList
+                {
+                    datas = datas,
+                    indexes = indexes,
+                    len = (nuint)cmds.indexes.Count,
+                };
+                FError err;
+                m_inner->submit(&list, &err);
+                if (err.type != FErrorType.None) err.Throw();
+            }
+        }
+        cmds.Reset();
+    }
 
     #endregion
 }

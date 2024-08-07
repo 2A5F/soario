@@ -173,7 +173,7 @@ namespace ccc
         winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
     }
 
-    CD3DX12_CPU_DESCRIPTOR_HANDLE GpuSurfaceHwnd::get_cpu_handle() const
+    CD3DX12_CPU_DESCRIPTOR_HANDLE GpuSurfaceHwnd::get_dx_cpu_handle() const
     {
         return m_current_cpu_handle;
     }
@@ -220,6 +220,48 @@ namespace ccc
         return {m_current_size.x, m_current_size.y};
     }
 
+    void GpuSurfaceHwnd::ready_frame(FGpuQueue* queue, FError& err) noexcept
+    {
+        const auto r_queue = Rc<GpuQueue>::UnsafeClone(static_cast<GpuQueue*>(queue));
+        try
+        {
+            ready_frame(r_queue);
+        }
+        catch (std::exception ex)
+        {
+            logger::error(ex.what());
+            err = make_error(FErrorType::Gpu, "Failed to read frame!");
+        }
+        catch (winrt::hresult_error ex)
+        {
+            logger::error(ex.message());
+            err = make_hresult_error(ex);
+        }
+    }
+
+    void GpuSurfaceHwnd::present_frame(FError& err) noexcept
+    {
+        try
+        {
+            present();
+        }
+        catch (std::exception ex)
+        {
+            logger::error(ex.what());
+            err = make_error(FErrorType::Gpu, "Failed to present");
+        }
+        catch (winrt::hresult_error ex)
+        {
+            logger::error(ex.message());
+            err = make_hresult_error(ex);
+        }
+    }
+
+    void GpuSurfaceHwnd::ready_frame(const Rc<GpuQueue>& queue)
+    {
+        move_to_next_frame(queue->m_command_queue);
+    }
+
     bool GpuSurfaceHwnd::get_v_sync() const noexcept
     {
         return m_v_sync;
@@ -228,6 +270,23 @@ namespace ccc
     void GpuSurfaceHwnd::set_v_sync(const bool v) noexcept
     {
         m_v_sync = v;
+    }
+
+    size_t GpuSurfaceHwnd::get_cpu_rtv_handle(FError& err) noexcept
+    {
+        const D3D12_CPU_DESCRIPTOR_HANDLE h = get_dx_cpu_handle();
+        return h.ptr;
+    }
+
+    size_t GpuSurfaceHwnd::get_cpu_dsv_handle(FError& err) noexcept
+    {
+        err = make_error(FErrorType::Gpu, "TODO 暂时没实现深度纹理");
+        return 0;
+    }
+
+    void* GpuSurfaceHwnd::get_res_raw_ptr() noexcept
+    {
+        return m_render_targets[m_frame_index].get();
     }
 
     // bool GpuSurfaceHwnd::require_state(

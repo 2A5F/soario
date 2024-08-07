@@ -46,6 +46,15 @@ namespace ccc
         int32_t Y;
     };
 
+    __declspec(align(16))
+    struct FInt4
+    {
+        int32_t X;
+        int32_t Y;
+        int32_t Z;
+        int32_t W;
+    };
+
     __declspec(align(8))
     struct FFloat2
     {
@@ -71,6 +80,15 @@ namespace ccc
         float Y;
         float Z;
         float W;
+    };
+
+    __declspec(align(16))
+    struct FFloatRect
+    {
+        float X;
+        float Y;
+        float W;
+        float H;
     };
 
     using FBool = int32_t;

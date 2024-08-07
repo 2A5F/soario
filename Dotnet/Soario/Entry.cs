@@ -18,6 +18,18 @@ public class Entry
     {
         InitLogger();
 
+        AppDomain.CurrentDomain.UnhandledException += static (_, e) =>
+        {
+            if (e.ExceptionObject is Exception exception)
+            {
+                Log.Error(exception, "");
+            }
+            else
+            {
+                Log.Error("{Error}", e.ExceptionObject);
+            }
+        };
+
         Time.p_time_data = init_params->p_time_data;
         Gpu.s_gpu = new(init_params->p_gpu);
         init_result->fn_vtb = new AppFnVtb

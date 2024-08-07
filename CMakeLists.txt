@@ -70,7 +70,6 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/FrameContext.h
         src/render/GpuCommandList.cc
         src/render/GpuCommandList.h
-        src/render/IRT.cc
         src/App.cc
         src/App.h
         src/utils/Time.cc
@@ -120,6 +119,12 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/ffi/gpu/FGpuRt.h
         src/ffi/FString8.cc
         src/ffi/FString8.h
+        src/ffi/gpu/FGpuCmd.cc
+        src/ffi/gpu/FGpuCmd.h
+        src/ffi/gpu/FGpuRes.cc
+        src/ffi/gpu/FGpuRes.h
+        src/render/State.cc
+        src/render/State.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

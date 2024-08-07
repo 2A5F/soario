@@ -73,6 +73,21 @@ namespace Soario.Native
         public int Y;
     }
 
+    public partial struct FInt4
+    {
+        [NativeTypeName("int32_t")]
+        public int X;
+
+        [NativeTypeName("int32_t")]
+        public int Y;
+
+        [NativeTypeName("int32_t")]
+        public int Z;
+
+        [NativeTypeName("int32_t")]
+        public int W;
+    }
+
     public partial struct FFloat2
     {
         [NativeTypeName("int32_t")]
@@ -102,6 +117,17 @@ namespace Soario.Native
         public float Z;
 
         public float W;
+    }
+
+    public partial struct FFloatRect
+    {
+        public float X;
+
+        public float Y;
+
+        public float W;
+
+        public float H;
     }
 
     public enum FErrorType
@@ -365,23 +391,55 @@ namespace Soario.Native
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void* get_res_raw_ptr()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, void*>)(lpVtbl[3]))((FGpuSurface*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("ccc::FInt2")]
         public FInt2 get_size()
         {
             FInt2 result;
-            return *((delegate* unmanaged[Thiscall]<FGpuSurface*, FInt2*, FInt2*>)(lpVtbl[3]))((FGpuSurface*)Unsafe.AsPointer(ref this), &result);
+            return *((delegate* unmanaged[Thiscall]<FGpuSurface*, FInt2*, FInt2*>)(lpVtbl[4]))((FGpuSurface*)Unsafe.AsPointer(ref this), &result);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint get_cpu_rtv_handle([NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, FError*, nuint>)(lpVtbl[5]))((FGpuSurface*)Unsafe.AsPointer(ref this), err);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint get_cpu_dsv_handle([NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, FError*, nuint>)(lpVtbl[6]))((FGpuSurface*)Unsafe.AsPointer(ref this), err);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ready_frame([NativeTypeName("ccc::FGpuQueue *")] FGpuQueue* queue, [NativeTypeName("ccc::FError &")] FError* err)
+        {
+            ((delegate* unmanaged[Thiscall]<FGpuSurface*, FGpuQueue*, FError*, void>)(lpVtbl[7]))((FGpuSurface*)Unsafe.AsPointer(ref this), queue, err);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void present_frame([NativeTypeName("ccc::FError &")] FError* err)
+        {
+            ((delegate* unmanaged[Thiscall]<FGpuSurface*, FError*, void>)(lpVtbl[8]))((FGpuSurface*)Unsafe.AsPointer(ref this), err);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool get_v_sync()
         {
-            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte>)(lpVtbl[4]))((FGpuSurface*)Unsafe.AsPointer(ref this)) != 0;
+            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte>)(lpVtbl[9]))((FGpuSurface*)Unsafe.AsPointer(ref this)) != 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void set_v_sync([NativeTypeName("bool")] byte v)
         {
-            ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte, void>)(lpVtbl[5]))((FGpuSurface*)Unsafe.AsPointer(ref this), v);
+            ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte, void>)(lpVtbl[10]))((FGpuSurface*)Unsafe.AsPointer(ref this), v);
         }
     }
 
@@ -479,7 +537,39 @@ namespace Soario.Native
         }
     }
 
-    [NativeTypeName("struct FGpuRt : ccc::FObject")]
+    public enum FGpuResState
+    {
+        Common,
+        RenderTarget,
+    }
+
+    [NativeTypeName("struct FGpuRes : ccc::FObject")]
+    public unsafe partial struct FGpuRes
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuRes*, nuint>)(lpVtbl[1]))((FGpuRes*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuRes*, nuint>)(lpVtbl[2]))((FGpuRes*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void* get_res_raw_ptr()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuRes*, void*>)(lpVtbl[3]))((FGpuRes*)Unsafe.AsPointer(ref this));
+        }
+    }
+
+    [NativeTypeName("struct FGpuRt : ccc::FGpuRes")]
     public unsafe partial struct FGpuRt
     {
         public void** lpVtbl;
@@ -499,11 +589,31 @@ namespace Soario.Native
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void* get_res_raw_ptr()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuRt*, void*>)(lpVtbl[3]))((FGpuRt*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("ccc::FInt2")]
         public FInt2 get_size()
         {
             FInt2 result;
-            return *((delegate* unmanaged[Thiscall]<FGpuRt*, FInt2*, FInt2*>)(lpVtbl[3]))((FGpuRt*)Unsafe.AsPointer(ref this), &result);
+            return *((delegate* unmanaged[Thiscall]<FGpuRt*, FInt2*, FInt2*>)(lpVtbl[4]))((FGpuRt*)Unsafe.AsPointer(ref this), &result);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint get_cpu_rtv_handle([NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuRt*, FError*, nuint>)(lpVtbl[5]))((FGpuRt*)Unsafe.AsPointer(ref this), err);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint get_cpu_dsv_handle([NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuRt*, FError*, nuint>)(lpVtbl[6]))((FGpuRt*)Unsafe.AsPointer(ref this), err);
         }
     }
 
@@ -542,6 +652,12 @@ namespace Soario.Native
         {
             return ((delegate* unmanaged[Thiscall]<FGpuQueue*, nuint>)(lpVtbl[2]))((FGpuQueue*)Unsafe.AsPointer(ref this));
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void submit([NativeTypeName("const FGpuCmdList *")] FGpuCmdList* cmd_list, [NativeTypeName("ccc::FError &")] FError* err)
+        {
+            ((delegate* unmanaged[Thiscall]<FGpuQueue*, FGpuCmdList*, FError*, void>)(lpVtbl[3]))((FGpuQueue*)Unsafe.AsPointer(ref this), cmd_list, err);
+        }
     }
 
     public partial struct FGpuQueueCreateOptions
@@ -555,6 +671,118 @@ namespace Soario.Native
 
         [NativeTypeName("ccc::FGpuQueueType")]
         public FGpuQueueType type;
+    }
+
+    public enum FGpuCmdType
+    {
+        BarrierTransition = 1,
+        ClearRtv,
+    }
+
+    public partial struct FGpuCmdClearRtvFlag
+    {
+        public byte _bitfield;
+
+        [NativeTypeName("uint8_t : 1")]
+        public byte color
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (byte)(_bitfield & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (byte)((_bitfield & ~0x1u) | (value & 0x1u));
+            }
+        }
+
+        [NativeTypeName("uint8_t : 1")]
+        public byte depth
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (byte)((_bitfield >> 1) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (byte)((_bitfield & ~(0x1u << 1)) | ((value & 0x1u) << 1));
+            }
+        }
+
+        [NativeTypeName("uint8_t : 1")]
+        public byte stencil
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (byte)((_bitfield >> 2) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (byte)((_bitfield & ~(0x1u << 2)) | ((value & 0x1u) << 2));
+            }
+        }
+    }
+
+    public unsafe partial struct FGpuCmdClearRtv
+    {
+        [NativeTypeName("ccc::FGpuCmdType")]
+        public FGpuCmdType type;
+
+        [NativeTypeName("ccc::FGpuCmdClearRtvFlag")]
+        public FGpuCmdClearRtvFlag flag;
+
+        [NativeTypeName("ccc::FGpuRt *")]
+        public FGpuRt* rt;
+
+        [NativeTypeName("ccc::FFloat4")]
+        public FFloat4 color;
+
+        [NativeTypeName("int32_t")]
+        public int rect_len;
+
+        public float depth;
+
+        [NativeTypeName("uint8_t")]
+        public byte stencil;
+    }
+
+    public unsafe partial struct FGpuCmdBarrierTransition
+    {
+        [NativeTypeName("ccc::FGpuCmdType")]
+        public FGpuCmdType type;
+
+        [NativeTypeName("uint32_t")]
+        public uint sub_res;
+
+        [NativeTypeName("ccc::FGpuRes *")]
+        public FGpuRes* res;
+
+        [NativeTypeName("ccc::FGpuResState")]
+        public FGpuResState pre_state;
+
+        [NativeTypeName("ccc::FGpuResState")]
+        public FGpuResState cur_state;
+    }
+
+    public unsafe partial struct FGpuCmdList
+    {
+        [NativeTypeName("uint8_t *")]
+        public byte* datas;
+
+        [NativeTypeName("int32_t *")]
+        public int* indexes;
+
+        [NativeTypeName("size_t")]
+        public nuint len;
     }
 
     public enum FGpuQueueType

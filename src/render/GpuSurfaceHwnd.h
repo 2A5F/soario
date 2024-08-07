@@ -59,7 +59,7 @@ namespace ccc
 
         void present() const;
 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE get_cpu_handle() const;
+        CD3DX12_CPU_DESCRIPTOR_HANDLE get_dx_cpu_handle() const;
 
     public:
         static Rc<GpuSurfaceHwnd> Create(
@@ -69,7 +69,21 @@ namespace ccc
 
         FInt2 get_size() const noexcept override;
 
+        void ready_frame(FGpuQueue* queue, FError& err) noexcept override;
+
+        void present_frame(FError& err) noexcept override;
+
+        void ready_frame(const Rc<GpuQueue>& queue);
+
         bool get_v_sync() const noexcept override;
+
         void set_v_sync(bool v) noexcept override;
+
+        size_t get_cpu_rtv_handle(FError& err) noexcept override;
+
+        size_t get_cpu_dsv_handle(FError& err) noexcept override;
+
+        void* get_res_raw_ptr() noexcept override;
+
     };
 } // ccc

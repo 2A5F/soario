@@ -1,5 +1,6 @@
 #pragma once
 
+#include "FGpuCmd.h"
 #include "../FFI.h"
 
 namespace ccc
@@ -19,5 +20,6 @@ namespace ccc
 
     struct FGpuQueue : FObject
     {
+        virtual void submit(const FGpuCmdList* cmd_list, FError& err) noexcept = 0;
     };
 } // ccc
