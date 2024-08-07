@@ -7,14 +7,15 @@ SamplerState _sampler_liner_wrap : register(s4, space0);
 SamplerState _sampler_liner_mirror : register(s5, space0);
 
 struct BindLessEntry_t {
-    uint index;
+    uint root;
+    uint scene;
 };
 
 ConstantBuffer<BindLessEntry_t> _bindless_entry : register(b0, space0);
 
 template<typename T>
 T LoadRoot() {
-    return ResourceDescriptorHeap[_bindless_entry.index];
+    return ResourceDescriptorHeap[_bindless_entry.root];
 }
 
 template<typename T>

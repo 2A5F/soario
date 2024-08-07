@@ -199,7 +199,7 @@ namespace ccc
         }
         else
         {
-            err = make_error(FErrorType::Common, "Failed to get window size");
+            err = make_error(FErrorType::Common, u"Failed to get window size");
             return nullptr;
         }
 
@@ -211,7 +211,7 @@ namespace ccc
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to create surface!");
+            err = make_error(FErrorType::Gpu, u"Failed to create surface!");
             return nullptr;
         }
         catch (winrt::hresult_error ex)
@@ -237,7 +237,7 @@ namespace ccc
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to read frame!");
+            err = make_error(FErrorType::Gpu, u"Failed to read frame!");
         }
         catch (winrt::hresult_error ex)
         {
@@ -255,7 +255,7 @@ namespace ccc
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to present");
+            err = make_error(FErrorType::Gpu, u"Failed to present");
         }
         catch (winrt::hresult_error ex)
         {
@@ -297,7 +297,7 @@ namespace ccc
 
     size_t GpuSurfaceHwnd::get_cpu_dsv_handle(FError& err) noexcept
     {
-        err = make_error(FErrorType::Gpu, "交换链不包含深度");
+        err = make_error(FErrorType::Gpu, u"Swap chain does not contain depth");
         return 0;
     }
 

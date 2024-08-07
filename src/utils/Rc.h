@@ -1,135 +1,23 @@
 ﻿#pragma once
 
-#define DECL_RC(Name) \
-    template<class T> \
-    friend class Rc; \
-    \
-    template<class T> \
-    friend class Weak; \
-    \
-    mutable std::atomic_size_t m_strong{1}; \
-    mutable std::atomic_size_t m_weak{1}; \
-    \
-public: \
-    size_t AddRef() const noexcept override; \
-    \
-    size_t Release() noexcept override; \
-    \
-private: \
-    size_t strong_clone() const; \
-    \
-    size_t weak_clone() const; \
-    \
-    size_t strong_drop(); \
-    \
-    void drop_slow(); \
-    \
-    void weak_drop(); \
-    \
-    bool try_upgrade() const; \
-    \
-    bool try_downgrade() const;
-
 #define IMPL_RC(Name) \
-    template<class T> \
-    friend class Rc; \
-    \
-    template<class T> \
-    friend class Weak; \
-    \
     mutable std::atomic_size_t m_strong{1}; \
     mutable std::atomic_size_t m_weak{1}; \
-    \
-public: \
-    size_t AddRef() const noexcept override \
-    { \
-        return strong_clone(); \
-    } \
-    \
-    size_t Release() noexcept override \
-    { \
-        return strong_drop(); \
-    } \
-    \
-private: \
-    size_t strong_clone() const \
-    { \
-        return m_strong.fetch_add(1, std::memory_order_relaxed); \
-    } \
-    \
-    size_t weak_clone() const \
-    { \
-        return m_weak.fetch_add(1, std::memory_order_relaxed); \
-    } \
-    \
-    size_t strong_drop() \
-    { \
-        const size_t r = m_strong.fetch_sub(1, std::memory_order_release); \
-        if (r != 1) return r; \
-    \
-        drop_slow(); \
-        return r; \
-    } \
     \
     void drop_slow() \
     { \
         this->~Name(); \
      \
-        weak_drop(); \
+        ReleaseWeak(); \
     } \
     \
-    void weak_drop() \
-    { \
-        if (m_weak.fetch_sub(1, std::memory_order_release) == 1) { \
-            operator delete(this); \
-        } \
-    } \
-    \
-    bool try_upgrade() const \
-    { \
-        size_t cur = m_strong.load(std::memory_order_relaxed); \
-    re_try: \
-        if (cur == 0) return false; \
-        if (m_strong.compare_exchange_weak(cur, cur + 1, std::memory_order_acquire, std::memory_order_relaxed)) { \
-            return true; \
-        } \
-        goto re_try; \
-    } \
-    \
-    bool try_downgrade() const \
-    { \
-        size_t cur = m_weak.load(std::memory_order_relaxed); \
-    re_try: \
-        if (cur == 0) return false; \
-        if (m_weak.compare_exchange_weak(cur, cur + 1, std::memory_order_acquire, std::memory_order_relaxed)) { \
-            return true; \
-        } \
-        goto re_try; \
-    }
-
-
-#define IMPL_RC_CC(Name) \
-    size_t Name::AddRef() const noexcept \
-    { \
-        return strong_clone(); \
-    } \
-    \
-    size_t Name::Release() noexcept \
-    { \
-        return strong_drop(); \
-    } \
-    \
-    size_t Name::strong_clone() const \
+public: \
+    size_t AddRef() const noexcept override \
     { \
         return m_strong.fetch_add(1, std::memory_order_relaxed); \
     } \
     \
-    size_t Name::weak_clone() const \
-    { \
-        return m_weak.fetch_add(1, std::memory_order_relaxed); \
-    } \
-    \
-    size_t Name::strong_drop() \
+    size_t Release() noexcept override \
     { \
         const size_t r = m_strong.fetch_sub(1, std::memory_order_release); \
         if (r != 1) return r; \
@@ -138,21 +26,32 @@ private: \
         return r; \
     } \
     \
-    void Name::drop_slow() \
+    size_t AddRefWeak() const noexcept override \
     { \
-        this->~Name(); \
-     \
-        weak_drop(); \
+        return m_weak.fetch_add(1, std::memory_order_relaxed); \
     } \
     \
-    void Name::weak_drop() \
+    size_t ReleaseWeak() noexcept override \
     { \
-        if (m_weak.fetch_sub(1, std::memory_order_release) == 1) { \
-            operator delete(this); \
+        const size_t r = m_weak.fetch_sub(1, std::memory_order_release); \
+        if (r != 1) return r; \
+        \
+        operator delete(this); \
+        return r; \
+    } \
+    \
+    bool TryDowngrade() noexcept override \
+    { \
+        size_t cur = m_weak.load(std::memory_order_relaxed); \
+    re_try: \
+        if (cur == 0) return false; \
+        if (m_weak.compare_exchange_weak(cur, cur + 1, std::memory_order_acquire, std::memory_order_relaxed)) { \
+            return true; \
         } \
+        goto re_try; \
     } \
     \
-    bool Name::try_upgrade() const \
+    bool TryUpgrade() noexcept override \
     { \
         size_t cur = m_strong.load(std::memory_order_relaxed); \
     re_try: \
@@ -163,16 +62,7 @@ private: \
         goto re_try; \
     } \
     \
-    bool Name::try_downgrade() const \
-    { \
-        size_t cur = m_weak.load(std::memory_order_relaxed); \
-    re_try: \
-        if (cur == 0) return false; \
-        if (m_weak.compare_exchange_weak(cur, cur + 1, std::memory_order_acquire, std::memory_order_relaxed)) { \
-            return true; \
-        } \
-        goto re_try; \
-    }
+private:
 
 namespace ccc
 {
@@ -205,7 +95,7 @@ namespace ccc
 
             if (auto p = get())
             {
-                p->strong_clone();
+                p->AddRef();
             }
         }
 
@@ -216,7 +106,7 @@ namespace ccc
 
             if (auto p = get())
             {
-                if (!p->try_upgrade())
+                if (!p->TryUpgrade())
                 {
                     this->m_ptr = nullptr;
                     return;
@@ -228,7 +118,7 @@ namespace ccc
         {
             if (auto p = m_ptr)
             {
-                p->strong_drop();
+                p->Release();
             }
         }
 
@@ -408,7 +298,7 @@ namespace ccc
 
             if (auto p = get())
             {
-                p->weak_clone();
+                p->AddRefWeak();
             }
         }
 
@@ -419,7 +309,7 @@ namespace ccc
 
             if (auto p = get())
             {
-                if (!p->try_downgrade())
+                if (!p->TryDowngrade())
                 {
                     this->m_ptr = nullptr;
                     return;
@@ -431,7 +321,7 @@ namespace ccc
         {
             if (auto p = this->m_ptr)
             {
-                p->weak_drop();
+                p->ReleaseWeak();
             }
         }
 

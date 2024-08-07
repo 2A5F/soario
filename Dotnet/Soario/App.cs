@@ -2,6 +2,7 @@
 using Coplt.Mathematics;
 using Serilog;
 using Soario.Rendering;
+using Soario.Resources;
 using Soario.Utils;
 using Soario.Windowing;
 
@@ -28,6 +29,9 @@ public static class App
             Log.Information("{Queue}", Gpu.Instance.MainDevice.ComputeQueue);
             Log.Information("{Queue}", Gpu.Instance.MainDevice.CopyQueue);
             Log.Information("{Surface}", surface);
+
+            var shader_rect = Assets.TryGet<Shader>("shader/rect")!;
+            Log.Information("{Shader}", shader_rect);
 
             var cmd = new GpuCmdList();
             try

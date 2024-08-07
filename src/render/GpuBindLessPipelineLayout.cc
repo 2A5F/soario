@@ -84,6 +84,7 @@ namespace ccc
         desc.NumStaticSamplers = std::size(static_samplers::s_static_samplers);
         D3D12_ROOT_PARAMETER root_parameter[1] = {};
         root_parameter[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_32BIT_CONSTANTS;
+        root_parameter[0].Constants.Num32BitValues = 2;
         desc.pParameters = root_parameter;
         desc.NumParameters = std::size(root_parameter);
         winrt::check_hresult(DirectX::CreateRootSignature(m_device->m_device.get(), &desc, m_root_signature.put()));
@@ -100,12 +101,13 @@ namespace ccc
         try
         {
             Rc r(new GpuBindLessPipelineLayout(std::move(device), options, err));
+            if (err.type != FErrorType::None) return nullptr;
             return r;
         }
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to create bindLess pipeline layout");
+            err = make_error(FErrorType::Gpu, u"Failed to create bindLess pipeline layout");
             return nullptr;
         }
         catch (winrt::hresult_error ex)
@@ -119,5 +121,10 @@ namespace ccc
     void* GpuBindLessPipelineLayout::get_raw_ptr() const noexcept
     {
         return m_root_signature.get();
+    }
+
+    const com_ptr<ID3D12RootSignature>& GpuBindLessPipelineLayout::get_root_signature() const
+    {
+        return m_root_signature;
     }
 } // ccc

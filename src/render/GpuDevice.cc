@@ -57,7 +57,7 @@ namespace ccc
         }
     }
 
-    GpuDevice::GpuDevice(Rc<Gpu> gpu, com_ptr<ID3D12Device> device, const FGpuDeviceCreateOptions& options) : m_gpu(
+    GpuDevice::GpuDevice(Rc<Gpu> gpu, com_ptr<ID3D12Device2> device, const FGpuDeviceCreateOptions& options) : m_gpu(
             std::move(gpu)
         ), m_device(std::move(device)),
         m_logger(options.logger),
@@ -108,7 +108,7 @@ namespace ccc
     {
         try
         {
-            com_ptr<ID3D12Device> device{};
+            com_ptr<ID3D12Device2> device{};
             winrt::check_hresult(
                 D3D12CreateDevice(gpu->m_adapter.get(), D3D_FEATURE_LEVEL_12_2, RT_IID_PPV_ARGS(device))
             );
@@ -124,7 +124,7 @@ namespace ccc
                 if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_SHADER_MODEL, &shader_model, sizeof(shader_model)))
                     || (shader_model.HighestShaderModel < D3D_SHADER_MODEL_6_6))
                 {
-                    err = make_error(FErrorType::Gpu, "Shader Model 6.6 is not supported");
+                    err = make_error(FErrorType::Gpu, u"Shader Model 6.6 is not supported");
                     return nullptr;
                 }
 
@@ -132,7 +132,7 @@ namespace ccc
                 if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS7, &features, sizeof(features)))
                     || (features.MeshShaderTier == D3D12_MESH_SHADER_TIER_NOT_SUPPORTED))
                 {
-                    err = make_error(FErrorType::Gpu, "Mesh Shaders aren't supported!");
+                    err = make_error(FErrorType::Gpu, u"Mesh Shaders aren't supported!");
                     return nullptr;
                 }
             }
@@ -143,7 +143,7 @@ namespace ccc
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to create device!");
+            err = make_error(FErrorType::Gpu, u"Failed to create device!");
             return nullptr;
         }
         catch (winrt::hresult_error ex)

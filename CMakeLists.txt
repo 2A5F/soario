@@ -49,6 +49,7 @@ add_custom_target(shaders)
 add_custom_target(dotnet)
 
 set(HLSL_ITEMS src/shader/line.meta)
+set(HLSL_ITEMS src/shader/rect.meta)
 
 add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/pch.h
@@ -131,6 +132,10 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/GpuBindLessPipelineLayout.h
         src/render/GpuPipelineLayout.cc
         src/render/GpuPipelineLayout.h
+        src/ffi/gpu/FGpuPipelineState.cc
+        src/ffi/gpu/FGpuPipelineState.h
+        src/render/GpuPipelineState.cc
+        src/render/GpuPipelineState.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

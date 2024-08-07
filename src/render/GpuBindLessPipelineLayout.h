@@ -5,7 +5,7 @@
 
 namespace ccc
 {
-    class GpuBindLessPipelineLayout : public GpuPipelineLayout
+    class GpuBindLessPipelineLayout final : public GpuPipelineLayout
     {
         IMPL_RC(GpuBindLessPipelineLayout);
 
@@ -22,5 +22,9 @@ namespace ccc
         ) noexcept;
 
         void* get_raw_ptr() const noexcept override;
+
+        bool is_bind_less() const override { return true; }
+
+        const com_ptr<ID3D12RootSignature>& get_root_signature() const override;
     };
 } // ccc

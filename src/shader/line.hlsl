@@ -33,8 +33,5 @@ void mesh(
 }
 
 float4 pixel(VertexOut input) : SV_TARGET {
-   ConstantBuffer<RootData> root = LoadRoot< ConstantBuffer<RootData> >();
-   Texture2D<float> some = LoadRoot< Texture2D<float> >();
-
-   return float4(root.a, 1) * some.Sample(_sampler_point_wrap, 0);
+   return float4(0, 1);
 }

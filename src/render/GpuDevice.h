@@ -13,6 +13,7 @@ namespace ccc
     class GpuQueue;
     class GpuSurfaceHwnd;
     class GpuBindLessPipelineLayout;
+    class GpuPipelineState;
 
     class GpuDevice final : public FGpuDevice
     {
@@ -21,10 +22,11 @@ namespace ccc
         friend GpuQueue;
         friend GpuSurfaceHwnd;
         friend GpuBindLessPipelineLayout;
+        friend GpuPipelineState;
 
         Rc<Gpu> m_gpu;
 
-        com_ptr<ID3D12Device> m_device{};
+        com_ptr<ID3D12Device2> m_device{};
 
         com_ptr<ID3D12InfoQueue1> m_info_queue{};
         DWORD m_callback_cookie{};
@@ -43,7 +45,7 @@ namespace ccc
             void* pContext
         );
 
-        explicit GpuDevice(Rc<Gpu> gpu, com_ptr<ID3D12Device> device, const FGpuDeviceCreateOptions& options);
+        explicit GpuDevice(Rc<Gpu> gpu, com_ptr<ID3D12Device2> device, const FGpuDeviceCreateOptions& options);
 
     public:
         ~GpuDevice() override;

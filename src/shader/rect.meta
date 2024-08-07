@@ -1,0 +1,7 @@
+id: 81257ef9-616c-45ff-850a-fdd0dcaf5fd5
+type: shader
+
+pass:
+  mesh:
+    ms: mesh
+    ps: pixel

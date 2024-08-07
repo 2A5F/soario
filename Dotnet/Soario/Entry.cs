@@ -72,7 +72,7 @@ public class Entry
                     .Select(static a => a.n)
                     .FirstOrDefault();
                 var count = max_count + 1;
-                File.Move("./logs/latest.log", $"./logs/{time_name}-{count}.log");
+                File.Move("./logs/latest.log", $"./logs/{time_name}.{count}.log");
             }
             catch (Exception e)
             {
@@ -98,14 +98,7 @@ public class Entry
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static void Start()
     {
-        try
-        {
-            App.Start();
-        }
-        catch (Exception e)
-        {
-            Log.Error(e, "");
-        }
+        App.Start();
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]

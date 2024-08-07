@@ -13,6 +13,14 @@ namespace ccc
         virtual size_t AddRef() const noexcept = 0;
 
         virtual size_t Release() noexcept = 0;
+
+        virtual size_t AddRefWeak() const noexcept = 0;
+
+        virtual size_t ReleaseWeak() noexcept = 0;
+
+        virtual bool TryDowngrade() noexcept = 0;
+
+        virtual bool TryUpgrade() noexcept = 0;
     };
 
     struct FmStr16

@@ -67,7 +67,7 @@ namespace ccc
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to create queue!");
+            err = make_error(FErrorType::Gpu, u"Failed to create queue!");
             return nullptr;
         }
         catch (winrt::hresult_error ex)
@@ -87,7 +87,7 @@ namespace ccc
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to submit command list!");
+            err = make_error(FErrorType::Gpu, u"Failed to submit command list!");
         }
         catch (winrt::hresult_error ex)
         {
@@ -198,7 +198,7 @@ namespace ccc
                 if (err.type != FErrorType::None) return;
                 break;
             default:
-                err = make_error(FErrorType::Gpu, "Unknown command type");
+                err = make_error(FErrorType::Gpu, u"Unknown command type");
                 return;
             }
         }
