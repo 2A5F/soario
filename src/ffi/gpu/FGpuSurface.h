@@ -9,6 +9,7 @@ namespace ccc
         FrStr16 name;
 
         bool v_sync;
+
     };
 
     struct FGpuSurface : FGpuRt

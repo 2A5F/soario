@@ -21,8 +21,8 @@ public enum ClearFlag : byte
 public static class ClearFlagEx
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal static FGpuCmdClearRtvFlag ToFFI(this ClearFlag self) =>
-        Unsafe.BitCast<ClearFlag, FGpuCmdClearRtvFlag>(self);
+    internal static FGpuCmdClearRtFlag ToFFI(this ClearFlag self) =>
+        Unsafe.BitCast<ClearFlag, FGpuCmdClearRtFlag>(self);
 }
 
 public sealed unsafe class GpuCmdList
@@ -47,6 +47,8 @@ public sealed unsafe class GpuCmdList
     #endregion
 
     #region Cmds
+
+    #region Clear
 
     /// <summary>
     /// 用 0 清空 Rt
@@ -93,9 +95,9 @@ public sealed unsafe class GpuCmdList
         if (old_state != ResourceState.RenderTarget) BarrierTransition(rt, old_state, ResourceState.RenderTarget);
         else objects.Add(rt); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
         indexes.Add(datas.Count);
-        var data = new FGpuCmdClearRtv
+        var data = new FGpuCmdClearRt
         {
-            type = FGpuCmdType.ClearRtv,
+            type = FGpuCmdType.ClearRt,
             flag = flag.ToFFI(),
             rt = rt.AsRtPointer(),
             color = Unsafe.BitCast<float4, FFloat4>(color),
@@ -103,7 +105,7 @@ public sealed unsafe class GpuCmdList
             stencil = stencil,
             rect_len = rects.Length,
         };
-        datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRtv)));
+        datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
         datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
     }
 
@@ -141,6 +143,8 @@ public sealed unsafe class GpuCmdList
         if (old_state != ResourceState.Common) BarrierTransition(rt, old_state, ResourceState.Common);
         else objects.Add(rt); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
     }
+
+    #endregion
 
     #endregion
 }

@@ -52,7 +52,8 @@ namespace ccc
         if (options.name.ptr != nullptr)
         {
             winrt::check_hresult(m_command_queue->SetName(reinterpret_cast<const wchar_t*>(options.name.ptr)));
-            winrt::check_hresult(m_command_list->SetName(reinterpret_cast<const wchar_t*>(options.name.ptr)));
+            const auto allocator_name = fmt::format(L"{} Allocator", reinterpret_cast<const wchar_t*>(options.name.ptr));
+            winrt::check_hresult(m_command_allocators->SetName(allocator_name.c_str()));
         }
     }
 
@@ -109,7 +110,7 @@ namespace ccc
     }
 
     void submit_ClearRenderTarget(
-        const com_ptr<ID3D12GraphicsCommandList>& command_list, uint8_t* const ptr, const FGpuCmdClearRtv& data,
+        const com_ptr<ID3D12GraphicsCommandList>& command_list, uint8_t* const ptr, const FGpuCmdClearRt& data,
         FError& err
     )
     {
@@ -117,14 +118,15 @@ namespace ccc
         const auto color = reinterpret_cast<const float*>(&data.color);
         if (data.rect_len > 0)
         {
-            const auto src = reinterpret_cast<FInt4*>(ptr + sizeof FGpuCmdClearRtv);
+            if (!(data.flag.color && data.rt->has_rtv() || data.rt->has_dsv())) return;
+            const auto src = reinterpret_cast<FInt4*>(ptr + sizeof FGpuCmdClearRt);
             const auto rects = static_cast<D3D12_RECT*>(_malloca(data.rect_len));
             for (int i = 0; i < data.rect_len; i++)
             {
                 const auto [X, Y, Z, W] = src[i];
                 rects[i] = {X, Y, Z, W};
             }
-            if (data.flag.color)
+            if (data.flag.color && data.rt->has_rtv())
             {
                 D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rt->get_cpu_rtv_handle(err)};
                 if (err.type != FErrorType::None) return;
@@ -132,7 +134,7 @@ namespace ccc
                     cpu_handle, color, data.rect_len, rects
                 );
             }
-            if (data.flag.depth || data.flag.stencil)
+            if ((data.flag.depth || data.flag.stencil) && data.rt->has_dsv())
             {
                 D3D12_CLEAR_FLAGS flags = {};
                 if (data.flag.depth)
@@ -152,7 +154,7 @@ namespace ccc
         }
         else
         {
-            if (data.flag.color)
+            if (data.flag.color && data.rt->has_rtv())
             {
                 D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rt->get_cpu_rtv_handle(err)};
                 if (err.type != FErrorType::None) return;
@@ -160,7 +162,7 @@ namespace ccc
                     cpu_handle, color, 0, nullptr
                 );
             }
-            if (data.flag.depth || data.flag.stencil)
+            if ((data.flag.depth || data.flag.stencil) && data.rt->has_dsv())
             {
                 D3D12_CLEAR_FLAGS flags = {};
                 if (data.flag.depth)
@@ -191,8 +193,8 @@ namespace ccc
             case FGpuCmdType::BarrierTransition:
                 submit_BarrierTransition(m_command_list, *reinterpret_cast<FGpuCmdBarrierTransition*>(ptr));
                 break;
-            case FGpuCmdType::ClearRtv:
-                submit_ClearRenderTarget(m_command_list, ptr, *reinterpret_cast<FGpuCmdClearRtv*>(ptr), err);
+            case FGpuCmdType::ClearRt:
+                submit_ClearRenderTarget(m_command_list, ptr, *reinterpret_cast<FGpuCmdClearRt*>(ptr), err);
                 if (err.type != FErrorType::None) return;
                 break;
             default:
@@ -204,10 +206,4 @@ namespace ccc
         ID3D12CommandList* command_lists[] = {m_command_list.get()};
         m_command_queue->ExecuteCommandLists(1, command_lists);
     }
-
-    // void GpuQueue::ready_frame(const int frame_index) const
-    // {
-    //     winrt::check_hresult(m_command_allocators[frame_index]->Reset());
-    //     winrt::check_hresult(m_command_list->Reset(m_command_allocators[frame_index].get(), nullptr));
-    // }
 } // ccc

@@ -27,7 +27,7 @@ namespace ccc
         com_ptr<ID3D12DescriptorHeap> m_rtv_heap{};
         UINT m_rtv_descriptor_size{};
         UINT m_frame_index{};
-        com_ptr<ID3D12Resource> m_render_targets[FrameCount]{};
+        com_ptr<ID3D12Resource> m_rts[FrameCount]{};
 
         UINT64 m_fence_values[FrameCount]{};
         com_ptr<ID3D12Fence> m_fences[FrameCount]{};
@@ -75,6 +75,10 @@ namespace ccc
 
         void ready_frame(const Rc<GpuQueue>& queue);
 
+        bool has_rtv() noexcept override;
+
+        bool has_dsv() noexcept override;
+
         bool get_v_sync() const noexcept override;
 
         void set_v_sync(bool v) noexcept override;
@@ -84,6 +88,5 @@ namespace ccc
         size_t get_cpu_dsv_handle(FError& err) noexcept override;
 
         void* get_res_raw_ptr() noexcept override;
-
     };
 } // ccc

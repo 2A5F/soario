@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+﻿using System.Collections.Concurrent;
 using System.Collections.Frozen;
 using System.IO.Compression;
 using System.Runtime.CompilerServices;
@@ -12,6 +12,20 @@ namespace Soario.Rendering;
 
 public sealed class Shader : AAsset, IEquatable<Shader>
 {
+    #region Static
+
+    #region PropertyToID
+
+    private static int s_prop_id_inc;
+    private static readonly ConcurrentDictionary<string, int> s_prop_to_id_map = new();
+
+    public static int PropertyToID(string name) =>
+        s_prop_to_id_map.GetOrAdd(name, static _ => Interlocked.Increment(ref s_prop_id_inc));
+
+    #endregion
+
+    #endregion
+
     #region Fields
 
     private readonly FrozenDictionary<string, int> m_name_2_index;

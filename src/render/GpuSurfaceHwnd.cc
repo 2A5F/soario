@@ -17,6 +17,8 @@ namespace ccc
 
         m_dx_device = m_device->m_device;
 
+        m_v_sync = options.v_sync;
+
         DXGI_SWAP_CHAIN_DESC1 swap_chain_desc = {};
         swap_chain_desc.BufferCount = FrameCount;
         swap_chain_desc.Width = size.x;
@@ -49,6 +51,11 @@ namespace ccc
             rtv_heap_desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
             winrt::check_hresult(m_dx_device->CreateDescriptorHeap(&rtv_heap_desc, RT_IID_PPV_ARGS(m_rtv_heap)));
             m_rtv_descriptor_size = m_dx_device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
+            if (options.name.ptr != nullptr)
+            {
+                winrt::check_hresult(m_rtv_heap->SetName(reinterpret_cast<const wchar_t*>(options.name.ptr)));
+            }
         }
 
         /* 创建帧缓冲区 */
@@ -83,8 +90,8 @@ namespace ccc
         // 为每一帧创建一个 RTV。
         for (UINT n = 0; n < FrameCount; n++)
         {
-            winrt::check_hresult(m_swap_chain->GetBuffer(n, RT_IID_PPV_ARGS(m_render_targets[n])));
-            m_dx_device->CreateRenderTargetView(m_render_targets[n].get(), nullptr, rtvHandle);
+            winrt::check_hresult(m_swap_chain->GetBuffer(n, RT_IID_PPV_ARGS(m_rts[n])));
+            m_dx_device->CreateRenderTargetView(m_rts[n].get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtv_descriptor_size);
         }
     }
@@ -124,7 +131,7 @@ namespace ccc
 
             for (UINT n = 0; n < FrameCount; n++)
             {
-                m_render_targets[n] = nullptr;
+                m_rts[n] = nullptr;
             }
 
             DXGI_SWAP_CHAIN_DESC1 desc = {};
@@ -262,6 +269,16 @@ namespace ccc
         move_to_next_frame(queue->m_command_queue);
     }
 
+    bool GpuSurfaceHwnd::has_rtv() noexcept
+    {
+        return true;
+    }
+
+    bool GpuSurfaceHwnd::has_dsv() noexcept
+    {
+        return false;
+    }
+
     bool GpuSurfaceHwnd::get_v_sync() const noexcept
     {
         return m_v_sync;
@@ -280,13 +297,13 @@ namespace ccc
 
     size_t GpuSurfaceHwnd::get_cpu_dsv_handle(FError& err) noexcept
     {
-        err = make_error(FErrorType::Gpu, "TODO 暂时没实现深度纹理");
+        err = make_error(FErrorType::Gpu, "交换链不包含深度");
         return 0;
     }
 
     void* GpuSurfaceHwnd::get_res_raw_ptr() noexcept
     {
-        return m_render_targets[m_frame_index].get();
+        return m_rts[m_frame_index].get();
     }
 
     // bool GpuSurfaceHwnd::require_state(

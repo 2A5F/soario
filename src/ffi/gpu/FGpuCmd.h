@@ -6,10 +6,10 @@ namespace ccc
     enum class FGpuCmdType
     {
         BarrierTransition = 1,
-        ClearRtv,
+        ClearRt,
     };
 
-    struct FGpuCmdClearRtvFlag
+    struct FGpuCmdClearRtFlag
     {
         uint8_t color   : 1;
         uint8_t depth   : 1;
@@ -18,15 +18,16 @@ namespace ccc
         bool any() const { return color || depth || stencil; }
     };
 
-    struct FGpuCmdClearRtv
+    struct FGpuCmdClearRt
     {
         FGpuCmdType type;
-        FGpuCmdClearRtvFlag flag;
+        /* 可以尾随 n 个 int4 rect */
+        int32_t rect_len;
         FGpuRt* rt;
         FFloat4 color;
-        int32_t rect_len;
         float depth;
         uint8_t stencil;
+        FGpuCmdClearRtFlag flag;
     };
 
     struct FGpuCmdBarrierTransition
