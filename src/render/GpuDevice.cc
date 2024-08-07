@@ -1,5 +1,6 @@
 ﻿#include "./GpuDevice.h"
 #include "./Gpu.h"
+#include "GpuSurfaceHwnd.h"
 #include "../Args.h"
 #include "../utils/Err.h"
 #include "../utils/logger.h"
@@ -150,6 +151,18 @@ namespace ccc
             err = make_hresult_error(ex);
             return nullptr;
         }
+    }
+
+    FGpuSurface* GpuDevice::CreateSurfaceFromHwnd(
+        FGpuQueue* queue, const FGpuSurfaceCreateOptions& options, const size_t hwnd, FError& err
+    ) noexcept
+    {
+        const auto r_queue = Rc<GpuQueue>::UnsafeClone(static_cast<GpuQueue*>(queue));
+        auto self = Rc<GpuDevice>::UnsafeClone(this);
+        auto r = GpuSurfaceHwnd::Create(
+            std::move(self), r_queue, options, reinterpret_cast<HWND>(hwnd), err
+        );
+        return r.leak();
     }
 
     FGpuQueue* GpuDevice::CreateQueue(const FGpuQueueCreateOptions& options, FError& err) noexcept

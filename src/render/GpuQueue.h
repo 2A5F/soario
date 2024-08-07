@@ -4,22 +4,24 @@
 
 #include "D3D12MemAlloc.h"
 #include "GpuDevice.h"
-#include "GpuSurface.h"
 
 #include "../pch.h"
+#include "../ffi/gpu/FGpu.h"
 #include "../ffi/gpu/FGpuQueue.h"
-#include "../utils/Object.h"
 #include "../utils/Rc.h"
 
 namespace ccc
 {
     struct FrameContext;
+    class GpuSurfaceHwnd;
 
     class GpuQueue final : public FGpuQueue
     {
         IMPL_RC(GpuQueue);
 
-        static constexpr UINT FrameCount = GpuSurface::FrameCount;
+        friend class GpuSurfaceHwnd;
+
+        static constexpr UINT FrameCount = FGpuConsts::FrameCount;
 
         Rc<GpuDevice> m_device;
 

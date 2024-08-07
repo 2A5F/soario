@@ -6,11 +6,15 @@
 
 namespace ccc
 {
+    struct FString8;
+
     using fn_action = void();
 
     using fn_func__FrStr16__size_t = size_t (FrStr16);
 
     using fn_func__FrStr16_FmStr8__size_t = size_t (FrStr16, FmStr8);
+
+    using fn_func__FrStr16__FString8p = FString8* (FrStr16);
 
     using fn_func__FLogLevel_charp__void = void (FLogLevel, const char*);
     using fn_func__FLogLevel_wcharp__void = void (FLogLevel, const wchar_t*);

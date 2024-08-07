@@ -6,18 +6,19 @@
 #include "../pch.h"
 #include "../ffi/gpu/FGpuDevice.h"
 #include "../utils/Rc.h"
-#include "./IResource.h"
 
 namespace ccc
 {
     class Gpu;
     class GpuQueue;
+    class GpuSurfaceHwnd;
 
     class GpuDevice final : public FGpuDevice
     {
         IMPL_RC(GpuDevice);
 
         friend GpuQueue;
+        friend GpuSurfaceHwnd;
 
         Rc<Gpu> m_gpu;
 
@@ -27,8 +28,6 @@ namespace ccc
         DWORD m_callback_cookie{};
 
         com_ptr<D3D12MA::Allocator> m_gpu_allocator{};
-
-        std::shared_ptr<ResourceOwner> m_resource_owner = std::make_shared<ResourceOwner>();
 
         fn_func__voidp_FLogLevel_charp__void* m_logger;
         void* m_logger_object;
@@ -48,6 +47,10 @@ namespace ccc
         ~GpuDevice() override;
 
         static Rc<GpuDevice> Create(Rc<Gpu> m_gpu, const FGpuDeviceCreateOptions& options, FError& err) noexcept;
+
+        FGpuSurface* CreateSurfaceFromHwnd(
+            FGpuQueue* queue, const FGpuSurfaceCreateOptions& options, size_t hwnd, FError& err
+        ) noexcept override;
 
         FGpuQueue* CreateQueue(const FGpuQueueCreateOptions& options, FError& err) noexcept override;
     };

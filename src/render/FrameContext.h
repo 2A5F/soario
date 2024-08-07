@@ -4,13 +4,12 @@
 
 namespace ccc
 {
-    class RenderContext;
-
-    struct FrameContext final
-    {
-        RenderContext& render_context;
-        GpuQueue& queue;
-        GpuCommandList& cmd;
-        const std::shared_ptr<GpuSurface>& surface;
-    };
+    // class RenderContext;
+    //
+    // struct FrameContext final
+    // {
+    //     RenderContext& render_context;
+    //     GpuQueue& queue;
+    //     const std::shared_ptr<GpuSurfaceOld>& surface;
+    // };
 } // ccc

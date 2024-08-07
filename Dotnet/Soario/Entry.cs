@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Buffers;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Serilog;
@@ -23,6 +24,7 @@ public class Entry
         {
             utf16_get_utf8_max_len = &GetUtf8MaxLength,
             utf16_to_utf8 = &Utf16ToUtf8,
+            utf16_to_string8 = &Utf16ToUtf8String,
 
             start = &Start,
             exit = &Exit,
@@ -96,6 +98,25 @@ public class Entry
         var len = Encoding.UTF8.GetBytes(str16.AsSpan(), str8.AsSpan());
         str8.AsSpan()[len] = 0;
         return (nuint)len;
+    }
+
+    [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+    private static unsafe FString8* Utf16ToUtf8String(FrStr16 str16)
+    {
+        var span = str16.AsSpan();
+        var array = ArrayPool<byte>.Shared.Rent(Encoding.UTF8.GetMaxByteCount(span.Length));
+        try
+        {
+            var len = Encoding.UTF8.GetBytes(span, array);
+            fixed (byte* ptr = array)
+            {
+                return FString8.Create(new() { ptr = ptr, len = (nuint)len });
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(array);
+        }
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]

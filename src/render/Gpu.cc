@@ -126,7 +126,7 @@ namespace ccc
         return s_gpu;
     }
 
-    FGpuDevice* Gpu::CreateDevice(const FGpuDeviceCreateOptions& options, FError& err)
+    FGpuDevice* Gpu::CreateDevice(const FGpuDeviceCreateOptions& options, FError& err) noexcept
     {
         Rc r = GpuDevice::Create(Rc<Gpu>::UnsafeClone(this), options, err);
         return r.leak();

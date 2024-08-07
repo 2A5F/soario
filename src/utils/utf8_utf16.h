@@ -5,5 +5,5 @@
 
 namespace ccc
 {
-    String utf16_to_utf8(const std::wstring_view& str);
+    Rc<String> utf16_to_utf8(const std::wstring_view& str);
 }

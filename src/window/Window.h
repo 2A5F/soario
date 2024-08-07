@@ -6,7 +6,6 @@
 
 #include "../pch.h"
 #include "../ffi/FWindow.h"
-#include "../utils/Object.h"
 #include "../utils/Rc.h"
 #include "../utils/String.h"
 
@@ -16,8 +15,10 @@ namespace ccc
 {
     class Window;
 
-    class WindowHandle final : public virtual Object
+    class WindowHandle final : FObject
     {
+        IMPL_RC(WindowHandle);
+
         SDL_Window* m_window{};
         void* m_gc_handle{};
 
@@ -49,7 +50,7 @@ namespace ccc
 
     struct WindowCreateParamPack
     {
-        String title;
+        Rc<String> title;
         int2 size;
         std::optional<int2> min_size;
         Rc<Window> window;
@@ -58,8 +59,10 @@ namespace ccc
         void create();
     };
 
-    class WindowSystem final : public virtual Object
+    class WindowSystem final : FObject
     {
+        IMPL_RC(WindowSystem);
+
         friend Window;
 
         std::atomic_bool m_exited{false};
@@ -122,7 +125,7 @@ namespace ccc
 
         friend WindowSystem;
 
-        std::shared_ptr<WindowHandle> m_inner{};
+        Rc<WindowHandle> m_inner{};
 
         bool m_resized{false};
 
@@ -131,11 +134,13 @@ namespace ccc
 
         static Rc<Window> create(const WindowOptions& options);
 
-        const std::shared_ptr<WindowHandle>& inner() const;
+        const Rc<WindowHandle>& inner() const;
 
         HWND hwnd() const;
 
         int2 size() const;
+
+        size_t get_hwnd() noexcept override;
 
         // 大小是否改变
         bool resized() const;

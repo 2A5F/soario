@@ -67,7 +67,7 @@ namespace ccc
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, "Failed to create device!");
+            err = make_error(FErrorType::Gpu, "Failed to create queue!");
             return nullptr;
         }
         catch (winrt::hresult_error ex)

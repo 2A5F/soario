@@ -2,9 +2,13 @@
 
 #include "../FFI.h"
 #include "../FnPtrs.h"
+#include "../FWindow.h"
 
 namespace ccc
 {
+    struct FGpuSurfaceCreateOptions;
+    struct FGpuSurface;
+
     struct FGpuQueue;
     struct FGpuQueueCreateOptions;
 
@@ -20,6 +24,14 @@ namespace ccc
 
     struct FGpuDevice : FObject
     {
+        virtual FGpuSurface* CreateSurfaceFromHwnd(
+            FGpuQueue* queue, const FGpuSurfaceCreateOptions& options, size_t hwnd, FError& err
+        ) noexcept = 0;
+
+        virtual FGpuSurface* CreateSurfaceFromWindow(
+            FGpuQueue* queue, const FGpuSurfaceCreateOptions& options, FWindow* window, FError& err
+        ) noexcept;
+
         virtual FGpuQueue* CreateQueue(const FGpuQueueCreateOptions& options, FError& err) noexcept = 0;
     };
 } // ccc

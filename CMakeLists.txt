@@ -70,21 +70,13 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/FrameContext.h
         src/render/GpuCommandList.cc
         src/render/GpuCommandList.h
-        src/render/RenderProperties.cc
-        src/render/RenderProperties.h
         src/render/IRT.cc
-        src/render/IRT.h
-        src/render/GpuSurface.cc
-        src/render/GpuSurface.h
-        src/utils/Object.h
         src/App.cc
         src/App.h
         src/utils/Time.cc
         src/utils/Time.h
         src/render/Shader.cc
         src/render/Shader.h
-        src/render/IResource.cc
-        src/render/IResource.h
         src/utils/new-delete.cc
         src/utils/dotnet.cc
         src/utils/dotnet.h
@@ -118,6 +110,16 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/GpuDevice.h
         src/ffi/FLogLevel.h
         src/utils/logger.h
+        src/ffi/gpu/FGpuSurface.cc
+        src/ffi/gpu/FGpuSurface.h
+        src/render/GpuSurfaceHwnd.cc
+        src/render/GpuSurfaceHwnd.h
+        src/render/GpuSurface.cc
+        src/render/GpuSurface.h
+        src/ffi/gpu/FGpuRt.cc
+        src/ffi/gpu/FGpuRt.h
+        src/ffi/FString8.cc
+        src/ffi/FString8.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

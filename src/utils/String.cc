@@ -2,27 +2,33 @@
 
 namespace ccc
 {
-    String::String() : m_ptr(nullptr), m_len(0)
+    String::String() : FString8(nullptr, 0)
     {
     }
 
-    String::String(const uint8_t* ptr, size_t len) : m_ptr(ptr), m_len(len)
+    String::String(const uint8_t* ptr, const size_t len) : FString8(ptr, len)
     {
     }
 
-    String::String(String&& other) noexcept : m_ptr(other.m_ptr), m_len(other.len())
+    Rc<String> String::CreateCopy(FrStr8 slice)
     {
-        other.m_ptr = nullptr;
-        other.m_len = 0;
+        return Create(
+            slice.len, [slice](auto ptr)
+            {
+                memcpy(ptr, slice.ptr, slice.len);
+                return slice.len;
+            }
+        );
     }
 
-    String& String::operator=(String&& other) noexcept
+    Rc<String> String::Create(const size_t len)
     {
-        m_ptr = other.m_ptr;
-        m_len = other.m_len;
-        other.m_ptr = nullptr;
-        other.m_len = 0;
-        return *this;
+        const auto size = sizeof(String) + len + 1;
+        const auto mem = static_cast<char*>(operator new(size));
+        mem[size - 1] = 0;
+        const auto ptr = reinterpret_cast<uint8_t*>(mem + sizeof(String));
+        new(mem) String(ptr, len);
+        return Rc(reinterpret_cast<String*>(mem));
     }
 
     size_t String::len() const
@@ -43,10 +49,5 @@ namespace ccc
     std::string String::to_std_string() const
     {
         return std::string(c_str(), len());
-    }
-
-    String::~String()
-    {
-        if (m_ptr != nullptr) delete[] m_ptr;
     }
 } // ccc

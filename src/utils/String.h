@@ -2,28 +2,36 @@
 #include <cstdint>
 #include <string>
 
-#include "Object.h"
+#include "../ffi/FFI.h"
+#include "Rc.h"
+#include "../ffi/FString8.h"
 
 namespace ccc
 {
     // 只读的堆分配字符串
-    class String final : Object
+    class String final : public FString8
     {
-        const uint8_t* m_ptr;
-        size_t m_len;
+        IMPL_RC(String);
 
-    public:
         String();
 
-        explicit String(/* 将获取所有权，要求 0 结尾 */const uint8_t* ptr, size_t len);
+        explicit String(const uint8_t* ptr, size_t len);
+
+    public:
+        static Rc<String> CreateCopy(FrStr8 slice);
+
+        static Rc<String> Create(size_t len);
+
+        template <class F>
+        static Rc<String> Create(const size_t cap, F f);
 
         String(String& other) = delete;
 
-        String(String&& other) noexcept;
+        String(String&& other) = delete;
 
         String& operator=(String& other) = delete;
 
-        String& operator=(String&& other) noexcept;
+        String& operator=(String&& other) = delete;
 
         size_t len() const;
 
@@ -33,7 +41,17 @@ namespace ccc
 
         // 将产生复制
         std::string to_std_string() const;
-
-        ~String() override;
     };
+
+    template <class F>
+    Rc<String> String::Create(const size_t cap, F f)
+    {
+        const auto size = sizeof(String) + cap + 1;
+        const auto mem = static_cast<char*>(operator new(size));
+        mem[size - 1] = 0;
+        const auto ptr = reinterpret_cast<uint8_t*>(mem + sizeof(String));
+        const auto len = f(ptr);
+        new(mem) String(ptr, len);
+        return Rc(reinterpret_cast<String*>(mem));
+    }
 } // ccc

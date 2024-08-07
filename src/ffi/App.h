@@ -8,6 +8,7 @@ namespace ccc
     {
         fn_func__FrStr16__size_t* utf16_get_utf8_max_len;
         fn_func__FrStr16_FmStr8__size_t* utf16_to_utf8;
+        fn_func__FrStr16__FString8p* utf16_to_string8;
 
         fn_action* start;
         fn_action* exit;

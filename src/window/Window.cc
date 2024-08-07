@@ -91,7 +91,7 @@ namespace ccc
     void WindowCreateParamPack::create()
     {
         auto builder = Window::builder()
-            .title(title.c_str())
+            .title(title->c_str())
             .size(size.x, size.y);
         if (min_size.has_value()) builder.min_size(min_size.value().x, min_size.value().y);
         window = builder.build();
@@ -205,7 +205,7 @@ namespace ccc
                 throw sdl_error();
         }
         Rc win(new Window());
-        win->m_inner = std::make_shared<WindowHandle>(sw);
+        win->m_inner = new WindowHandle(sw);
         const auto hwnd = win->hwnd();
         SetMica(hwnd);
         const auto id = win->m_inner->id();
@@ -214,7 +214,7 @@ namespace ccc
         return win;
     }
 
-    const std::shared_ptr<WindowHandle>& Window::inner() const
+    const Rc<WindowHandle>& Window::inner() const
     {
         return m_inner;
     }
@@ -227,6 +227,11 @@ namespace ccc
     int2 Window::size() const
     {
         return m_inner->size();
+    }
+
+    size_t Window::get_hwnd() noexcept
+    {
+        return reinterpret_cast<size_t>(hwnd());
     }
 
     bool Window::resized() const

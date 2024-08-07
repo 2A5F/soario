@@ -4,6 +4,7 @@ using System.Text;
 using Serilog;
 using Serilog.Events;
 using Soario.Native;
+using Soario.Windowing;
 
 namespace Soario.Rendering;
 
@@ -34,19 +35,19 @@ public sealed unsafe class GpuDevice : IDisposable
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => m_name;
     }
-    
+
     public GpuQueue CommonQueue
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => m_queue_common;
     }
-    
+
     public GpuQueue ComputeQueue
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => m_queue_compute;
     }
-    
+
     public GpuQueue CopyQueue
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -112,6 +113,15 @@ public sealed unsafe class GpuDevice : IDisposable
     #region ToString
 
     public override string ToString() => $"GpuDevice({m_name})";
+
+    #endregion
+
+    #region CreateSurface
+
+    public GpuSurface CreateSurface(Window window, GpuSurfaceCreateOptions options) => new(this, window, options);
+    
+    public GpuSurface CreateSurfaceFromHwnd(Window window, nuint hwnd, GpuSurfaceCreateOptions options) =>
+        new(this, hwnd, options);
 
     #endregion
 }
