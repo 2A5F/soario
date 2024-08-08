@@ -22,7 +22,6 @@ public static class App
         {
             var device = Gpu.Instance.MainDevice;
             var surface = device.CreateSurface(MainWindow, new GpuSurfaceCreateOptions { Name = "MainSurface" });
-            var queue = device.CommonQueue;
 
             Log.Information("{Device}", Gpu.Instance.MainDevice);
             Log.Information("{Queue}", Gpu.Instance.MainDevice.CommonQueue);
@@ -38,11 +37,11 @@ public static class App
             {
                 while (true)
                 {
-                    surface.ReadyFrame(queue);
+                    surface.ReadyFrame();
 
                     cmd.Clear(surface, new float4(1, 1, 1, 1));
 
-                    surface.PresentFrame(cmd, queue);
+                    surface.PresentFrame(cmd);
                 }
             }
             catch (Exception e)

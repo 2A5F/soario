@@ -11,7 +11,7 @@ namespace ccc
     GpuSurfaceHwnd::GpuSurfaceHwnd(
         Rc<GpuDevice> device, const Rc<GpuQueue>& queue, const FGpuSurfaceCreateOptions& options, HWND hwnd,
         const int2 size, FError& err
-    ) : m_device(std::move(device)), m_current_size(size)
+    ) : m_device(std::move(device)), m_queue(std::move(queue)), m_current_size(size)
     {
         m_gpu = m_device->m_gpu;
 
@@ -31,7 +31,7 @@ namespace ccc
         com_ptr<IDXGISwapChain1> swap_chain;
         winrt::check_hresult(
             m_gpu->m_factory->CreateSwapChainForHwnd(
-                queue->m_command_queue.get(), // Swap chain needs the queue so that it can force a flush on it.
+                m_queue->m_command_queue.get(), // Swap chain needs the queue so that it can force a flush on it.
                 hwnd,
                 &swap_chain_desc,
                 nullptr,
@@ -63,15 +63,12 @@ namespace ccc
 
         /*创建 fence */
         {
-            for (UINT i = 0; i < FrameCount; ++i)
-            {
-                winrt::check_hresult(
-                    m_dx_device->CreateFence(
-                        m_fence_values[m_frame_index], D3D12_FENCE_FLAG_NONE, RT_IID_PPV_ARGS(m_fences[i])
-                    )
-                );
-                m_fence_values[m_frame_index]++;
-            }
+            winrt::check_hresult(
+                m_dx_device->CreateFence(
+                    m_fence_values, D3D12_FENCE_FLAG_NONE, RT_IID_PPV_ARGS(m_fences)
+                )
+            );
+            m_fence_values++;
 
             m_fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
             if (m_fence_event == nullptr)
@@ -79,7 +76,7 @@ namespace ccc
                 winrt::throw_last_error();
             }
 
-            wait_gpu(queue->m_command_queue);
+            wait_gpu();
         }
     }
 
@@ -96,11 +93,11 @@ namespace ccc
         }
     }
 
-    void GpuSurfaceHwnd::wait_gpu(const com_ptr<ID3D12CommandQueue>& command_queue)
+    void GpuSurfaceHwnd::wait_gpu()
     {
-        const auto& fence = m_fences[m_frame_index];
-        const auto fence_value = m_fence_values[m_frame_index];
-        winrt::check_hresult(command_queue->Signal(fence.get(), fence_value));
+        const auto& fence = m_fences;
+        const auto fence_value = m_fence_values;
+        winrt::check_hresult(m_queue->m_command_queue->Signal(fence.get(), fence_value));
 
         if (fence->GetCompletedValue() < fence_value)
         {
@@ -108,26 +105,16 @@ namespace ccc
             WaitForSingleObjectEx(m_fence_event, INFINITE, false);
         }
 
-        m_fence_values[m_frame_index]++;
+        m_fence_values++;
     }
 
-    void GpuSurfaceHwnd::move_to_next_frame(const com_ptr<ID3D12CommandQueue>& command_queue)
+    void GpuSurfaceHwnd::move_to_next_frame()
     {
+        wait_gpu();
+
         if (m_resized && (m_current_size.x != m_new_size.x || m_current_size.y != m_new_size.y))
         {
             m_current_size = m_new_size;
-
-            for (UINT i = 0; i < FrameCount; ++i)
-            {
-                const auto& fence = m_fences[i];
-                const auto fence_value = ++m_fence_values[i];
-                winrt::check_hresult(command_queue->Signal(fence.get(), fence_value));
-                if (fence->GetCompletedValue() < m_fence_values[i])
-                {
-                    winrt::check_hresult(fence->SetEventOnCompletion(fence_value, m_fence_event));
-                    WaitForSingleObjectEx(m_fence_event, INFINITE, false);
-                }
-            }
 
             for (UINT n = 0; n < FrameCount; n++)
             {
@@ -144,40 +131,25 @@ namespace ccc
 
             create_rts();
 
-            m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
-        }
-        else
-        {
-            const auto& fence = m_fences[m_frame_index];
-            const UINT64 current_fence_value = m_fence_values[m_frame_index];
-            winrt::check_hresult(command_queue->Signal(fence.get(), current_fence_value));
-
-            m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
-
-            if (fence->GetCompletedValue() < m_fence_values[m_frame_index])
-            {
-                winrt::check_hresult(fence->SetEventOnCompletion(m_fence_values[m_frame_index], m_fence_event));
-                WaitForSingleObjectEx(m_fence_event, INFINITE, FALSE);
-            }
-
-            m_fence_values[m_frame_index] = current_fence_value + 1;
+            m_resized = false;
         }
 
-        m_resized = false;
+        m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
+
         m_current_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(
             m_rtv_heap->GetCPUDescriptorHandleForHeapStart(), m_frame_index, m_rtv_descriptor_size
         );
+    }
+
+    void GpuSurfaceHwnd::present() const
+    {
+        winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
     }
 
     void GpuSurfaceHwnd::on_resize(const int2 new_size)
     {
         m_resized = true;
         m_new_size = new_size;
-    }
-
-    void GpuSurfaceHwnd::present() const
-    {
-        winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
     }
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE GpuSurfaceHwnd::get_dx_cpu_handle() const
@@ -222,17 +194,21 @@ namespace ccc
         }
     }
 
+    GpuSurfaceHwnd::~GpuSurfaceHwnd()
+    {
+        wait_gpu();
+    }
+
     FInt2 GpuSurfaceHwnd::get_size() const noexcept
     {
         return {m_current_size.x, m_current_size.y};
     }
 
-    void GpuSurfaceHwnd::ready_frame(FGpuQueue* queue, FError& err) noexcept
+    void GpuSurfaceHwnd::ready_frame(FError& err) noexcept
     {
-        const auto r_queue = Rc<GpuQueue>::UnsafeClone(static_cast<GpuQueue*>(queue));
         try
         {
-            ready_frame(r_queue);
+            ready_frame();
         }
         catch (std::exception ex)
         {
@@ -264,9 +240,9 @@ namespace ccc
         }
     }
 
-    void GpuSurfaceHwnd::ready_frame(const Rc<GpuQueue>& queue)
+    void GpuSurfaceHwnd::ready_frame()
     {
-        move_to_next_frame(queue->m_command_queue);
+        move_to_next_frame();
     }
 
     bool GpuSurfaceHwnd::has_rtv() noexcept
@@ -305,17 +281,4 @@ namespace ccc
     {
         return m_rts[m_frame_index].get();
     }
-
-    // bool GpuSurfaceHwnd::require_state(
-    //     ResourceOwner& owner, GpuRtState target_state, CD3DX12_RESOURCE_BARRIER& barrier
-    // )
-    // {
-    //     owner.assert_ownership(this);
-    //     if (target_state == m_state) return false;
-    //     const auto before = to_dx_state(m_state);
-    //     const auto after = to_dx_state(target_state);
-    //     m_state = target_state;
-    //     barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_render_targets[m_frame_index].get(), before, after);
-    //     return true;
-    // }
 } // ccc

@@ -20,6 +20,7 @@ namespace ccc
 
         Rc<Gpu> m_gpu;
         Rc<GpuDevice> m_device;
+        Rc<GpuQueue> m_queue;
 
         com_ptr<ID3D12Device> m_dx_device;
 
@@ -29,8 +30,8 @@ namespace ccc
         UINT m_frame_index{};
         com_ptr<ID3D12Resource> m_rts[FrameCount]{};
 
-        UINT64 m_fence_values[FrameCount]{};
-        com_ptr<ID3D12Fence> m_fences[FrameCount]{};
+        UINT64 m_fence_values{};
+        com_ptr<ID3D12Fence> m_fences{};
         HANDLE m_fence_event{};
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE m_current_cpu_handle{};
@@ -51,9 +52,9 @@ namespace ccc
 
         void create_rts();
 
-        void wait_gpu(const com_ptr<ID3D12CommandQueue>& command_queue);
+        void wait_gpu();
 
-        void move_to_next_frame(const com_ptr<ID3D12CommandQueue>& command_queue);
+        void move_to_next_frame();
 
         void on_resize(int2 new_size);
 
@@ -67,13 +68,15 @@ namespace ccc
             FError& err
         ) noexcept;
 
+        ~GpuSurfaceHwnd() override;
+
         FInt2 get_size() const noexcept override;
 
-        void ready_frame(FGpuQueue* queue, FError& err) noexcept override;
+        void ready_frame(FError& err) noexcept override;
 
         void present_frame(FError& err) noexcept override;
 
-        void ready_frame(const Rc<GpuQueue>& queue);
+        void ready_frame();
 
         bool has_rtv() noexcept override;
 

@@ -535,9 +535,9 @@ namespace Soario.Native
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ready_frame([NativeTypeName("ccc::FGpuQueue *")] FGpuQueue* queue, [NativeTypeName("ccc::FError &")] FError* err)
+        public void ready_frame([NativeTypeName("ccc::FError &")] FError* err)
         {
-            ((delegate* unmanaged[Thiscall]<FGpuSurface*, FGpuQueue*, FError*, void>)(lpVtbl[13]))((FGpuSurface*)Unsafe.AsPointer(ref this), queue, err);
+            ((delegate* unmanaged[Thiscall]<FGpuSurface*, FError*, void>)(lpVtbl[13]))((FGpuSurface*)Unsafe.AsPointer(ref this), err);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

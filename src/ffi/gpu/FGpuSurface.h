@@ -15,7 +15,7 @@ namespace ccc
     struct FGpuSurface : FGpuRt
     {
         /* 准备并等待帧可用 */
-        virtual void ready_frame(FGpuQueue* queue, FError& err) noexcept = 0;
+        virtual void ready_frame(FError& err) noexcept = 0;
 
         /* 呈现帧 */
         virtual void present_frame(FError& err) noexcept = 0;

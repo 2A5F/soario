@@ -16,6 +16,7 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
 
     private readonly Gpu m_gpu;
     private readonly GpuDevice m_device;
+    private readonly GpuQueue m_queue;
     internal FGpuSurface* m_inner;
     private string m_name;
 
@@ -50,6 +51,7 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
         m_name = options.Name ?? $"Anonymous Surface ({Guid.NewGuid():D})";
         m_gpu = device.Gpu;
         m_device = device;
+        m_queue = device.CommonQueue;
         fixed (char* p_name = m_name)
         {
             var n_options = new FGpuSurfaceCreateOptions
@@ -59,7 +61,7 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
             };
             FError err;
             m_inner = m_device.m_inner->CreateSurfaceFromWindow(
-                m_device.CommonQueue.m_inner, &n_options, window.m_inner, &err
+                m_queue.m_inner, &n_options, window.m_inner, &err
             );
             if (m_inner == null) err.Throw();
         }
@@ -70,6 +72,7 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
         m_name = options.Name ?? $"Anonymous Surface ({Guid.NewGuid():D})";
         m_gpu = device.Gpu;
         m_device = device;
+        m_queue = device.CommonQueue;
         fixed (char* p_name = m_name)
         {
             var n_options = new FGpuSurfaceCreateOptions
@@ -79,7 +82,7 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
             };
             FError err;
             m_inner = m_device.m_inner->CreateSurfaceFromHwnd(
-                m_device.CommonQueue.m_inner, &n_options, hwnd, &err
+                m_queue.m_inner, &n_options, hwnd, &err
             );
             if (m_inner == null) err.Throw();
         }
@@ -112,10 +115,10 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
 
     #region Frame
 
-    public void ReadyFrame(GpuQueue queue)
+    public void ReadyFrame()
     {
         FError err;
-        m_inner->ready_frame(queue.m_inner, &err);
+        m_inner->ready_frame(&err);
         if (err.type != FErrorType.None) err.Throw();
     }
 
@@ -126,10 +129,10 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
         if (err.type != FErrorType.None) err.Throw();
     }
 
-    public void PresentFrame(GpuCmdList list, GpuQueue queue)
+    public void PresentFrame(GpuCmdList list)
     {
         list.Present(this);
-        queue.Submit(list);
+        m_queue.Submit(list);
         PresentFrame();
     }
 
@@ -152,9 +155,9 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
         State = new_state;
         return old;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public FGpuRes* AsResPointer()=> (FGpuRes*)m_inner;
+    public FGpuRes* AsResPointer() => (FGpuRes*)m_inner;
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FGpuRt* AsRtPointer() => (FGpuRt*)m_inner;
