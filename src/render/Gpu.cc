@@ -4,9 +4,8 @@
 #include <dxgi1_6.h>
 
 #include "GpuDevice.h"
+#include "../App.h"
 #include "directx/d3dx12.h"
-
-#include "../Args.h"
 
 namespace ccc
 {
@@ -80,11 +79,9 @@ namespace ccc
 
     Gpu::Gpu()
     {
-        const auto& args = Args::get();
-
         UINT dxgi_factory_flags = 0;
 
-        if (args.debug)
+        if (app_vars().debug)
         {
             if (SUCCEEDED(D3D12GetDebugInterface(RT_IID_PPV_ARGS(m_debug_controller))))
             {
@@ -99,16 +96,6 @@ namespace ccc
             throw std::exception(
                 "Unable to create render context, no graphics device or graphics device does not support"
             );
-    }
-
-    void Gpu::set_global(Rc<Gpu> gpu)
-    {
-        s_gpu = std::move(gpu);
-    }
-
-    const Rc<Gpu>& Gpu::global()
-    {
-        return s_gpu;
     }
 
     FGpuDevice* Gpu::CreateDevice(const FGpuDeviceCreateOptions& options, FError& err) noexcept

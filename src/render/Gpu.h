@@ -42,12 +42,6 @@ namespace ccc
 
         explicit Gpu();
 
-        // 获取全局默认的 Gpu 实例
-        static void set_global(Rc<Gpu> gpu);
-
-        // 获取全局默认的 Gpu 实例
-        static const Rc<Gpu>& global();
-
         FGpuDevice* CreateDevice(const FGpuDeviceCreateOptions& options, FError& err) noexcept override;
     };
 } // ccc

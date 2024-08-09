@@ -3,7 +3,7 @@ using Coplt.Mathematics;
 using Serilog;
 using Soario.Rendering;
 using Soario.Resources;
-using Soario.Utils;
+using Soario.Utilities;
 using Soario.Windowing;
 
 namespace Soario;
@@ -13,9 +13,10 @@ public static class App
     public static Window MainWindow = null!;
     public static void Start()
     {
+        Gpu.Init();
+        
         Shaders.LoadShaders().Wait();
 
-        Log.Information("Start");
         MainWindow = new Window(new() { Title = "测试", Size = new(1280, 720), MinSize = new(640, 360) });
 
         Task.Factory.StartNew(() =>

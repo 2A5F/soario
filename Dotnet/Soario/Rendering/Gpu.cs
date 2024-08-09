@@ -33,6 +33,19 @@ public sealed class Gpu : IDisposable
 
     #region Ctor
 
+    internal static void Init()
+    {
+        s_gpu = new Gpu();
+    }
+
+    internal unsafe Gpu()
+    {
+        FError err;
+        m_inner = FGpu.CreateGpu(&err);
+        if (m_inner == null || err.type != FErrorType.None) err.Throw();
+        m_main_device = new GpuDevice(this, "Main Device");
+    }
+
     internal unsafe Gpu(FGpu* inner)
     {
         m_inner = inner;

@@ -5,20 +5,15 @@
 
 #include <stacktrace>
 
-#include "Args.h"
-#include "args.hxx"
-
 #include "utils/utils.h"
 #include "window/Window.h"
 
-#include "spdlog/async.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/sinks/rotating_file_sink.h"
 
 #include <fmt/chrono.h>
 
 #include "App.h"
-#include "utils/Time.h"
 
 #include <winrt/Windows.UI.Core.h>
 
@@ -44,59 +39,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     mi_version();
 
-    args::ArgumentParser arg_parser("Soario");
-    args::HelpFlag arg_help(arg_parser, "help", "Display this help menu", {'h', "help"});
-    args::Flag arg_debug(arg_parser, "debug", "Enable debug mode", {'D', "debug"});
-    try
-    {
-        arg_parser.ParseCLI(__argc, __argv);
-    }
-    catch (const args::Help&)
-    {
-        std::cout << arg_parser;
-        return 0;
-    } catch (const args::ParseError& e)
-    {
-        std::cerr << e.what() << std::endl;
-        std::cerr << arg_parser;
-        return 1;
-    } catch (args::ValidationError e)
-    {
-        std::cerr << e.what() << std::endl;
-        std::cerr << arg_parser;
-        return 1;
-    }
-
-    ccc::Args args;
-    args.exe_path = std::string(__argv[0]);
-    args.debug = arg_debug;
-    ccc::Args::set(args);
-
     int r;
 
+    ccc::WindowSystem::init();
+
+    ccc::InitParams init_params{};
+    init_params.p_vas = &ccc::app_vars();
+    ccc::InitResult init_result;
+    load_dotnet(init_params, init_result);
+    ccc::app_fn_vtb() = init_result.fn_vtb;
+
     try
     {
-        ccc::WindowSystem::init();
-
-        ccc::Gpu::set_global(new ccc::Gpu());
-
-        auto gpu = ccc::Gpu::global();
-
-        ccc::time::init();
-        ccc::time::tick();
-        ccc::InitParams init_params{};
-        init_params.p_time_data = ccc::time::get_data_ptr();
-        init_params.p_gpu = gpu.leak();
-        ccc::InitResult init_result;
-        load_dotnet(init_params, init_result);
-        ccc::app_fn_vtb() = init_result.fn_vtb;
-
-        if (arg_debug)
-        {
-            ccc::logger::warn("Debug mode enabled");
-            ccc::logger::debug(std::format("exe path: {}", args.exe_path));
-        }
-
         std::thread(
             []
             {

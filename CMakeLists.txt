@@ -61,8 +61,6 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/window/Window.h
         src/utils/sdl_error.cc
         src/utils/sdl_error.h
-        src/Args.cc
-        src/Args.h
         third_party/D3D12MemoryAllocator/include/D3D12MemAlloc.h
         third_party/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp
         src/render/GpuQueue.cc
@@ -73,15 +71,12 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/GpuCommandList.h
         src/App.cc
         src/App.h
-        src/utils/Time.cc
-        src/utils/Time.h
         src/render/Shader.cc
         src/render/Shader.h
         src/utils/new-delete.cc
         src/utils/dotnet.cc
         src/utils/dotnet.h
         src/ffi/Init.h
-        src/ffi/Time.h
         src/ffi/App.h
         src/ffi/FnPtrs.h
         src/ffi/FWindow.cc

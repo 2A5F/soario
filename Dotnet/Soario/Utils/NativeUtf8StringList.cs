@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using Soario.Native;
 
-namespace Soario.Utils;
+namespace Soario.Utilities;
 
 public sealed unsafe class NativeUtf8StringList : IDisposable
 {

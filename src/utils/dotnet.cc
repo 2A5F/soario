@@ -7,7 +7,6 @@
 #include <hostfxr.h>
 
 #include "Time.h"
-#include "../Args.h"
 #include "../ffi/Init.h"
 #include "../render/FrameContext.h"
 
@@ -32,8 +31,7 @@ namespace ccc
 
     void load_dotnet(InitParams& init_params, InitResult& result)
     {
-        const auto& args = Args::get();
-        auto path = std::filesystem::path(args.exe_path);
+        auto path = std::filesystem::path(__argv[0]);
         path = path.parent_path();
         path.append("managed");
 
@@ -73,7 +71,6 @@ namespace ccc
             throw std::exception("Failed to load dotnet runtime2");
         }
 
-        init_params.p_time_data = time::get_data_ptr();
         init(&init_params, &result);
     }
 

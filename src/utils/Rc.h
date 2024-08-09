@@ -1,5 +1,8 @@
 ﻿#pragma once
 
+#include <type_traits>
+#include <utility>
+
 #define IMPL_RC(Name) \
     mutable std::atomic_size_t m_strong{1}; \
     mutable std::atomic_size_t m_weak{1}; \

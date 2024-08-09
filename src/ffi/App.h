@@ -20,4 +20,9 @@ namespace ccc
         fn_func__FLogLevel_FrStr8__void* logger_str8;
         fn_func__FLogLevel_FrStr16__void* logger_str16;
     };
+
+    struct AppVars
+    {
+        bool debug;
+    };
 }

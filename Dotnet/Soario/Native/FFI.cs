@@ -280,11 +280,8 @@ namespace Soario.Native
 
     public unsafe partial struct InitParams
     {
-        [NativeTypeName("ccc::TimeData *")]
-        public TimeData* p_time_data;
-
-        [NativeTypeName("ccc::FGpu *")]
-        public FGpu* p_gpu;
+        [NativeTypeName("ccc::AppVars *")]
+        public AppVars* p_vas;
     }
 
     public partial struct InitResult
@@ -326,26 +323,10 @@ namespace Soario.Native
         public delegate* unmanaged[Cdecl]<FLogLevel, FrStr16, void> logger_str16;
     }
 
-    public partial struct TimeData
+    public partial struct AppVars
     {
-        [NativeTypeName("int64_t")]
-        public long start_time;
-
-        [NativeTypeName("int64_t")]
-        public long last_time;
-
-        [NativeTypeName("int64_t")]
-        public long now_time;
-
-        [NativeTypeName("int64_t")]
-        public long delta_time_raw;
-
-        [NativeTypeName("int64_t")]
-        public long total_time_raw;
-
-        public double delta_time;
-
-        public double total_time;
+        [NativeTypeName("bool")]
+        public byte debug;
     }
 
     public partial struct WindowCreateOptions
@@ -663,6 +644,10 @@ namespace Soario.Native
     public unsafe partial struct FGpu
     {
         public void** lpVtbl;
+
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?CreateGpu@FGpu@ccc@@SAPEAU12@AEAUFError@2@@Z", ExactSpelling = true)]
+        [return: NativeTypeName("ccc::FGpu *")]
+        public static extern FGpu* CreateGpu([NativeTypeName("ccc::FError &")] FError* err);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("size_t")]

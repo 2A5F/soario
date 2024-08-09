@@ -1,12 +1,16 @@
 ﻿using System.Buffers;
+using System.CommandLine;
+using System.CommandLine.Builder;
+using System.CommandLine.Parsing;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Serilog;
+using Serilog.Core;
+using Serilog.Events;
 using Serilog.Exceptions;
 using Soario.Native;
-using Soario.Rendering;
-using Soario.Utils;
+using Soario.Utilities;
 using Soario.Windowing;
 
 namespace Soario;
@@ -30,8 +34,7 @@ public class Entry
             }
         };
 
-        Time.p_time_data = init_params->p_time_data;
-        Gpu.s_gpu = new(init_params->p_gpu);
+        AppVars.s_app_vars = init_params->p_vas;
         init_result->fn_vtb = new AppFnVtb
         {
             utf16_get_utf8_max_len = &GetUtf8MaxLength,
@@ -72,7 +75,7 @@ public class Entry
                     .Select(static a => a.n)
                     .FirstOrDefault();
                 var count = max_count + 1;
-                File.Move("./logs/latest.log", $"./logs/{time_name}.{count}.log");
+                File.Move("./logs/latest.log", $"./logs/{time_name}_{count}.log");
             }
             catch (Exception e)
             {
@@ -88,17 +91,52 @@ public class Entry
             .CreateLogger();
     }
 
+    [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_minimumLevel")]
+    private static extern ref LogEventLevel GetMinimumLevel(Logger logger);
+
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static void Exit()
     {
-        Log.Information("exited");
         Log.CloseAndFlush();
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     private static void Start()
     {
-        App.Start();
+        var version = new Option<bool>(["--version", "-v"], " Show version information");
+        var debug = new Option<bool>(["--debug", "-D"], "Enable debug mode");
+        var root = new RootCommand("Soario a game of automation")
+        {
+            debug,
+            version,
+        };
+        root.SetHandler(ctx =>
+        {
+            if (ctx.ParseResult.FindResultFor(version) is { })
+            {
+                Console.WriteLine(Utils.GetAsmVer(typeof(Entry).Assembly));
+                return;
+            }
+            if (ctx.ParseResult.FindResultFor(debug) is { })
+            {
+                AppVars.Debug = true;
+                GetMinimumLevel((Logger)Log.Logger) = LogEventLevel.Debug;
+                Log.Warning("Debug mode enabled");
+            }
+            App.Start();
+        });
+        var parser = new CommandLineBuilder(root)
+            .UseHelp()
+            .UseEnvironmentVariableDirective()
+            .UseParseDirective()
+            .UseSuggestDirective()
+            .RegisterWithDotnetSuggest()
+            .UseTypoCorrections()
+            .UseParseErrorReporting()
+            .UseExceptionHandler()
+            .CancelOnProcessTermination()
+            .Build();
+        parser.Invoke(Environment.GetCommandLineArgs().Skip(1).ToArray());
     }
 
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]

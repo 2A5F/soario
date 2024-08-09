@@ -2,7 +2,6 @@
 #include "./Gpu.h"
 #include "GpuBindLessPipelineLayout.h"
 #include "GpuSurfaceHwnd.h"
-#include "../Args.h"
 #include "../utils/Err.h"
 #include "../utils/logger.h"
 
@@ -75,9 +74,7 @@ namespace ccc
             winrt::check_hresult(CreateAllocator(&allocator_desc, m_gpu_allocator.put()));
         }
 
-        const auto& args = Args::get();
-
-        if (args.debug)
+        if (app_vars().debug)
         {
             if (SUCCEEDED(m_device -> QueryInterface(RT_IID_PPV_ARGS(m_info_queue))))
             {
