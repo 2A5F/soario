@@ -12,7 +12,9 @@
   - 尽可能用 mesh shader、无绑定等现代特性
 
 ## 构建
+- 需要 windows 11 环境
 - 使用了 gitmodule，需要 clone submodule
+- 需要 pwsh 7 环境
 - 需要 .net8 环境
 - 需要环境安装 [deno](https://deno.com/)
   ```
