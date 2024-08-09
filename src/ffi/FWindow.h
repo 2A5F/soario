@@ -26,7 +26,7 @@ namespace ccc
 
     struct FWindow : FObject
     {
-        __declspec(dllexport) static FWindow* create(FError& err, const WindowCreateOptions& options) noexcept;
+        FFI_EXPORT static FWindow* Create(FError& err, const WindowCreateOptions& options) noexcept;
 
         virtual size_t get_hwnd() noexcept = 0;
 

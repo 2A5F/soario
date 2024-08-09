@@ -33,7 +33,7 @@ public class Window : IDisposable
             };
 
             FError err;
-            m_inner = FWindow.create(&err, &f_options);
+            m_inner = FWindow.Create(&err, &f_options);
 
             if (err) err.Throw();
 

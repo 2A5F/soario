@@ -8,7 +8,7 @@
 
 namespace ccc
 {
-    FWindow* FWindow::create(FError& err, const WindowCreateOptions& options) noexcept
+    FWindow* FWindow::Create(FError& err, const WindowCreateOptions& options) noexcept
     {
         auto title = utf16_to_utf8(
             std::wstring_view(reinterpret_cast<const wchar_t*>(options.title.ptr), options.title.len)

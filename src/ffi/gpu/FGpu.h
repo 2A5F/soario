@@ -17,7 +17,7 @@ namespace ccc
 
     struct FGpu : FObject
     {
-        __declspec(dllexport) static FGpu* CreateGpu(FError& err) noexcept;
+        FFI_EXPORT static FGpu* CreateGpu(FError& err) noexcept;
 
         virtual FGpuDevice* CreateDevice(const FGpuDeviceCreateOptions& options, FError& err) noexcept = 0;
     };

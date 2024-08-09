@@ -83,8 +83,6 @@ namespace ccc
 
         void present_frame(FError& err) noexcept override;
 
-        void ready_frame();
-
         bool has_rtv() noexcept override;
 
         bool has_dsv() noexcept override;

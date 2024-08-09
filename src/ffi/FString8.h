@@ -13,7 +13,7 @@ namespace ccc
         {
         };
 
-        __declspec(dllexport) static FString8* Create(FrStr8 slice) noexcept;
+        FFI_EXPORT static FString8* Create(FrStr8 slice) noexcept;
     };
 
     struct FString16 : FObject
@@ -25,6 +25,6 @@ namespace ccc
         {
         };
 
-        __declspec(dllexport) static FString16* Create(FrStr8 slice) noexcept;
+        FFI_EXPORT static FString16* Create(FrStr8 slice) noexcept;
     };
 } // ccc

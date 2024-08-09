@@ -99,6 +99,21 @@ namespace Soario.Native
         public int Y;
     }
 
+    public partial struct FInt3
+    {
+        [NativeTypeName("int32_t")]
+        public int X;
+
+        [NativeTypeName("int32_t")]
+        public int Y;
+
+        [NativeTypeName("int32_t")]
+        public int Z;
+
+        [NativeTypeName("int32_t")]
+        private int _pad;
+    }
+
     public partial struct FInt4
     {
         [NativeTypeName("int32_t")]
@@ -412,9 +427,9 @@ namespace Soario.Native
     {
         public void** lpVtbl;
 
-        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?create@FWindow@ccc@@SAPEAU12@AEAUFError@2@AEBUWindowCreateOptions@2@@Z", ExactSpelling = true)]
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?Create@FWindow@ccc@@SAPEAU12@AEAUFError@2@AEBUWindowCreateOptions@2@@Z", ExactSpelling = true)]
         [return: NativeTypeName("ccc::FWindow *")]
-        public static extern FWindow* create([NativeTypeName("ccc::FError &")] FError* err, [NativeTypeName("const WindowCreateOptions &")] WindowCreateOptions* options);
+        public static extern FWindow* Create([NativeTypeName("ccc::FError &")] FError* err, [NativeTypeName("const WindowCreateOptions &")] WindowCreateOptions* options);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         [return: NativeTypeName("size_t")]

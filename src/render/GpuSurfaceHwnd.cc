@@ -210,12 +210,12 @@ namespace ccc
     {
         try
         {
-            ready_frame();
+             move_to_next_frame();
         }
         catch (std::exception ex)
         {
             logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, u"Failed to read frame!");
+            err = make_error(FErrorType::Gpu, u"Failed to ready frame!");
         }
         catch (winrt::hresult_error ex)
         {
@@ -240,11 +240,6 @@ namespace ccc
             logger::error(ex.message());
             err = make_hresult_error(ex);
         }
-    }
-
-    void GpuSurfaceHwnd::ready_frame()
-    {
-        move_to_next_frame();
     }
 
     bool GpuSurfaceHwnd::has_rtv() noexcept

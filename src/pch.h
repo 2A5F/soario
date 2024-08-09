@@ -16,3 +16,4 @@ namespace winrt_thread = winrt::Windows::System::Threading;
 
 template <class T>
 using com_ptr = winrt::com_ptr<T>;
+

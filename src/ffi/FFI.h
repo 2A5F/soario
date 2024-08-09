@@ -1,10 +1,11 @@
 ﻿#pragma once
 #include <stdint.h>
-#include <atomic>
+
+#define FFI_EXPORT __declspec(dllexport)
 
 namespace ccc
 {
-    __declspec(dllexport) void exit(int code) noexcept;
+    FFI_EXPORT void exit(int code) noexcept;
 
     struct FObject
     {
@@ -52,6 +53,17 @@ namespace ccc
     {
         int32_t X;
         int32_t Y;
+    };
+
+    __declspec(align(16))
+    struct FInt3
+    {
+        int32_t X;
+        int32_t Y;
+        int32_t Z;
+
+    private:
+        int32_t _pad{};
     };
 
     __declspec(align(16))
