@@ -94,6 +94,9 @@ public class Window : IDisposable
 
     #region Event
 
+    public event Action? OnClose; 
+    public event Action? OnResize; 
+
     [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
     internal static unsafe void EventHandle(void* gc_handle, FWindowEventType type, void* data)
     {
@@ -111,8 +114,15 @@ public class Window : IDisposable
 
     private unsafe void EventHandle(FWindowEventType type, void* data)
     {
-        // todo
-        Log.Debug("{Type}", type);
+        switch (type)
+        {
+            case FWindowEventType.Close:
+                OnClose?.Invoke();;
+                break;
+            case FWindowEventType.Resize:
+                OnResize?.Invoke();
+                break;
+        }
     }
 
     #endregion

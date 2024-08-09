@@ -1,4 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
+using Coplt.Mathematics;
+using Serilog;
 using Soario.Native;
 using Soario.Windowing;
 
@@ -19,6 +21,7 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
     private readonly GpuQueue m_queue;
     internal FGpuSurface* m_inner;
     private string m_name;
+    private readonly List<Action> m_disposables = new();
 
     #endregion
 
@@ -40,6 +43,15 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => m_name;
+    }
+
+    /// <summary>
+    /// 交换链包含几份帧缓冲区
+    /// </summary>
+    public int FrameCount
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get;
     }
 
     #endregion
@@ -65,6 +77,8 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
             );
             if (m_inner == null) err.Throw();
         }
+        FrameCount = m_inner->frame_count();
+        BindResize(window);
     }
 
     internal GpuSurface(GpuDevice device, nuint hwnd, GpuSurfaceCreateOptions options)
@@ -101,6 +115,10 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
     public void Dispose()
     {
         ReleaseUnmanagedResources();
+        foreach (var disposable in m_disposables)
+        {
+            disposable();
+        }
         GC.SuppressFinalize(this);
     }
     ~GpuSurface() => Dispose();
@@ -110,6 +128,31 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
     #region ToString
 
     public override string ToString() => $"GpuSurface({m_name})";
+
+    #endregion
+
+    #region BindResize
+
+    public void BindResize(Window window)
+    {
+        window.OnResize += on_resize;
+        m_disposables.Add(() => window.OnResize -= on_resize);
+
+        return;
+
+        void on_resize()
+        {
+            Resize(window.Size);
+        }
+    }
+
+    /// <summary>
+    /// 设置新大小，实际重设大小将在下帧开始时
+    /// </summary>
+    public void Resize(int2 new_size)
+    {
+        m_inner->resize(Unsafe.BitCast<int2, FInt2>(new_size));
+    }
 
     #endregion
 

@@ -268,6 +268,62 @@ namespace Soario.Native
     {
     }
 
+    [NativeTypeName("struct FString16 : ccc::FObject")]
+    public unsafe partial struct FString16
+    {
+        public void** lpVtbl;
+
+        [NativeTypeName("const uint16_t *")]
+        public ushort* m_ptr;
+
+        [NativeTypeName("const size_t")]
+        public nuint m_len;
+
+        [DllImport("soario.exe", CallingConvention = CallingConvention.Cdecl, EntryPoint = "?Create@FString16@ccc@@SAPEAU12@UFrStr8@2@@Z", ExactSpelling = true)]
+        [return: NativeTypeName("ccc::FString16 *")]
+        public static extern FString16* Create([NativeTypeName("ccc::FrStr8")] FrStr8 slice);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FString16*, nuint>)(lpVtbl[1]))((FString16*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FString16*, nuint>)(lpVtbl[2]))((FString16*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRefWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FString16*, nuint>)(lpVtbl[3]))((FString16*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint ReleaseWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FString16*, nuint>)(lpVtbl[4]))((FString16*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryDowngrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FString16*, byte>)(lpVtbl[5]))((FString16*)Unsafe.AsPointer(ref this)) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryUpgrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FString16*, byte>)(lpVtbl[6]))((FString16*)Unsafe.AsPointer(ref this)) != 0;
+        }
+    }
+
     public enum FLogLevel
     {
         Fatal,
@@ -516,27 +572,40 @@ namespace Soario.Native
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ready_frame([NativeTypeName("ccc::FError &")] FError* err)
+        [return: NativeTypeName("int32_t")]
+        public int frame_count()
         {
-            ((delegate* unmanaged[Thiscall]<FGpuSurface*, FError*, void>)(lpVtbl[13]))((FGpuSurface*)Unsafe.AsPointer(ref this), err);
+            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, int>)(lpVtbl[13]))((FGpuSurface*)Unsafe.AsPointer(ref this));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void present_frame([NativeTypeName("ccc::FError &")] FError* err)
+        public void ready_frame([NativeTypeName("ccc::FError &")] FError* err)
         {
             ((delegate* unmanaged[Thiscall]<FGpuSurface*, FError*, void>)(lpVtbl[14]))((FGpuSurface*)Unsafe.AsPointer(ref this), err);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void present_frame([NativeTypeName("ccc::FError &")] FError* err)
+        {
+            ((delegate* unmanaged[Thiscall]<FGpuSurface*, FError*, void>)(lpVtbl[15]))((FGpuSurface*)Unsafe.AsPointer(ref this), err);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void resize([NativeTypeName("ccc::FInt2")] FInt2 new_size)
+        {
+            ((delegate* unmanaged[Thiscall]<FGpuSurface*, FInt2, void>)(lpVtbl[16]))((FGpuSurface*)Unsafe.AsPointer(ref this), new_size);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool get_v_sync()
         {
-            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte>)(lpVtbl[15]))((FGpuSurface*)Unsafe.AsPointer(ref this)) != 0;
+            return ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte>)(lpVtbl[17]))((FGpuSurface*)Unsafe.AsPointer(ref this)) != 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void set_v_sync([NativeTypeName("bool")] byte v)
         {
-            ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte, void>)(lpVtbl[16]))((FGpuSurface*)Unsafe.AsPointer(ref this), v);
+            ((delegate* unmanaged[Thiscall]<FGpuSurface*, byte, void>)(lpVtbl[18]))((FGpuSurface*)Unsafe.AsPointer(ref this), v);
         }
     }
 

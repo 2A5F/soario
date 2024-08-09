@@ -22,7 +22,7 @@ public static class App
         Task.Factory.StartNew(() =>
         {
             var device = Gpu.Instance.MainDevice;
-            var surface = device.CreateSurface(MainWindow, new GpuSurfaceCreateOptions { Name = "MainSurface" });
+            var surface = device.CreateSurface(MainWindow, new GpuSurfaceCreateOptions { Name = "Main Surface" });
 
             Log.Information("{Device}", Gpu.Instance.MainDevice);
             Log.Information("{Queue}", Gpu.Instance.MainDevice.CommonQueue);

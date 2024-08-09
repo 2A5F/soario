@@ -13,6 +13,11 @@ namespace ccc
         const int2 size, FError& err
     ) : m_device(std::move(device)), m_queue(std::move(queue)), m_current_size(size)
     {
+        if (options.name.ptr != nullptr)
+        {
+            m_name = std::move(String16::CreateCopy(options.name));
+        }
+
         m_gpu = m_device->m_gpu;
 
         m_dx_device = m_device->m_device;
@@ -63,20 +68,10 @@ namespace ccc
 
         /*创建 fence */
         {
-            winrt::check_hresult(
-                m_dx_device->CreateFence(
-                    m_fence_values, D3D12_FENCE_FLAG_NONE, RT_IID_PPV_ARGS(m_fences)
-                )
-            );
-            m_fence_values++;
-
-            m_fence_event = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-            if (m_fence_event == nullptr)
+            for (int i = 0; i < FrameCount; ++i)
             {
-                winrt::throw_last_error();
+                m_fences[i] = GpuFencePak(m_dx_device, options.name, i);
             }
-
-            wait_gpu();
         }
     }
 
@@ -90,30 +85,30 @@ namespace ccc
             winrt::check_hresult(m_swap_chain->GetBuffer(n, RT_IID_PPV_ARGS(m_rts[n])));
             m_dx_device->CreateRenderTargetView(m_rts[n].get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, m_rtv_descriptor_size);
+
+            if (!m_name->is_null())
+            {
+                winrt::check_hresult(
+                    m_rts[n]->SetName(fmt::format(L"{} Frame {}", m_name->c_str(), n).c_str())
+                );
+            }
         }
     }
 
-    void GpuSurfaceHwnd::wait_gpu()
+    void GpuSurfaceHwnd::wait_all_frame() const
     {
-        const auto& fence = m_fences;
-        const auto fence_value = m_fence_values;
-        winrt::check_hresult(m_queue->m_command_queue->Signal(fence.get(), fence_value));
-
-        if (fence->GetCompletedValue() < fence_value)
+        for (UINT n = 0; n < FrameCount; n++)
         {
-            winrt::check_hresult(fence->SetEventOnCompletion(fence_value, m_fence_event));
-            WaitForSingleObjectEx(m_fence_event, INFINITE, false);
+            m_fences[n].wait();
         }
-
-        m_fence_values++;
     }
 
     void GpuSurfaceHwnd::move_to_next_frame()
     {
-        wait_gpu();
-
         if (m_resized && (m_current_size.x != m_new_size.x || m_current_size.y != m_new_size.y))
         {
+            wait_all_frame();
+
             m_current_size = m_new_size;
 
             for (UINT n = 0; n < FrameCount; n++)
@@ -132,18 +127,25 @@ namespace ccc
             create_rts();
 
             m_resized = false;
-        }
 
-        m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
+            m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
+        }
+        else
+        {
+            m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
+
+            m_fences[m_frame_index].wait();
+        }
 
         m_current_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(
             m_rtv_heap->GetCPUDescriptorHandleForHeapStart(), m_frame_index, m_rtv_descriptor_size
         );
     }
 
-    void GpuSurfaceHwnd::present() const
+    void GpuSurfaceHwnd::present()
     {
         winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
+        m_fences[m_frame_index].signal(m_queue->m_command_queue);
     }
 
     void GpuSurfaceHwnd::on_resize(const int2 new_size)
@@ -196,7 +198,7 @@ namespace ccc
 
     GpuSurfaceHwnd::~GpuSurfaceHwnd()
     {
-        wait_gpu();
+        wait_all_frame();
     }
 
     FInt2 GpuSurfaceHwnd::get_size() const noexcept
@@ -253,6 +255,11 @@ namespace ccc
     bool GpuSurfaceHwnd::has_dsv() noexcept
     {
         return false;
+    }
+
+    void GpuSurfaceHwnd::resize(FInt2 new_size) noexcept
+    {
+        on_resize({new_size.X, new_size.Y});
     }
 
     bool GpuSurfaceHwnd::get_v_sync() const noexcept
