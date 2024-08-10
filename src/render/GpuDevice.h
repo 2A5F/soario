@@ -61,5 +61,9 @@ namespace ccc
         FGpuPipelineLayout* CreateBindLessPipelineLayout(
             const FGpuBindLessPipelineLayoutCreateOptions& options, FError& err
         ) noexcept override;
+
+        FGpuPipelineState* CreatePipelineState(
+            FGpuPipelineLayout* layout, const FGpuPipelineStateCreateOptions& options, FError& err
+        ) noexcept override;
     };
 } // ccc

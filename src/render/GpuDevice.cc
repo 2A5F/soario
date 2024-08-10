@@ -1,6 +1,7 @@
 ﻿#include "./GpuDevice.h"
 #include "./Gpu.h"
 #include "GpuBindLessPipelineLayout.h"
+#include "GpuPipelineState.h"
 #include "GpuSurfaceHwnd.h"
 #include "../utils/Err.h"
 #include "../utils/logger.h"
@@ -174,6 +175,18 @@ namespace ccc
     ) noexcept
     {
         auto r = GpuBindLessPipelineLayout::Create(Rc<GpuDevice>::UnsafeClone(this), options, err);
+        return r.leak();
+    }
+
+    FGpuPipelineState* GpuDevice::CreatePipelineState(
+        FGpuPipelineLayout* layout, const FGpuPipelineStateCreateOptions& options, FError& err
+    ) noexcept
+    {
+        auto r = GpuPipelineState::Create(
+            Rc<GpuDevice>::UnsafeClone(this),
+            Rc<GpuPipelineLayout>::UnsafeClone(static_cast<GpuPipelineLayout*>(layout)),
+            options, err
+        );
         return r.leak();
     }
 } // ccc

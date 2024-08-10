@@ -55,10 +55,9 @@ public sealed class Shader : AAsset, IEquatable<Shader>
 
     internal Shader(Guid id, string? path, List<PassData> passes) : base(id, path)
     {
-        m_passes = passes.Select(static p => new ShaderPass(p)).ToList();
+        m_passes = passes.Select((p, i) => new ShaderPass(this, i, p)).ToList();
         m_name_2_index = m_passes
-            .Select(static (p, i) => (p.Name, i))
-            .ToFrozenDictionary(static a => a.Name, a => a.i);
+            .ToFrozenDictionary(static a => a.Name, static a => a.Index);
     }
 
     #endregion
@@ -92,11 +91,52 @@ public sealed class Shader : AAsset, IEquatable<Shader>
     public record struct PassData
     {
         public string Name { get; set; }
+        public bool BindLess { get; set; }
+
         public StageData? Ps { get; set; }
         public StageData? Vs { get; set; }
         public StageData? Cs { get; set; }
         public StageData? Ms { get; set; }
-        public StageData? As { get; set; }
+        public StageData? Ts { get; set; }
+
+        /// <inheritdoc cref="ShaderFill"/>
+        public ShaderFill Fill { get; set; }
+        /// <inheritdoc cref="ShaderCull"/>
+        public ShaderCull Cull { get; set; }
+        /// <summary>
+        /// 是否启用保守光栅化
+        /// </summary>
+        public ShaderSwitch Conservative { get; set; }
+        /// <summary>
+        /// 深度偏移
+        /// </summary>
+        public ShaderDepthBias DepthBias { get; set; }
+        /// <summary>
+        /// 深度裁剪
+        /// </summary>
+        public ShaderSwitch ZClip { get; set; }
+        /// <summary>
+        /// 深度测试比较方式
+        /// </summary>
+        public ShaderComp ZTest { get; set; }
+        /// <summary>
+        /// 深度写入
+        /// </summary>
+        public ShaderSwitch ZWrite { get; set; }
+        /// <summary>
+        /// 模板
+        /// </summary>
+        public ShaderStencilData? Stencil { get; set; }
+
+        public BlendRts BlendRts { get; set; }
+
+        public int RtCount { get; set; }
+    }
+
+    [InlineArray(8)]
+    public struct BlendRts
+    {
+        private ShaderPassRtBlendData _;
     }
 
     #endregion
@@ -169,7 +209,114 @@ public sealed class Shader : AAsset, IEquatable<Shader>
                     return new StageData(shader_stage, blob, reflection!);
                 }));
 
-                var pa = new PassData { Name = name };
+                var stencil = pass.Stencil ?? meta.Stencil;
+                var pa = new PassData
+                {
+                    Name = name,
+                    Fill = pass.Fill ?? meta.Fill ?? ShaderFill.Solid,
+                    Cull = pass.Cull ?? meta.Cull ?? ShaderCull.Back,
+                    Conservative = pass.Conservative ?? meta.Conservative ?? ShaderSwitch.Off,
+                    DepthBias = pass.DepthBias ?? meta.DepthBias ?? default,
+                    ZClip = pass.ZClip ?? meta.ZClip ?? ShaderSwitch.On,
+                    ZWrite = pass.ZWrite ?? meta.ZWrite ?? ShaderSwitch.On,
+                    ZTest = pass.ZTest ?? meta.ZTest ?? ShaderComp.LE,
+                    Stencil = stencil is null
+                        ? null
+                        : new ShaderStencilData
+                        {
+                            Ref = stencil.Ref,
+                            ReadMask = stencil.ReadMask ?? byte.MaxValue,
+                            WriteMask = stencil.WriteMask ?? byte.MaxValue,
+                            Front = new ShaderStencilLogicData
+                            {
+                                Comp = stencil.Front?.Comp ?? stencil.Comp ?? ShaderComp.Always,
+                                Pass = stencil.Front?.Pass ?? stencil.Pass ?? ShaderStencilOp.Keep,
+                                Fail = stencil.Front?.Fail ?? stencil.Fail ?? ShaderStencilOp.Keep,
+                                ZFail = stencil.Front?.ZFail ?? stencil.ZFail ?? ShaderStencilOp.Keep,
+                            },
+                            Back = new ShaderStencilLogicData
+                            {
+                                Comp = stencil.Back?.Comp ?? stencil.Comp ?? ShaderComp.Always,
+                                Pass = stencil.Back?.Pass ?? stencil.Pass ?? ShaderStencilOp.Keep,
+                                Fail = stencil.Back?.Fail ?? stencil.Fail ?? ShaderStencilOp.Keep,
+                                ZFail = stencil.Back?.ZFail ?? stencil.ZFail ?? ShaderStencilOp.Keep,
+                            },
+                        },
+                };
+
+                #region BlendRts
+
+                var rt_count = 0;
+                var rts = new BlendRts();
+
+                static ShaderPassRtBlendData make_rt_blend_data(ShaderPassRtDesc? pass, ShaderPassRtDesc? meta) =>
+                    new()
+                    {
+                        ColorMask = pass?.ColorMask ?? meta?.ColorMask ?? ShaderColorMask.All,
+                        BlendOp = pass?.BlendOp?.BlendOp ?? meta?.BlendOp?.BlendOp ?? ShaderBlendOp.Off,
+                        SrcBlend = pass?.Blend?.SrcBlend ?? meta?.Blend?.SrcBlend ?? ShaderBlend.One,
+                        DstBlend = pass?.Blend?.DstBlend ?? meta?.Blend?.DstBlend ?? ShaderBlend.Zero,
+                        AlphaBlendOp = pass?.BlendOp?.AlphaBlendOp ??
+                                       meta?.BlendOp?.AlphaBlendOp ?? ShaderBlendOp.Off,
+                        AlphaSrcBlend = pass?.Blend?.AlphaSrcBlend ??
+                                        meta?.Blend?.AlphaSrcBlend ?? ShaderBlend.One,
+                        AlphaDstBlend = pass?.Blend?.AlphaDstBlend ??
+                                        meta?.Blend?.AlphaDstBlend ?? ShaderBlend.Zero,
+                        LogicOp = pass?.LogicOp ?? meta?.LogicOp ?? ShaderRtLogicOp.Noop,
+                    };
+
+                if (pass.Rt0 is { } || meta.Rt0 is { })
+                {
+                    rt_count = 1;
+                    rts[0] = make_rt_blend_data(pass.Rt0, meta.Rt0);
+
+                    if (pass.Rt1 is { } || meta.Rt1 is { })
+                    {
+                        rt_count = 2;
+                        rts[1] = make_rt_blend_data(pass.Rt1, meta.Rt1);
+
+                        if (pass.Rt2 is { } || meta.Rt2 is { })
+                        {
+                            rt_count = 3;
+                            rts[2] = make_rt_blend_data(pass.Rt2, meta.Rt2);
+
+                            if (pass.Rt3 is { } || meta.Rt3 is { })
+                            {
+                                rt_count = 4;
+                                rts[3] = make_rt_blend_data(pass.Rt3, meta.Rt3);
+
+                                if (pass.Rt4 is { } || meta.Rt4 is { })
+                                {
+                                    rt_count = 5;
+                                    rts[4] = make_rt_blend_data(pass.Rt4, meta.Rt4);
+
+                                    if (pass.Rt5 is { } || meta.Rt5 is { })
+                                    {
+                                        rt_count = 6;
+                                        rts[5] = make_rt_blend_data(pass.Rt5, meta.Rt5);
+
+                                        if (pass.Rt6 is { } || meta.Rt6 is { })
+                                        {
+                                            rt_count = 7;
+                                            rts[6] = make_rt_blend_data(pass.Rt6, meta.Rt6);
+
+                                            if (pass.Rt7 is { } || meta.Rt7 is { })
+                                            {
+                                                rt_count = 8;
+                                                rts[7] = make_rt_blend_data(pass.Rt7, meta.Rt7);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                pa.RtCount = rt_count;
+                pa.BlendRts = rts;
+
+                #endregion
+
                 foreach (var stage in stages)
                 {
                     switch (stage.ShaderStage)
@@ -186,8 +333,8 @@ public sealed class Shader : AAsset, IEquatable<Shader>
                         case ShaderStage.Ms:
                             pa.Ms = stage;
                             break;
-                        case ShaderStage.As:
-                            pa.As = stage;
+                        case ShaderStage.Ts:
+                            pa.Ts = stage;
                             break;
                         default:
                             throw new ArgumentOutOfRangeException();

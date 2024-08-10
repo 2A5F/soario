@@ -29,4 +29,10 @@ public readonly struct Blob : IDisposable
         // ReSharper disable once PossiblyImpureMethodCallOnReadonlyVariable
         get => data.AsSpan();
     }
+
+    public unsafe FrStr8 UnsafeSlice
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => new() { ptr = data.ptr, len = data.len };
+    }
 }

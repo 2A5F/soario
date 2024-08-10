@@ -5,6 +5,8 @@
 #include "GpuDevice.h"
 #include "GpuPipelineLayout.h"
 
+#include "GpuPipelineConvert.h"
+
 #include "../utils/Err.h"
 #include "../utils/logger.h"
 
@@ -39,11 +41,23 @@ namespace ccc
                     desc.pRootSignature = layout->get_root_signature().get();
                     desc.PS = {options.blob[0].ptr, options.blob[0].len};
                     desc.MS = {options.blob[1].ptr, options.blob[0].len};
-                    if (flag.as)
+                    if (flag.ts)
                     {
                         desc.AS = {options.blob[2].ptr, options.blob[0].len};
                     }
-                    // todo other
+                    to_dx(desc.BlendState, options.blend_state, options.rt_count);
+                    desc.SampleMask = options.sample_mask;
+                    to_dx(desc.RasterizerState, options.rasterizer_state);
+                    to_dx(desc.DepthStencilState, options.depth_stencil_state);
+                    desc.PrimitiveTopologyType = to_dx(options.primitive_topology_type);
+                    desc.NumRenderTargets = options.rt_count;
+                    desc.SampleDesc.Count = options.sample_state.count;
+                    desc.SampleDesc.Quality = options.sample_state.quality;
+                    for (int i = 0; i < options.rt_count; ++i)
+                    {
+                        desc.RTVFormats[i] = to_dx(options.rtv_formats[i]);
+                    }
+                    desc.DSVFormat = to_dx(options.dsv_format);
 
                     auto pso_stream = CD3DX12_PIPELINE_MESH_STATE_STREAM(desc);
 
@@ -62,6 +76,10 @@ namespace ccc
             return nullptr;
 
         ok:
+            if (options.name.ptr != nullptr)
+            {
+                winrt::check_hresult(pipeline_state->SetName(reinterpret_cast<const wchar_t*>(options.name.ptr)));
+            }
             Rc r(new GpuPipelineState(std::move(device), std::move(layout), std::move(pipeline_state)));
             if (err.type != FErrorType::None) return nullptr;
             return r;

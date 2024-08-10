@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include "FGpuPipelineLayout.h"
+#include "FGpuPipelineState.h"
 #include "../FFI.h"
 #include "../FnPtrs.h"
 #include "../FWindow.h"
@@ -37,6 +38,10 @@ namespace ccc
 
         virtual FGpuPipelineLayout* CreateBindLessPipelineLayout(
             const FGpuBindLessPipelineLayoutCreateOptions& options, FError& err
+        ) noexcept = 0;
+
+        virtual FGpuPipelineState* CreatePipelineState(
+            FGpuPipelineLayout* layout, const FGpuPipelineStateCreateOptions& options, FError& err
         ) noexcept = 0;
     };
 } // ccc

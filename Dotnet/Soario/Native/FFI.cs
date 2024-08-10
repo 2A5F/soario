@@ -722,6 +722,13 @@ namespace Soario.Native
         {
             return ((delegate* unmanaged[Thiscall]<FGpuDevice*, FGpuBindLessPipelineLayoutCreateOptions*, FError*, FGpuPipelineLayout*>)(lpVtbl[10]))((FGpuDevice*)Unsafe.AsPointer(ref this), options, err);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("ccc::FGpuPipelineState *")]
+        public FGpuPipelineState* CreatePipelineState([NativeTypeName("ccc::FGpuPipelineLayout *")] FGpuPipelineLayout* layout, [NativeTypeName("const FGpuPipelineStateCreateOptions &")] FGpuPipelineStateCreateOptions* options, [NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuDevice*, FGpuPipelineLayout*, FGpuPipelineStateCreateOptions*, FError*, FGpuPipelineState*>)(lpVtbl[11]))((FGpuDevice*)Unsafe.AsPointer(ref this), layout, options, err);
+        }
     }
 
     [NativeTypeName("struct FGpu : ccc::FObject")]
@@ -1126,6 +1133,110 @@ namespace Soario.Native
         Copy,
     }
 
+    public enum FGpuTextureFormat
+    {
+        Unknown = 0,
+        R32G32B32A32_TypeLess = 1,
+        R32G32B32A32_Float = 2,
+        R32G32B32A32_UInt = 3,
+        R32G32B32A32_SInt = 4,
+        R32G32B32_TypeLess = 5,
+        R32G32B32_Float = 6,
+        R32G32B32_UInt = 7,
+        R32G32B32_SInt = 8,
+        R16G16B16A16_TypeLess = 9,
+        R16G16B16A16_Float = 10,
+        R16G16B16A16_UNorm = 11,
+        R16G16B16A16_UInt = 12,
+        R16G16B16A16_SNorm = 13,
+        R16G16B16A16_SInt = 14,
+        R32G32_TypeLess = 15,
+        R32G32_Float = 16,
+        R32G32_UInt = 17,
+        R32G32_SInt = 18,
+        R32G8X24_TypeLess = 19,
+        D32_Float_S8X24_UInt = 20,
+        R32_Float_X8X24_TypeLess = 21,
+        X32_TypeLess_G8X24_Float = 22,
+        R10G10B10A2_TypeLess = 23,
+        R10G10B10A2_UNorm = 24,
+        R10G10B10A2_UInt = 25,
+        R11G11B10_Float = 26,
+        R8G8B8A8_TypeLess = 27,
+        R8G8B8A8_UNorm = 28,
+        R8G8B8A8_UNorm_sRGB = 29,
+        R8G8B8A8_UInt = 30,
+        R8G8B8A8_SNorm = 31,
+        R8G8B8A8_SInt = 32,
+        R16G16_TypeLess = 33,
+        R16G16_Float = 34,
+        R16G16_UNorm = 35,
+        R16G16_UInt = 36,
+        R16G16_SNorm = 37,
+        R16G16_SInt = 38,
+        R32_TypeLess = 39,
+        D32_Float = 40,
+        R32_Float = 41,
+        R32_UInt = 42,
+        R32_SInt = 43,
+        R24G8_TypeLess = 44,
+        D24_UNorm_S8_UInt = 45,
+        R24_UNorm_X8_TypeLess = 46,
+        X24_TypeLess_G8_UInt = 47,
+        R8G8_TypeLess = 48,
+        R8G8_UNorm = 49,
+        R8G8_UInt = 50,
+        R8G8_SNorm = 51,
+        R8G8_SInt = 52,
+        R16_TypeLess = 53,
+        R16_Float = 54,
+        D16_UNorm = 55,
+        R16_UNorm = 56,
+        R16_UInt = 57,
+        R16_SNorm = 58,
+        R16_SInt = 59,
+        R8_TypeLess = 60,
+        R8_UNorm = 61,
+        R8_UInt = 62,
+        R8_SNorm = 63,
+        R8_SInt = 64,
+        A8_UNorm = 65,
+        R1_UNorm = 66,
+        R9G9B9E5_SharedExp = 67,
+        R8G8_B8G8_UNorm = 68,
+        G8R8_G8B8_UNorm = 69,
+        BC1_TypeLess = 70,
+        BC1_UNorm = 71,
+        BC1_UNorm_sRGB = 72,
+        BC2_TypeLess = 73,
+        BC2_UNorm = 74,
+        BC2_UNorm_sRGB = 75,
+        BC3_TypeLess = 76,
+        BC3_UNorm = 77,
+        BC3_UNorm_sRGB = 78,
+        BC4_TypeLess = 79,
+        BC4_UNorm = 80,
+        BC4_SNorm = 81,
+        BC5_TypeLess = 82,
+        BC5_UNorm = 83,
+        BC5_SNorm = 84,
+        B5G6R5_UNorm = 85,
+        B5G5R5A1_UNorm = 86,
+        B8G8R8A8_UNorm = 87,
+        B8G8R8X8_UNorm = 88,
+        R10G10B10_XR_Bias_A2_UNorm = 89,
+        B8G8R8A8_TypeLess = 90,
+        B8G8R8A8_UNorm_sRGB = 91,
+        B8G8R8X8_TypeLess = 92,
+        B8G8R8X8_UNorm_sRGB = 93,
+        BC6H_TypeLess = 94,
+        BC6H_UF16 = 95,
+        BC6H_SF16 = 96,
+        BC7_TypeLess = 97,
+        BC7_UNorm = 98,
+        BC7_UNorm_sRGB = 99,
+    }
+
     public partial struct FGpuBindLessPipelineLayoutCreateOptions
     {
         [NativeTypeName("ccc::FrStr16")]
@@ -1181,6 +1292,523 @@ namespace Soario.Native
         public void* get_raw_ptr()
         {
             return ((delegate* unmanaged[Thiscall]<FGpuPipelineLayout*, void*>)(lpVtbl[7]))((FGpuPipelineLayout*)Unsafe.AsPointer(ref this));
+        }
+    }
+
+    public partial struct FGpuPipelineCreateFlag
+    {
+        public ushort _bitfield;
+
+        [NativeTypeName("uint16_t : 1")]
+        public ushort bind_less
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (ushort)(_bitfield & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (ushort)((_bitfield & ~0x1u) | (value & 0x1u));
+            }
+        }
+
+        [NativeTypeName("uint16_t : 1")]
+        public ushort cs
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (ushort)((_bitfield >> 1) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (ushort)((_bitfield & ~(0x1u << 1)) | ((value & 0x1u) << 1));
+            }
+        }
+
+        [NativeTypeName("uint16_t : 1")]
+        public ushort ps
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (ushort)((_bitfield >> 2) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (ushort)((_bitfield & ~(0x1u << 2)) | ((value & 0x1u) << 2));
+            }
+        }
+
+        [NativeTypeName("uint16_t : 1")]
+        public ushort vs
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (ushort)((_bitfield >> 3) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (ushort)((_bitfield & ~(0x1u << 3)) | ((value & 0x1u) << 3));
+            }
+        }
+
+        [NativeTypeName("uint16_t : 1")]
+        public ushort ms
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (ushort)((_bitfield >> 4) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (ushort)((_bitfield & ~(0x1u << 4)) | ((value & 0x1u) << 4));
+            }
+        }
+
+        [NativeTypeName("uint16_t : 1")]
+        public ushort ts
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (ushort)((_bitfield >> 5) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (ushort)((_bitfield & ~(0x1u << 5)) | ((value & 0x1u) << 5));
+            }
+        }
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelinePrimitiveTopologyType : byte
+    {
+        Undefined,
+        Point,
+        Line,
+        Triangle,
+        Patch,
+    }
+
+    public partial struct FGpuPipelineColorMask
+    {
+        public byte _bitfield;
+
+        [NativeTypeName("uint8_t : 1")]
+        public byte r
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (byte)(_bitfield & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (byte)((_bitfield & ~0x1u) | (value & 0x1u));
+            }
+        }
+
+        [NativeTypeName("uint8_t : 1")]
+        public byte g
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (byte)((_bitfield >> 1) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (byte)((_bitfield & ~(0x1u << 1)) | ((value & 0x1u) << 1));
+            }
+        }
+
+        [NativeTypeName("uint8_t : 1")]
+        public byte b
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (byte)((_bitfield >> 2) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (byte)((_bitfield & ~(0x1u << 2)) | ((value & 0x1u) << 2));
+            }
+        }
+
+        [NativeTypeName("uint8_t : 1")]
+        public byte a
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (byte)((_bitfield >> 3) & 0x1u);
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (byte)((_bitfield & ~(0x1u << 3)) | ((value & 0x1u) << 3));
+            }
+        }
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineSwitch : byte
+    {
+        Off = 0,
+        On = 1,
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineFillMode : byte
+    {
+        WireFrame = 2,
+        Solid = 3,
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineCullMode : byte
+    {
+        Off = 1,
+        Front = 2,
+        Back = 3,
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineBlendType : byte
+    {
+        Zero = 1,
+        One = 2,
+        SrcColor = 3,
+        InvSrcColor = 4,
+        SrcAlpha = 5,
+        InvSrcAlpha = 6,
+        DstAlpha = 7,
+        InvDstAlpha = 8,
+        DstColor = 9,
+        InvDstColor = 10,
+        SrcAlphaSat = 11,
+        BlendFactor = 14,
+        BlendInvBlendFactor = 15,
+        Src1Color = 16,
+        InvSrc1Color = 17,
+        Src1Alpha = 18,
+        InvSrc1Alpha = 19,
+        AlphaFactor = 20,
+        InvAlphaFactor = 21,
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineBlendOp : byte
+    {
+        None = 0,
+        Add = 1,
+        Sub = 2,
+        RevSub = 3,
+        Min = 4,
+        Max = 5,
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineLogicOp : byte
+    {
+        None = 0,
+        Clear,
+        One,
+        Copy,
+        CopyInv,
+        Noop,
+        Inv,
+        And,
+        NAnd,
+        Or,
+        Nor,
+        Xor,
+        Equiv,
+        AndRev,
+        AndInv,
+        OrRev,
+        OrInv,
+    }
+
+    public partial struct FGpuPipelineRtBlendState
+    {
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch blend;
+
+        [NativeTypeName("ccc::FGpuPipelineBlendType")]
+        public FGpuPipelineBlendType src_blend;
+
+        [NativeTypeName("ccc::FGpuPipelineBlendType")]
+        public FGpuPipelineBlendType dst_blend;
+
+        [NativeTypeName("ccc::FGpuPipelineBlendOp")]
+        public FGpuPipelineBlendOp blend_op;
+
+        [NativeTypeName("ccc::FGpuPipelineBlendType")]
+        public FGpuPipelineBlendType src_alpha_blend;
+
+        [NativeTypeName("ccc::FGpuPipelineBlendType")]
+        public FGpuPipelineBlendType dst_alpha_blend;
+
+        [NativeTypeName("ccc::FGpuPipelineBlendOp")]
+        public FGpuPipelineBlendOp alpha_blend_op;
+
+        [NativeTypeName("ccc::FGpuPipelineLogicOp")]
+        public FGpuPipelineLogicOp logic_op;
+
+        [NativeTypeName("ccc::FGpuPipelineColorMask")]
+        public FGpuPipelineColorMask write_mask;
+    }
+
+    public partial struct FGpuPipelineBlendState
+    {
+        [NativeTypeName("FGpuPipelineRtBlendState[8]")]
+        public _rts_e__FixedBuffer rts;
+
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch alpha_to_coverage;
+
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch independent_blend;
+
+        [InlineArray(8)]
+        public partial struct _rts_e__FixedBuffer
+        {
+            public FGpuPipelineRtBlendState e0;
+        }
+    }
+
+    public partial struct FGpuPipelineRasterizerState
+    {
+        [NativeTypeName("ccc::FGpuPipelineFillMode")]
+        public FGpuPipelineFillMode fill_mode;
+
+        [NativeTypeName("ccc::FGpuPipelineCullMode")]
+        public FGpuPipelineCullMode cull_mode;
+
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch depth_clip;
+
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch multisample;
+
+        [NativeTypeName("uint32_t")]
+        public uint forced_sample_count;
+
+        [NativeTypeName("int32_t")]
+        public int depth_bias;
+
+        public float depth_bias_clamp;
+
+        public float slope_scaled_depth_bias;
+
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch aa_line;
+
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch conservative;
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineDepthWriteMask : byte
+    {
+        Zero = 0,
+        All = 1,
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineCmpFunc : byte
+    {
+        Off = 0,
+        Never = 1,
+        Less = 2,
+        Equal = 3,
+        LessEqual = 4,
+        Greater = 5,
+        NotEqual = 6,
+        GreaterEqual = 7,
+        Always = 8,
+    }
+
+    [NativeTypeName("uint8_t")]
+    public enum FGpuPipelineStencilFailOp : byte
+    {
+        Keep = 1,
+        Zero = 2,
+        Replace = 3,
+        IncSat = 4,
+        DecSat = 5,
+        Invert = 6,
+        Inc = 7,
+        Dec = 8,
+    }
+
+    public partial struct FGpuPipelineStencilState
+    {
+        [NativeTypeName("ccc::FGpuPipelineStencilFailOp")]
+        public FGpuPipelineStencilFailOp fail_op;
+
+        [NativeTypeName("ccc::FGpuPipelineStencilFailOp")]
+        public FGpuPipelineStencilFailOp depth_fail_op;
+
+        [NativeTypeName("ccc::FGpuPipelineStencilFailOp")]
+        public FGpuPipelineStencilFailOp pass_op;
+
+        [NativeTypeName("ccc::FGpuPipelineCmpFunc")]
+        public FGpuPipelineCmpFunc func;
+    }
+
+    public partial struct FGpuPipelineDepthStencilState
+    {
+        [NativeTypeName("ccc::FGpuPipelineCmpFunc")]
+        public FGpuPipelineCmpFunc depth_func;
+
+        [NativeTypeName("ccc::FGpuPipelineDepthWriteMask")]
+        public FGpuPipelineDepthWriteMask depth_write_mask;
+
+        [NativeTypeName("ccc::FGpuPipelineSwitch")]
+        public FGpuPipelineSwitch stencil_enable;
+
+        [NativeTypeName("uint8_t")]
+        public byte stencil_read_mask;
+
+        [NativeTypeName("uint8_t")]
+        public byte stencil_write_mask;
+
+        [NativeTypeName("ccc::FGpuPipelineStencilState")]
+        public FGpuPipelineStencilState front_face;
+
+        [NativeTypeName("ccc::FGpuPipelineStencilState")]
+        public FGpuPipelineStencilState back_face;
+    }
+
+    public partial struct FGpuPipelineSampleState
+    {
+        [NativeTypeName("uint32_t")]
+        public uint count;
+
+        [NativeTypeName("int32_t")]
+        public int quality;
+    }
+
+    public partial struct FGpuPipelineStateCreateOptions
+    {
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 name;
+
+        [NativeTypeName("ccc::FGpuPipelineCreateFlag")]
+        public FGpuPipelineCreateFlag flag;
+
+        [NativeTypeName("ccc::FGpuPipelineBlendState")]
+        public FGpuPipelineBlendState blend_state;
+
+        [NativeTypeName("ccc::FGpuPipelinePrimitiveTopologyType")]
+        public FGpuPipelinePrimitiveTopologyType primitive_topology_type;
+
+        [NativeTypeName("ccc::FGpuPipelineRasterizerState")]
+        public FGpuPipelineRasterizerState rasterizer_state;
+
+        [NativeTypeName("ccc::FGpuPipelineDepthStencilState")]
+        public FGpuPipelineDepthStencilState depth_stencil_state;
+
+        [NativeTypeName("uint32_t")]
+        public uint sample_mask;
+
+        [NativeTypeName("int32_t")]
+        public int rt_count;
+
+        [NativeTypeName("FrStr8[3]")]
+        public _blob_e__FixedBuffer blob;
+
+        [NativeTypeName("FGpuTextureFormat[8]")]
+        public _rtv_formats_e__FixedBuffer rtv_formats;
+
+        [NativeTypeName("ccc::FGpuTextureFormat")]
+        public FGpuTextureFormat dsv_format;
+
+        [NativeTypeName("ccc::FGpuPipelineSampleState")]
+        public FGpuPipelineSampleState sample_state;
+
+        [InlineArray(3)]
+        public partial struct _blob_e__FixedBuffer
+        {
+            public FrStr8 e0;
+        }
+
+        [InlineArray(8)]
+        public partial struct _rtv_formats_e__FixedBuffer
+        {
+            public FGpuTextureFormat e0;
+        }
+    }
+
+    [NativeTypeName("struct FGpuPipelineState : ccc::FObject")]
+    public unsafe partial struct FGpuPipelineState
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, nuint>)(lpVtbl[1]))((FGpuPipelineState*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, nuint>)(lpVtbl[2]))((FGpuPipelineState*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRefWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, nuint>)(lpVtbl[3]))((FGpuPipelineState*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint ReleaseWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, nuint>)(lpVtbl[4]))((FGpuPipelineState*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryDowngrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, byte>)(lpVtbl[5]))((FGpuPipelineState*)Unsafe.AsPointer(ref this)) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryUpgrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, byte>)(lpVtbl[6]))((FGpuPipelineState*)Unsafe.AsPointer(ref this)) != 0;
         }
     }
 

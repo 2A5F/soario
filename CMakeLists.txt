@@ -133,6 +133,10 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/GpuPipelineState.h
         src/render/GpuFencePak.cc
         src/render/GpuFencePak.h
+        src/ffi/gpu/FGpuFormat.cc
+        src/ffi/gpu/FGpuFormat.h
+        src/render/GpuPipelineConvert.cc
+        src/render/GpuPipelineConvert.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

@@ -1,4 +1,6 @@
-﻿namespace Soario.Rendering;
+﻿using Soario.Native;
+
+namespace Soario.Rendering;
 
 /// <summary>
 /// 着色器阶段
@@ -22,9 +24,9 @@ public enum ShaderStage
     /// </summary>
     Ms,
     /// <summary>
-    /// 装配着色器
+    /// 任务着色器
     /// </summary>
-    As,
+    Ts,
 }
 
 /// <summary>
@@ -47,9 +49,13 @@ public enum ShaderSwitch
 /// </summary>
 public enum ShaderFill
 {
-    // 绘制连接顶点的线条， 不绘制相邻顶点
+    /// <summary>
+    /// 绘制连接顶点的线条， 不绘制相邻顶点
+    /// </summary>
     WireFrame = 2,
-    // 填充顶点形成的三角形， 不绘制相邻顶点
+    /// <summary>
+    /// 填充顶点形成的三角形， 不绘制相邻顶点
+    /// </summary>
     Solid = 3,
 }
 
@@ -88,6 +94,23 @@ public enum ShaderComp
     Always = 8,
 }
 
+internal static partial class ShaderEx
+{
+    public static FGpuPipelineCmpFunc ToFFI(this ShaderComp comp) => comp switch
+    {
+        ShaderComp.Off => FGpuPipelineCmpFunc.Off,
+        ShaderComp.Never => FGpuPipelineCmpFunc.Never,
+        ShaderComp.Lt => FGpuPipelineCmpFunc.Less,
+        ShaderComp.Eq => FGpuPipelineCmpFunc.Equal,
+        ShaderComp.LE => FGpuPipelineCmpFunc.LessEqual,
+        ShaderComp.Gt => FGpuPipelineCmpFunc.Greater,
+        ShaderComp.Ne => FGpuPipelineCmpFunc.NotEqual,
+        ShaderComp.Ge => FGpuPipelineCmpFunc.GreaterEqual,
+        ShaderComp.Always => FGpuPipelineCmpFunc.Always,
+        _ => throw new ArgumentOutOfRangeException(nameof(comp), comp, null)
+    };
+}
+
 /// <summary>
 /// 模板操作
 /// </summary>
@@ -101,6 +124,22 @@ public enum ShaderStencilOp
     Invert = 6,
     Incr = 7,
     Decr = 8,
+}
+
+internal static partial class ShaderEx
+{
+    public static FGpuPipelineStencilFailOp ToFFI(this ShaderStencilOp op) => op switch
+    {
+        ShaderStencilOp.Keep => FGpuPipelineStencilFailOp.Keep,
+        ShaderStencilOp.Zero => FGpuPipelineStencilFailOp.Zero,
+        ShaderStencilOp.Replace => FGpuPipelineStencilFailOp.Replace,
+        ShaderStencilOp.IncrSat => FGpuPipelineStencilFailOp.IncSat,
+        ShaderStencilOp.DecrSat => FGpuPipelineStencilFailOp.DecSat,
+        ShaderStencilOp.Invert => FGpuPipelineStencilFailOp.Invert,
+        ShaderStencilOp.Incr => FGpuPipelineStencilFailOp.Inc,
+        ShaderStencilOp.Decr => FGpuPipelineStencilFailOp.Dec,
+        _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
+    };
 }
 
 /// <summary>
@@ -153,7 +192,7 @@ public record ShaderStencil : ShaderStencilLogic
     public ShaderStencilLogic? Back { get; set; }
 }
 
-public enum ShaderRtLogicOp
+public enum ShaderRtLogicOp : byte
 {
     Clear,
     One,
@@ -173,20 +212,118 @@ public enum ShaderRtLogicOp
     OrInv,
 }
 
+internal static partial class ShaderEx
+{
+    public static FGpuPipelineLogicOp ToFFI(this ShaderRtLogicOp blend) => blend switch
+    {
+        ShaderRtLogicOp.Clear => FGpuPipelineLogicOp.Clear,
+        ShaderRtLogicOp.One => FGpuPipelineLogicOp.One,
+        ShaderRtLogicOp.Copy => FGpuPipelineLogicOp.Copy,
+        ShaderRtLogicOp.CopyInv => FGpuPipelineLogicOp.CopyInv,
+        ShaderRtLogicOp.Noop => FGpuPipelineLogicOp.Noop,
+        ShaderRtLogicOp.Inv => FGpuPipelineLogicOp.Inv,
+        ShaderRtLogicOp.And => FGpuPipelineLogicOp.And,
+        ShaderRtLogicOp.NAnd => FGpuPipelineLogicOp.NAnd,
+        ShaderRtLogicOp.Or => FGpuPipelineLogicOp.Or,
+        ShaderRtLogicOp.Nor => FGpuPipelineLogicOp.Nor,
+        ShaderRtLogicOp.Xor => FGpuPipelineLogicOp.Xor,
+        ShaderRtLogicOp.Equiv => FGpuPipelineLogicOp.Equiv,
+        ShaderRtLogicOp.AndRev => FGpuPipelineLogicOp.AndRev,
+        ShaderRtLogicOp.AndInv => FGpuPipelineLogicOp.AndInv,
+        ShaderRtLogicOp.OrRev => FGpuPipelineLogicOp.OrRev,
+        ShaderRtLogicOp.OrInv => FGpuPipelineLogicOp.OrInv,
+        _ => throw new ArgumentOutOfRangeException(nameof(blend), blend, null)
+    };
+}
+
+public enum ShaderBlend : byte
+{
+    Zero = 1,
+    One = 2,
+    SrcColor = 3,
+    InvSrcColor = 4,
+    SrcAlpha = 5,
+    InvSrcAlpha = 6,
+    DstAlpha = 7,
+    InvDstAlpha = 8,
+    DstColor = 9,
+    InvDstColor = 10,
+    SrcAlphaSat = 11,
+    BlendFactor = 14,
+    BlendInvBlendFactor = 15,
+    Src1Color = 16,
+    InvSrc1Color = 17,
+    Src1Alpha = 18,
+    InvSrc1Alpha = 19,
+    AlphaFactor = 20,
+    InvAlphaFactor = 21,
+}
+
+internal static partial class ShaderEx
+{
+    public static FGpuPipelineBlendType ToFFI(this ShaderBlend blend) => blend switch
+    {
+        ShaderBlend.Zero => FGpuPipelineBlendType.Zero,
+        ShaderBlend.One => FGpuPipelineBlendType.One,
+        ShaderBlend.SrcColor => FGpuPipelineBlendType.SrcColor,
+        ShaderBlend.InvSrcColor => FGpuPipelineBlendType.InvSrcColor,
+        ShaderBlend.SrcAlpha => FGpuPipelineBlendType.SrcAlpha,
+        ShaderBlend.InvSrcAlpha => FGpuPipelineBlendType.InvSrcAlpha,
+        ShaderBlend.DstAlpha => FGpuPipelineBlendType.DstAlpha,
+        ShaderBlend.InvDstAlpha => FGpuPipelineBlendType.InvDstAlpha,
+        ShaderBlend.DstColor => FGpuPipelineBlendType.DstColor,
+        ShaderBlend.InvDstColor => FGpuPipelineBlendType.InvDstColor,
+        ShaderBlend.SrcAlphaSat => FGpuPipelineBlendType.SrcAlphaSat,
+        ShaderBlend.BlendFactor => FGpuPipelineBlendType.BlendFactor,
+        ShaderBlend.BlendInvBlendFactor => FGpuPipelineBlendType.BlendInvBlendFactor,
+        ShaderBlend.Src1Color => FGpuPipelineBlendType.Src1Color,
+        ShaderBlend.InvSrc1Color => FGpuPipelineBlendType.InvSrc1Color,
+        ShaderBlend.Src1Alpha => FGpuPipelineBlendType.Src1Alpha,
+        ShaderBlend.InvSrc1Alpha => FGpuPipelineBlendType.InvSrc1Alpha,
+        ShaderBlend.AlphaFactor => FGpuPipelineBlendType.AlphaFactor,
+        ShaderBlend.InvAlphaFactor => FGpuPipelineBlendType.InvAlphaFactor,
+        _ => throw new ArgumentOutOfRangeException(nameof(blend), blend, null)
+    };
+}
+
+public enum ShaderBlendOp : byte
+{
+    Off = 0,
+    Add = 1,
+    Sub = 2,
+    RevSub = 3,
+    Min = 4,
+    Max = 5,
+}
+
+internal static partial class ShaderEx
+{
+    public static FGpuPipelineBlendOp ToFFI(this ShaderBlendOp op) => op switch
+    {
+        ShaderBlendOp.Off => FGpuPipelineBlendOp.None,
+        ShaderBlendOp.Add => FGpuPipelineBlendOp.Add,
+        ShaderBlendOp.Sub => FGpuPipelineBlendOp.Sub,
+        ShaderBlendOp.RevSub => FGpuPipelineBlendOp.RevSub,
+        ShaderBlendOp.Min => FGpuPipelineBlendOp.Min,
+        ShaderBlendOp.Max => FGpuPipelineBlendOp.Max,
+        _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
+    };
+}
+
 public record ShaderPassRtDesc
 {
     /// <summary>
-    /// 颜色遮罩 R G B A 任意组合 // todo 搞个专用结构处理 json 序列化
+    /// 颜色遮罩 R G B A 任意组合
     /// </summary>
-    public string? ColorMask { get; set; }
+    public ShaderColorMask? ColorMask { get; set; }
     /// <summary>
-    /// 混合模式 // todo 搞个专用格式处理 json 序列化
+    /// 混合模式 
     /// </summary>
-    public string? Blend { get; set; }
+    public ShaderBlendGroup? Blend { get; set; }
     /// <summary>
-    /// 混合操作 // todo 搞个专用格式处理 json 序列化
+    /// 混合操作
     /// </summary>
-    public string? BlendOp { get; set; }
+    public ShaderBlendOpGroup? BlendOp { get; set; }
     /// <summary>
     /// 逻辑操作
     /// </summary>
@@ -199,17 +336,15 @@ public record ShaderPassRtDesc
 public record ShaderPassStateMeta : ShaderPassRtDesc
 {
     /// <inheritdoc cref="ShaderFill"/>
-    public ShaderFill? ShaderFill { get; set; }
+    public ShaderFill? Fill { get; set; }
     /// <inheritdoc cref="ShaderCull"/>
     public ShaderCull? Cull { get; set; }
     /// <summary>
     /// 是否启用保守光栅化
     /// </summary>
     public ShaderSwitch? Conservative { get; set; }
-    /// <summary>
-    /// 深度斜率 , 深度偏移 ; 范围 -1 到 1 // todo 搞个专用结构处理 json 序列化
-    /// </summary>
-    public string? Offset { get; set; }
+    /// <inheritdoc cref="ShaderDepthBias"/>
+    public ShaderDepthBias? DepthBias { get; set; }
     /// <summary>
     /// 深度裁剪
     /// </summary>
@@ -235,7 +370,6 @@ public record ShaderPassStateMeta : ShaderPassRtDesc
     public ShaderPassRtDesc? Rt5 { get; set; }
     public ShaderPassRtDesc? Rt6 { get; set; }
     public ShaderPassRtDesc? Rt7 { get; set; }
-    public ShaderPassRtDesc? Rt8 { get; set; }
 }
 
 /// <summary>
@@ -266,4 +400,72 @@ public record ShaderAssetMeta : ShaderPassStateMeta
     /// 着色器步骤
     /// </summary>
     public required Dictionary<string, ShaderPassMeta> Pass { get; set; }
+}
+
+/// <summary>
+/// 语法：深度值 , 深度斜率 , 深度偏移 // todo json parser
+/// </summary>
+public record struct ShaderDepthBias
+{
+    /// <summary>
+    /// 添加到给定像素的深度值
+    /// </summary>
+    public int DepthBias { get; set; }
+    /// <summary>
+    /// 像素的最大深度偏差
+    /// </summary>
+    public float DepthBiasClamp { get; set; }
+    /// <summary>
+    /// 给定像素斜率上的标量
+    /// </summary>
+    public float SlopeScaledDepthBias { get; set; }
+}
+
+/// <summary>
+/// 颜色遮罩 R G B A 任意组合 // todo 搞个专用结构处理 json 序列化
+/// </summary>
+public record struct ShaderColorMask
+{
+    public bool R { get; set; }
+    public bool G { get; set; }
+    public bool B { get; set; }
+    public bool A { get; set; }
+
+    public static readonly ShaderColorMask All = new() { R = true, G = true, B = true, A = true };
+
+    internal FGpuPipelineColorMask ToFFI()
+    {
+        var r = new FGpuPipelineColorMask();
+        if (R) r.r = 1;
+        if (G) r.g = 1;
+        if (B) r.b = 1;
+        if (A) r.a = 1;
+        return r;
+    }
+}
+
+public record struct ShaderBlendGroup // todo 搞个专用结构处理 json 序列化
+{
+    public ShaderBlend SrcBlend { get; set; }
+    public ShaderBlend DstBlend { get; set; }
+    /// <summary>
+    /// 混合模式
+    /// </summary>
+    public ShaderBlend AlphaSrcBlend { get; set; }
+    /// <summary>
+    /// 混合模式
+    /// </summary>
+    public ShaderBlend AlphaDstBlend { get; set; }
+}
+
+public record struct ShaderBlendOpGroup // todo 搞个专用结构处理 json 序列化
+{
+    /// <summary>
+    /// 混合操作 
+    /// </summary>
+    public ShaderBlendOp BlendOp { get; set; }
+    /// <summary>
+    /// 混合操作 
+    /// </summary>
+    public ShaderBlendOp AlphaBlendOp { get; set; }
 }
