@@ -5,9 +5,19 @@ namespace Soario.Native;
 
 public class SoarioNativeException : Exception
 {
-    public SoarioNativeException() { }
-    public SoarioNativeException(string message) : base(message) { }
-    public SoarioNativeException(string message, Exception inner) : base(message, inner) { }
+    public FErrorType Type { get; }
+    public SoarioNativeException(FErrorType type) : base($"[{type}]")
+    {
+        Type = type;
+    }
+    public SoarioNativeException(FErrorType type, string message) : base($"[{type}] {message}")
+    {
+        Type = type;
+    }
+    public SoarioNativeException(FErrorType type, string message, Exception inner) : base($"[{type}] {message}", inner)
+    {
+        Type = type;
+    }
 }
 
 public partial struct FError
@@ -17,15 +27,15 @@ public partial struct FError
 
     public unsafe void Throw()
     {
-        if (type is FErrorType.None) throw new SoarioNativeException("Not A Error");
+        if (type is FErrorType.None) throw new SoarioNativeException(type, "Not A Error");
         throw msg_type switch
         {
-            FErrorMsgType.Utf8c => new SoarioNativeException(Marshal.PtrToStringUTF8((IntPtr)msg.u8c)!),
-            FErrorMsgType.Utf16c => new SoarioNativeException(Marshal.PtrToStringUni((IntPtr)msg.u16c)!),
-            FErrorMsgType.Utf8s => new SoarioNativeException(Encoding.UTF8.GetString(msg.u8s.AsSpan())),
-            FErrorMsgType.Utf16s => new SoarioNativeException(string.Create((int)msg.u16s.len, msg.u16s,
+            FErrorMsgType.Utf8c => new SoarioNativeException(type, Marshal.PtrToStringUTF8((IntPtr)msg.u8c)!),
+            FErrorMsgType.Utf16c => new SoarioNativeException(type, Marshal.PtrToStringUni((IntPtr)msg.u16c)!),
+            FErrorMsgType.Utf8s => new SoarioNativeException(type, Encoding.UTF8.GetString(msg.u8s.AsSpan())),
+            FErrorMsgType.Utf16s => new SoarioNativeException(type, string.Create((int)msg.u16s.len, msg.u16s,
                 static (span, str16) => str16.AsSpan().CopyTo(span))),
-            _ => new ArgumentOutOfRangeException()
+            _ => new ArgumentOutOfRangeException(nameof(msg_type), $"{msg_type}")
         };
     }
 }

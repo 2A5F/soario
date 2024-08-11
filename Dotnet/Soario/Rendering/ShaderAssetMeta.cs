@@ -335,6 +335,7 @@ public record ShaderPassRtDesc
 /// </summary>
 public record ShaderPassStateMeta : ShaderPassRtDesc
 {
+    public bool? BindLess { get; set; }
     /// <inheritdoc cref="ShaderFill"/>
     public ShaderFill? Fill { get; set; }
     /// <inheritdoc cref="ShaderCull"/>
@@ -410,15 +411,15 @@ public record struct ShaderDepthBias
     /// <summary>
     /// 添加到给定像素的深度值
     /// </summary>
-    public int DepthBias { get; set; }
+    public int DepthBias;
     /// <summary>
     /// 像素的最大深度偏差
     /// </summary>
-    public float DepthBiasClamp { get; set; }
+    public float DepthBiasClamp;
     /// <summary>
     /// 给定像素斜率上的标量
     /// </summary>
-    public float SlopeScaledDepthBias { get; set; }
+    public float SlopeScaledDepthBias;
 }
 
 /// <summary>
@@ -426,10 +427,10 @@ public record struct ShaderDepthBias
 /// </summary>
 public record struct ShaderColorMask
 {
-    public bool R { get; set; }
-    public bool G { get; set; }
-    public bool B { get; set; }
-    public bool A { get; set; }
+    public bool R;
+    public bool G;
+    public bool B;
+    public bool A;
 
     public static readonly ShaderColorMask All = new() { R = true, G = true, B = true, A = true };
 
@@ -446,16 +447,16 @@ public record struct ShaderColorMask
 
 public record struct ShaderBlendGroup // todo 搞个专用结构处理 json 序列化
 {
-    public ShaderBlend SrcBlend { get; set; }
-    public ShaderBlend DstBlend { get; set; }
+    public ShaderBlend SrcBlend;
+    public ShaderBlend DstBlend;
     /// <summary>
     /// 混合模式
     /// </summary>
-    public ShaderBlend AlphaSrcBlend { get; set; }
+    public ShaderBlend AlphaSrcBlend;
     /// <summary>
     /// 混合模式
     /// </summary>
-    public ShaderBlend AlphaDstBlend { get; set; }
+    public ShaderBlend AlphaDstBlend;
 }
 
 public record struct ShaderBlendOpGroup // todo 搞个专用结构处理 json 序列化
@@ -463,9 +464,9 @@ public record struct ShaderBlendOpGroup // todo 搞个专用结构处理 json �
     /// <summary>
     /// 混合操作 
     /// </summary>
-    public ShaderBlendOp BlendOp { get; set; }
+    public ShaderBlendOp BlendOp;
     /// <summary>
     /// 混合操作 
     /// </summary>
-    public ShaderBlendOp AlphaBlendOp { get; set; }
+    public ShaderBlendOp AlphaBlendOp;
 }

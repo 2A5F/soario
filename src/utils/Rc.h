@@ -330,6 +330,11 @@ namespace ccc
             }
         }
 
+        T* get() const
+        {
+            return m_ptr;
+        }
+
     public:
         ~Weak()
         {
@@ -433,21 +438,6 @@ namespace ccc
             drop();
             new(this) Weak(std::forward<Weak<U>>(r));
             return *this;
-        }
-
-        T* get() const
-        {
-            return m_ptr;
-        }
-
-        T& operator*() const
-        {
-            return *get();
-        }
-
-        T* operator->() const
-        {
-            return get();
         }
 
         Rc<T> upgrade() const

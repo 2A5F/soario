@@ -56,6 +56,12 @@ public sealed unsafe class GpuDevice : IDisposable
         get => m_queue_copy;
     }
 
+    public GpuPipelineLayout BindLessPipelineLayout
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => m_bindless_pipeline_layout;
+    }
+
     #endregion
 
     #region Ctor
@@ -124,7 +130,7 @@ public sealed unsafe class GpuDevice : IDisposable
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GpuSurface CreateSurface(Window window, GpuSurfaceCreateOptions options) => new(this, window, options);
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public GpuSurface CreateSurfaceFromHwnd(Window window, nuint hwnd, GpuSurfaceCreateOptions options) =>
         new(this, hwnd, options);
@@ -134,7 +140,16 @@ public sealed unsafe class GpuDevice : IDisposable
     #region BindLessGpuPipelineLayout
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public GpuPipelineLayout CreateBindLessPipelineLayout(string? name = null) => new BindLessGpuPipelineLayout(this, name);
+    public GpuPipelineLayout CreateBindLessPipelineLayout(string? name = null) =>
+        new BindLessGpuPipelineLayout(this, name);
+
+    #endregion
+
+    #region CreatePipelineState
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuPipelineState CreatePipelineState(GpuPipelineLayout layout, GpuPipelineStateCreateOptions options) =>
+        new(this, layout, options);
 
     #endregion
 }

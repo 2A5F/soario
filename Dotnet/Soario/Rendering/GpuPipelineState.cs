@@ -34,11 +34,11 @@ public ref struct GpuPipelineStateCreateOptions
         RtFormat = base_rt_format;
         var sb = new StringBuilder();
         var first = true;
-        if (rt_formats.Length != pass.RtCount && base_rt_format is null)
+        if (rt_formats.Length != pass.Meta.RtCount && base_rt_format is null)
             throw new ArgumentException("Rt count not same");
         if (base_rt_format is { } format)
         {
-            for (var i = 0; i < pass.RtCount; i++)
+            for (var i = 0; i < pass.Meta.RtCount; i++)
             {
                 if (first) first = false;
                 else sb.Append(", ");
@@ -114,10 +114,13 @@ public sealed unsafe class GpuPipelineState : IDisposable
         m_name = options.Name ?? $"Anonymous Pipeline State ({Guid.NewGuid():D})";
         fixed (char* p_name = m_name)
         {
+            var pass = options.Pass;
+
             var f_options = new FGpuPipelineStateCreateOptions
             {
                 name = new() { ptr = (ushort*)p_name, len = (nuint)m_name.Length },
                 primitive_topology_type = FGpuPipelinePrimitiveTopologyType.Triangle,
+                rt_count = pass.Meta.RtCount,
                 sample_state = new()
                 {
                     count = 1,
@@ -127,9 +130,8 @@ public sealed unsafe class GpuPipelineState : IDisposable
 
             #region InitFlag And Blob
 
-            var pass = options.Pass;
             var flag = new FGpuPipelineCreateFlag();
-            if (pass.BindLess) flag.bind_less = 1;
+            if (pass.Meta.BindLess) flag.bind_less = 1;
             if (pass.Cs is { Blob.UnsafeSlice: var cs })
             {
                 flag.cs = 1;
@@ -158,64 +160,73 @@ public sealed unsafe class GpuPipelineState : IDisposable
             }
             else throw new ArgumentException("This shader combination is not supported");
 
+            f_options.flag = flag;
+
             #endregion
 
             #region Rasterizer State
 
             f_options.rasterizer_state = new()
             {
-                fill_mode = pass.Fill switch
+                fill_mode = pass.Meta.Fill switch
                 {
                     ShaderFill.WireFrame => FGpuPipelineFillMode.WireFrame,
                     ShaderFill.Solid => FGpuPipelineFillMode.Solid,
                     _ => throw new ArgumentOutOfRangeException()
                 },
-                cull_mode = pass.Cull switch
+                cull_mode = pass.Meta.Cull switch
                 {
                     ShaderCull.Off => FGpuPipelineCullMode.Off,
                     ShaderCull.Front => FGpuPipelineCullMode.Front,
                     ShaderCull.Back => FGpuPipelineCullMode.Back,
                     _ => throw new ArgumentOutOfRangeException()
                 },
-                depth_clip = pass.ZClip is ShaderSwitch.On ? FGpuPipelineSwitch.On : FGpuPipelineSwitch.Off,
+                depth_clip = pass.Meta.ZClip is ShaderSwitch.On ? FGpuPipelineSwitch.On : FGpuPipelineSwitch.Off,
                 multisample = FGpuPipelineSwitch.Off,
                 forced_sample_count = 0,
-                depth_bias = pass.DepthBias.DepthBias,
-                depth_bias_clamp = pass.DepthBias.DepthBiasClamp,
-                slope_scaled_depth_bias = pass.DepthBias.SlopeScaledDepthBias,
+                depth_bias = pass.Meta.DepthBias.DepthBias,
+                depth_bias_clamp = pass.Meta.DepthBias.DepthBiasClamp,
+                slope_scaled_depth_bias = pass.Meta.DepthBias.SlopeScaledDepthBias,
                 aa_line = FGpuPipelineSwitch.Off,
-                conservative = pass.Conservative is ShaderSwitch.On ? FGpuPipelineSwitch.On : FGpuPipelineSwitch.Off,
+                conservative = pass.Meta.Conservative is ShaderSwitch.On
+                    ? FGpuPipelineSwitch.On
+                    : FGpuPipelineSwitch.Off,
             };
 
             #endregion
 
             #region Depth Stencil State
 
-            f_options.depth_stencil_state = new()
+            if (options.DepthFormat is not GpuDepthFormat.Unknown)
             {
-                depth_func = pass.ZWrite is ShaderSwitch.Off ? FGpuPipelineCmpFunc.Off : pass.ZTest.ToFFI(),
-                depth_write_mask = FGpuPipelineDepthWriteMask.All,
-            };
-            if (pass.Stencil is { } stencil)
-            {
-                ref var s = ref f_options.depth_stencil_state;
-                s.stencil_enable = FGpuPipelineSwitch.On;
-                s.stencil_read_mask = stencil.ReadMask;
-                s.stencil_write_mask = stencil.WriteMask;
-                s.front_face = new()
+                f_options.depth_stencil_state = new()
                 {
-                    func = stencil.Front.Comp.ToFFI(),
-                    fail_op = stencil.Front.Fail.ToFFI(),
-                    pass_op = stencil.Front.Pass.ToFFI(),
-                    depth_fail_op = stencil.Front.ZFail.ToFFI(),
+                    depth_func = pass.Meta.ZWrite is ShaderSwitch.Off
+                        ? FGpuPipelineCmpFunc.Off
+                        : pass.Meta.ZTest.ToFFI(),
+                    depth_write_mask = FGpuPipelineDepthWriteMask.All,
                 };
-                s.back_face = new()
+                if (pass.Meta.Stencil is { } stencil)
                 {
-                    func = stencil.Back.Comp.ToFFI(),
-                    fail_op = stencil.Back.Fail.ToFFI(),
-                    pass_op = stencil.Back.Pass.ToFFI(),
-                    depth_fail_op = stencil.Back.ZFail.ToFFI(),
-                };
+                    ref var s = ref f_options.depth_stencil_state;
+                    s.stencil_enable = FGpuPipelineSwitch.On;
+                    s.stencil_read_mask = stencil.ReadMask;
+                    s.stencil_write_mask = stencil.WriteMask;
+                    s.front_face = new()
+                    {
+                        func = stencil.Front.Comp.ToFFI(),
+                        fail_op = stencil.Front.Fail.ToFFI(),
+                        pass_op = stencil.Front.Pass.ToFFI(),
+                        depth_fail_op = stencil.Front.ZFail.ToFFI(),
+                    };
+                    s.back_face = new()
+                    {
+                        func = stencil.Back.Comp.ToFFI(),
+                        fail_op = stencil.Back.Fail.ToFFI(),
+                        pass_op = stencil.Back.Pass.ToFFI(),
+                        depth_fail_op = stencil.Back.ZFail.ToFFI(),
+                    };
+                }
             }
 
             #endregion
@@ -224,32 +235,34 @@ public sealed unsafe class GpuPipelineState : IDisposable
 
             f_options.blend_state = new FGpuPipelineBlendState
             {
-                independent_blend = pass.RtCount > 1 && options.RtFormat is null
+                independent_blend = pass.Meta.RtCount > 1 && options.RtFormat is null
                     ? FGpuPipelineSwitch.On
                     : FGpuPipelineSwitch.Off,
                 alpha_to_coverage = FGpuPipelineSwitch.Off,
             };
 
-            for (var i = 0; i < pass.RtCount; i++)
+            for (var i = 0; i < pass.Meta.RtCount; i++)
             {
-                var src = pass.BlendRtsRts[i];
+                var src = pass.Meta.BlendRts[i];
                 ref var dst = ref f_options.blend_state.rts[i];
                 dst.blend = src.BlendOp is ShaderBlendOp.Off ? FGpuPipelineSwitch.Off : FGpuPipelineSwitch.On;
-                dst.blend_op = src.BlendOp.ToFFI();
-                dst.src_blend = src.SrcBlend.ToFFI();
-                dst.dst_blend = src.DstBlend.ToFFI();
-                dst.alpha_blend_op = src.AlphaBlendOp.ToFFI();
-                dst.src_alpha_blend = src.AlphaSrcBlend.ToFFI();
-                dst.dst_alpha_blend = src.AlphaDstBlend.ToFFI();
-                dst.logic_op = src.LogicOp is { } logic_op ? logic_op.ToFFI() : FGpuPipelineLogicOp.None;
-                dst.write_mask = src.ColorMask.ToFFI();
+                if (dst.blend is FGpuPipelineSwitch.On)
+                {
+                    dst.blend_op = src.BlendOp.ToFFI();
+                    dst.src_blend = src.SrcBlend.ToFFI();
+                    dst.dst_blend = src.DstBlend.ToFFI();
+                    dst.alpha_blend_op = src.AlphaBlendOp.ToFFI();
+                    dst.src_alpha_blend = src.AlphaSrcBlend.ToFFI();
+                    dst.dst_alpha_blend = src.AlphaDstBlend.ToFFI();
+                    dst.logic_op = src.LogicOp is { } logic_op ? logic_op.ToFFI() : FGpuPipelineLogicOp.None;
+                    dst.write_mask = src.ColorMask.ToFFI();
+                }
             }
 
             #endregion
 
             #region Set Format
 
-            f_options.rt_count = options.RtFormats.Length;
             if (options.RtFormat is null)
             {
                 for (var i = 0; i < options.RtFormats.Length; i++)
@@ -260,7 +273,7 @@ public sealed unsafe class GpuPipelineState : IDisposable
             }
             else
             {
-                for (var i = 0; i < options.RtFormats.Length; i++)
+                for (var i = 0; i < pass.Meta.RtCount; i++)
                 {
                     f_options.rtv_formats[i] = options.RtFormat.Value.ToFFI();
                 }

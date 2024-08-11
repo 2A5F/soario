@@ -40,10 +40,10 @@ namespace ccc
                     D3DX12_MESH_SHADER_PIPELINE_STATE_DESC desc = {};
                     desc.pRootSignature = layout->get_root_signature().get();
                     desc.PS = {options.blob[0].ptr, options.blob[0].len};
-                    desc.MS = {options.blob[1].ptr, options.blob[0].len};
+                    desc.MS = {options.blob[1].ptr, options.blob[1].len};
                     if (flag.ts)
                     {
-                        desc.AS = {options.blob[2].ptr, options.blob[0].len};
+                        desc.AS = {options.blob[2].ptr, options.blob[2].len};
                     }
                     to_dx(desc.BlendState, options.blend_state, options.rt_count);
                     desc.SampleMask = options.sample_mask;
