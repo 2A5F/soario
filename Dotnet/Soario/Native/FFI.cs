@@ -1295,6 +1295,12 @@ namespace Soario.Native
         {
             ((delegate* unmanaged[Thiscall]<FGpuTask*, FError*, void>)(lpVtbl[9]))((FGpuTask*)Unsafe.AsPointer(ref this), err);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void wait_reset_async([NativeTypeName("ccc::FError &")] FError* err, void* obj, [NativeTypeName("ccc::fn_action__voidp")] delegate* unmanaged[Cdecl]<void*, void> cb)
+        {
+            ((delegate* unmanaged[Thiscall]<FGpuTask*, FError*, void*, delegate* unmanaged[Cdecl]<void*, void>, void>)(lpVtbl[10]))((FGpuTask*)Unsafe.AsPointer(ref this), err, obj, cb);
+        }
     }
 
     public enum FGpuQueueType

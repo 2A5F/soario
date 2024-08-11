@@ -32,6 +32,8 @@ namespace ccc
 
         void wait_reset_inner();
 
+        void wait_reset_async_inner(void* obj, fn_action__voidp cb);
+
     public:
         static Rc<GpuTask> Create(
             Rc<GpuDevice> device, Rc<GpuQueue> queue, const FGpuTaskCreateOptions& options, FError& err
@@ -42,5 +44,8 @@ namespace ccc
         void end(FError& err) noexcept override;
 
         void wait_reset(FError& err) noexcept override;
+
+        void wait_reset_async(FError& err, void* obj, fn_action__voidp cb) noexcept override;
+
     };
 } // ccc

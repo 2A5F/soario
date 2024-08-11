@@ -25,10 +25,12 @@ public partial struct FError
     public static bool operator true(FError e) => e.type is not FErrorType.None;
     public static bool operator false(FError e) => e.type is FErrorType.None;
 
-    public unsafe void Throw()
+    public void Throw() => throw ToException();
+
+    public unsafe Exception ToException()
     {
-        if (type is FErrorType.None) throw new SoarioNativeException(type, "Not A Error");
-        throw msg_type switch
+        if (type is FErrorType.None) return new SoarioNativeException(type, "Not A Error");
+        return msg_type switch
         {
             FErrorMsgType.Utf8c => new SoarioNativeException(type, Marshal.PtrToStringUTF8((IntPtr)msg.u8c)!),
             FErrorMsgType.Utf16c => new SoarioNativeException(type, Marshal.PtrToStringUni((IntPtr)msg.u16c)!),

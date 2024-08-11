@@ -49,6 +49,27 @@ namespace ccc
         }
     }
 
+    void GpuFencePak::wait_async(std::function<void()> callback) const
+    {
+        const auto& fence = m_fence;
+        const auto fence_value = m_fence_value;
+
+        if (fence->GetCompletedValue() < fence_value)
+        {
+            winrt::check_hresult(fence->SetEventOnCompletion(fence_value, m_fence_event));
+            const auto data = new WaitAsyncData{std::move(callback)};
+            HANDLE hNewHandle;
+            RegisterWaitForSingleObject(
+                &hNewHandle, m_fence_event, [](void* p_data, BOOLEAN timeout)
+                {
+                    const auto data = static_cast<WaitAsyncData*>(p_data);
+                    data->callback();
+                    delete data;
+                }, data, INFINITE, false
+            );
+        }
+    }
+
     void GpuFencePak::signal(const com_ptr<ID3D12CommandQueue>& queue)
     {
         const auto& fence = m_fence;

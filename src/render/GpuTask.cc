@@ -216,6 +216,27 @@ namespace ccc
         m_closed = false;
     }
 
+    void GpuTask::wait_reset_async_inner(void* obj, fn_action__voidp cb)
+    {
+        if (!m_closed)
+        {
+            winrt::check_hresult(m_command_list->Close());
+            m_closed = true;
+        }
+        m_fence_pak.wait_async(
+            [
+                self = Rc<GpuTask>::UnsafeClone(this),
+                obj, cb
+            ]
+            {
+                winrt::check_hresult(self->m_command_allocators->Reset());
+                winrt::check_hresult(self->m_command_list->Reset(self->m_command_allocators.get(), nullptr));
+                self->m_closed = false;
+                cb(obj);
+            }
+        );
+    }
+
     Rc<GpuTask> GpuTask::Create(
         Rc<GpuDevice> device, Rc<GpuQueue> queue, const FGpuTaskCreateOptions& options, FError& err
     ) noexcept
@@ -285,6 +306,24 @@ namespace ccc
         try
         {
             wait_reset_inner();
+        }
+        catch (std::exception ex)
+        {
+            logger::error(ex.what());
+            err = make_error(FErrorType::Gpu, u"Failed to wait reset!");
+        }
+        catch (winrt::hresult_error ex)
+        {
+            logger::error(ex.message());
+            err = make_hresult_error(ex);
+        }
+    }
+
+    void GpuTask::wait_reset_async(FError& err, void* obj, fn_action__voidp cb) noexcept
+    {
+        try
+        {
+            wait_reset_async_inner(obj, cb);
         }
         catch (std::exception ex)
         {

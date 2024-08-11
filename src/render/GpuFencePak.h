@@ -4,6 +4,7 @@
 
 #include "../pch.h"
 #include "../ffi/FFI.h"
+#include "../ffi/FnPtrs.h"
 
 namespace ccc
 {
@@ -12,6 +13,11 @@ namespace ccc
         UINT64 m_fence_value{};
         com_ptr<ID3D12Fence> m_fence{};
         HANDLE m_fence_event{};
+
+        struct WaitAsyncData
+        {
+            std::function<void()> callback;
+        };
 
     public:
         GpuFencePak() = default;
@@ -24,6 +30,9 @@ namespace ccc
 
         void wait() const;
 
+        void wait_async(std::function<void()> callback) const;
+
         void signal(const com_ptr<ID3D12CommandQueue>& queue);
+
     };
 } // ccc

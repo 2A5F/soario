@@ -1,5 +1,8 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Microsoft.Win32.SafeHandles;
+using Serilog;
+using Serilog.Core;
 using Soario.Native;
 
 namespace Soario.Rendering;
@@ -93,7 +96,7 @@ public sealed unsafe class GpuTask
 
     #endregion
 
-    #region End
+    #region Complete
 
     /// <summary>
     /// 完成任务
@@ -119,6 +122,36 @@ public sealed unsafe class GpuTask
         m_inner->wait_reset(&err);
         if (err.type != FErrorType.None) err.Throw();
         m_end = false;
+    }
+
+    #endregion
+
+    #region WaitResetAsync
+
+    /// <summary>
+    /// 等待任务完成
+    /// </summary>
+    public Task WaitResetAsync()
+    {
+        var tcs = new TaskCompletionSource();
+        var h = GCHandle.Alloc(tcs);
+        FError err;
+        m_inner->wait_reset_async(&err, (void*)GCHandle.ToIntPtr(h), &Cb);
+        if (err.type != FErrorType.None) err.Throw();
+        return tcs.Task;
+
+        [UnmanagedCallersOnly(CallConvs = [typeof(CallConvCdecl)])]
+        static void Cb(void* obj)
+        {
+            var h = GCHandle.FromIntPtr((IntPtr)obj);
+            var tcs = h.Target as TaskCompletionSource;
+            if (tcs == null)
+            {
+                Log.Error("GCHandle got null");
+                return;
+            }
+            tcs.SetResult();
+        }
     }
 
     #endregion

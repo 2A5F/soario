@@ -2,6 +2,7 @@
 
 #include "FGpuCmd.h"
 #include "../FFI.h"
+#include "../FnPtrs.h"
 
 namespace ccc
 {
@@ -20,5 +21,8 @@ namespace ccc
 
         /* 等待任务可重用 */
         virtual void wait_reset(FError& err) noexcept = 0;
+
+        /* 等待任务可重用 */
+        virtual void wait_reset_async(FError& err, void* obj, fn_action__voidp cb) noexcept = 0;
     };
 } // ccc
