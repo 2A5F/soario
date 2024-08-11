@@ -3,6 +3,7 @@
 #include "Gpu.h"
 #include "GpuDevice.h"
 #include "GpuQueue.h"
+#include "GpuTask.h"
 #include "../utils/Err.h"
 #include "../utils/logger.h"
 
@@ -66,11 +67,18 @@ namespace ccc
         /* 创建帧缓冲区 */
         create_rts();
 
-        /*创建 fence */
+        /*创建 task */
         {
             for (int i = 0; i < FrameCount; ++i)
             {
-                m_fences[i] = GpuFencePak(m_dx_device, options.name, i);
+                std::wstring task_name;
+                FGpuTaskCreateOptions task_options{};
+                if (options.name.ptr != nullptr)
+                {
+                    task_name = fmt::format(L"{} Task {}", m_name->c_str(), i);;
+                    task_options.name = {reinterpret_cast<uint16_t*>(task_name.data()), task_name.size()};
+                }
+                m_tasks[i] = GpuTask::Create(m_device, m_queue, task_options, err);
             }
         }
     }
@@ -99,7 +107,7 @@ namespace ccc
     {
         for (UINT n = 0; n < FrameCount; n++)
         {
-            m_fences[n].wait();
+            m_tasks[n]->wait_reset_inner();
         }
     }
 
@@ -134,18 +142,12 @@ namespace ccc
         {
             m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
 
-            m_fences[m_frame_index].wait();
+            m_tasks[m_frame_index]->wait_reset_inner();
         }
 
         m_current_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(
             m_rtv_heap->GetCPUDescriptorHandleForHeapStart(), m_frame_index, m_rtv_descriptor_size
         );
-    }
-
-    void GpuSurfaceHwnd::present()
-    {
-        winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
-        m_fences[m_frame_index].signal(m_queue->m_command_queue);
     }
 
     void GpuSurfaceHwnd::on_resize(const int2 new_size)
@@ -160,7 +162,8 @@ namespace ccc
     }
 
     Rc<GpuSurfaceHwnd> GpuSurfaceHwnd::Create(
-        Rc<GpuDevice> device, const Rc<GpuQueue>& queue, const FGpuSurfaceCreateOptions& options, HWND hwnd, FError& err
+        Rc<GpuDevice> device, const Rc<GpuQueue>& queue, const FGpuSurfaceCreateOptions& options, const HWND hwnd,
+        FError& err
     ) noexcept
     {
         int2 size;
@@ -210,7 +213,7 @@ namespace ccc
     {
         try
         {
-             move_to_next_frame();
+            move_to_next_frame();
         }
         catch (std::exception ex)
         {
@@ -228,7 +231,8 @@ namespace ccc
     {
         try
         {
-            present();
+            winrt::check_hresult(m_swap_chain->Present(m_v_sync ? 1 : 0, 0));
+            m_tasks[m_frame_index]->end(err);
         }
         catch (std::exception ex)
         {
@@ -282,5 +286,10 @@ namespace ccc
     void* GpuSurfaceHwnd::get_res_raw_ptr() noexcept
     {
         return m_rts[m_frame_index].get();
+    }
+
+    void GpuSurfaceHwnd::submit(const FGpuCmdList* cmd_list, FError& err) noexcept
+    {
+        m_tasks[m_frame_index]->submit(cmd_list, err);
     }
 } // ccc

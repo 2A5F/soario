@@ -14,6 +14,7 @@ namespace ccc
     class GpuSurfaceHwnd;
     class GpuBindLessPipelineLayout;
     class GpuPipelineState;
+    class GpuTask;
 
     class GpuDevice final : public FGpuDevice
     {
@@ -23,6 +24,7 @@ namespace ccc
         friend GpuSurfaceHwnd;
         friend GpuBindLessPipelineLayout;
         friend GpuPipelineState;
+        friend GpuTask;
 
         Rc<Gpu> m_gpu;
 

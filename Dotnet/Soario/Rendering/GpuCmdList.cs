@@ -89,6 +89,30 @@ public sealed unsafe class GpuCmdList
 
     #endregion
 
+    #region Submit
+
+    internal delegate void CmdListSubmit<in T>(T data,  FGpuCmdList* list);
+
+    internal void Submit<T>(T data, CmdListSubmit<T> cb)
+    {
+        fixed (byte* datas = CollectionsMarshal.AsSpan(m_datas))
+        {
+            fixed (int* indexes = CollectionsMarshal.AsSpan(m_indexes))
+            {
+                var list = new FGpuCmdList
+                {
+                    datas = datas,
+                    indexes = indexes,
+                    len = (nuint)m_indexes.Count,
+                };
+                cb(data, &list);
+            }
+        }
+        Reset();
+    }
+
+    #endregion
+
     #region Cmds
 
     #region SetRt

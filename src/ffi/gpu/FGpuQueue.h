@@ -1,6 +1,6 @@
-#pragma once
+﻿#pragma once
 
-#include "FGpuCmd.h"
+#include "FGpuTask.h"
 #include "../FFI.h"
 
 namespace ccc
@@ -20,6 +20,8 @@ namespace ccc
 
     struct FGpuQueue : FObject
     {
-        virtual void submit(const FGpuCmdList* cmd_list, FError& err) noexcept = 0;
+        virtual FGpuTask* CreateTask(
+            const FGpuTaskCreateOptions& options, FError& err
+        ) noexcept = 0;
     };
 } // ccc

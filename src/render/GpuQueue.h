@@ -14,21 +14,23 @@ namespace ccc
 {
     struct FrameContext;
     class GpuSurfaceHwnd;
+    class GpuTask;
 
     class GpuQueue final : public FGpuQueue
     {
         IMPL_RC(GpuQueue);
 
         friend class GpuSurfaceHwnd;
+        friend class GpuTask;
 
         static constexpr UINT FrameCount = FGpuConsts::FrameCount;
 
         Rc<GpuDevice> m_device;
 
+        D3D12_COMMAND_LIST_TYPE m_type;
+
         com_ptr<ID3D12Device> m_dx_device{};
-        com_ptr<ID3D12CommandAllocator> m_command_allocators{};
         com_ptr<ID3D12CommandQueue> m_command_queue{};
-        com_ptr<ID3D12GraphicsCommandList6> m_command_list{};
 
         friend FrameContext;
 
@@ -40,8 +42,6 @@ namespace ccc
 
         static Rc<GpuQueue> Create(Rc<GpuDevice> gpu_device, const FGpuQueueCreateOptions& options, FError& err) noexcept;
 
-        void submit(const FGpuCmdList* cmd_list, FError& err) noexcept override;
-
-        void submit_inner(const FGpuCmdList* cmd_list, FError& err) ;
+        FGpuTask* CreateTask(const FGpuTaskCreateOptions& options, FError& err) noexcept override;
     };
 } // ccc

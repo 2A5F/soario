@@ -99,31 +99,4 @@ public sealed unsafe class GpuQueue : IDisposable
     public override string ToString() => $"GpuQueue({m_name})";
 
     #endregion
-
-    #region Submit
-
-    /// <summary>
-    /// 提交命令
-    /// </summary>
-    public void Submit(GpuCmdList cmds)
-    {
-        fixed (byte* datas = CollectionsMarshal.AsSpan(cmds.m_datas))
-        {
-            fixed (int* indexes = CollectionsMarshal.AsSpan(cmds.m_indexes))
-            {
-                var list = new FGpuCmdList
-                {
-                    datas = datas,
-                    indexes = indexes,
-                    len = (nuint)cmds.m_indexes.Count,
-                };
-                FError err;
-                m_inner->submit(&list, &err);
-                if (err.type != FErrorType.None) err.Throw();
-            }
-        }
-        cmds.Reset();
-    }
-
-    #endregion
 }

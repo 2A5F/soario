@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Coplt.Mathematics;
 using Serilog;
 using Soario.Native;
@@ -172,10 +173,15 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
         if (err.type != FErrorType.None) err.Throw();
     }
 
-    public void PresentFrame(GpuCmdList list)
+    public void PresentFrame(GpuCmdList cmd)
     {
-        list.Present(this);
-        m_queue.Submit(list);
+        cmd.Present(this);
+        cmd.Submit(this, static (self, list) =>
+        {
+            FError err;
+            self.m_inner->submit(list, &err);
+            if (err.type != FErrorType.None) err.Throw();
+        });
         PresentFrame();
     }
 
@@ -212,7 +218,7 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
     } = GpuTextureFormat.R8G8B8A8_UNorm; // todo 允许设置格式
 
     // todo 分离 Rtv 和 Dsv
-    
+
     public bool HasRtv
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -34,7 +34,7 @@ namespace ccc
         UINT m_frame_index{};
         com_ptr<ID3D12Resource> m_rts[FrameCount]{};
 
-        GpuFencePak m_fences[FrameCount]{};
+        Rc<GpuTask> m_tasks[FrameCount]{};
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE m_current_cpu_handle{};
 
@@ -60,8 +60,6 @@ namespace ccc
 
         void on_resize(int2 new_size);
 
-        void present();
-
         CD3DX12_CPU_DESCRIPTOR_HANDLE get_dx_cpu_handle() const;
 
     public:
@@ -80,6 +78,8 @@ namespace ccc
         FInt2 get_size() const noexcept override;
 
         void ready_frame(FError& err) noexcept override;
+
+        void submit(const FGpuCmdList* cmd_list, FError& err) noexcept override;
 
         void present_frame(FError& err) noexcept override;
 

@@ -18,6 +18,9 @@ namespace ccc
         /* 准备并等待帧可用 */
         virtual void ready_frame(FError& err) noexcept = 0;
 
+        /* 提交命令 */
+        virtual void submit(const FGpuCmdList* cmd_list, FError& err) noexcept = 0;
+
         /* 呈现帧 */
         virtual void present_frame(FError& err) noexcept = 0;
 
