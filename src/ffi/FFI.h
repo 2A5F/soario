@@ -48,14 +48,12 @@ namespace ccc
         size_t len;
     };
 
-    __declspec(align(8))
     struct FInt2
     {
         int32_t X;
         int32_t Y;
     };
 
-    __declspec(align(16))
     struct FInt3
     {
         int32_t X;
@@ -66,7 +64,6 @@ namespace ccc
         int32_t _pad{};
     };
 
-    __declspec(align(16))
     struct FInt4
     {
         int32_t X;
@@ -75,14 +72,12 @@ namespace ccc
         int32_t W;
     };
 
-    __declspec(align(8))
     struct FFloat2
     {
         int32_t X;
         int32_t Y;
     };
 
-    __declspec(align(16))
     struct FFloat3
     {
         float X;
@@ -93,7 +88,6 @@ namespace ccc
         float _pad{};
     };
 
-    __declspec(align(16))
     struct FFloat4
     {
         float X;
@@ -102,7 +96,6 @@ namespace ccc
         float W;
     };
 
-    __declspec(align(16))
     struct FFloatRect
     {
         float X;

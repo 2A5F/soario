@@ -52,7 +52,9 @@ namespace ccc
         if (options.name.ptr != nullptr)
         {
             winrt::check_hresult(m_command_queue->SetName(reinterpret_cast<const wchar_t*>(options.name.ptr)));
-            const auto allocator_name = fmt::format(L"{} Allocator", reinterpret_cast<const wchar_t*>(options.name.ptr));
+            const auto allocator_name = fmt::format(
+                L"{} Allocator", reinterpret_cast<const wchar_t*>(options.name.ptr)
+            );
             winrt::check_hresult(m_command_allocators->SetName(allocator_name.c_str()));
         }
     }
@@ -118,7 +120,11 @@ namespace ccc
         const auto color = reinterpret_cast<const float*>(&data.color);
         if (data.rect_len > 0)
         {
-            if (!(data.flag.color && data.rt->has_rtv() || data.rt->has_dsv())) return;
+            if (!(
+                (data.flag.color && data.rtv != nullptr && data.rtv->has_rtv()) ||
+                ((data.flag.depth || data.flag.stencil) && data.dsv != nullptr && data.dsv->has_dsv())
+            ))
+                return;
             const auto src = reinterpret_cast<FInt4*>(ptr + sizeof FGpuCmdClearRt);
             const auto rects = static_cast<D3D12_RECT*>(_malloca(data.rect_len));
             for (int i = 0; i < data.rect_len; i++)
@@ -126,15 +132,15 @@ namespace ccc
                 const auto [X, Y, Z, W] = src[i];
                 rects[i] = {X, Y, Z, W};
             }
-            if (data.flag.color && data.rt->has_rtv())
+            if (data.flag.color && data.rtv != nullptr && data.rtv->has_rtv())
             {
-                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rt->get_cpu_rtv_handle(err)};
+                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rtv->get_cpu_rtv_handle(err)};
                 if (err.type != FErrorType::None) return;
                 command_list->ClearRenderTargetView(
                     cpu_handle, color, data.rect_len, rects
                 );
             }
-            if ((data.flag.depth || data.flag.stencil) && data.rt->has_dsv())
+            if ((data.flag.depth || data.flag.stencil) && data.dsv != nullptr && data.dsv->has_dsv())
             {
                 D3D12_CLEAR_FLAGS flags = {};
                 if (data.flag.depth)
@@ -145,7 +151,7 @@ namespace ccc
                 {
                     flags |= D3D12_CLEAR_FLAG_STENCIL;
                 }
-                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rt->get_cpu_dsv_handle(err)};
+                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.dsv->get_cpu_dsv_handle(err)};
                 if (err.type != FErrorType::None) return;
                 command_list->ClearDepthStencilView(
                     cpu_handle, flags, data.depth, data.stencil, data.rect_len, rects
@@ -154,15 +160,15 @@ namespace ccc
         }
         else
         {
-            if (data.flag.color && data.rt->has_rtv())
+            if (data.flag.color && data.rtv != nullptr && data.rtv->has_rtv())
             {
-                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rt->get_cpu_rtv_handle(err)};
+                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rtv->get_cpu_rtv_handle(err)};
                 if (err.type != FErrorType::None) return;
                 command_list->ClearRenderTargetView(
                     cpu_handle, color, 0, nullptr
                 );
             }
-            if ((data.flag.depth || data.flag.stencil) && data.rt->has_dsv())
+            if ((data.flag.depth || data.flag.stencil) && data.dsv != nullptr && data.dsv->has_dsv())
             {
                 D3D12_CLEAR_FLAGS flags = {};
                 if (data.flag.depth)
@@ -173,7 +179,7 @@ namespace ccc
                 {
                     flags |= D3D12_CLEAR_FLAG_STENCIL;
                 }
-                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.rt->get_cpu_dsv_handle(err)};
+                D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle{data.dsv->get_cpu_dsv_handle(err)};
                 if (err.type != FErrorType::None) return;
                 command_list->ClearDepthStencilView(
                     cpu_handle, flags, data.depth, data.stencil, 0, nullptr

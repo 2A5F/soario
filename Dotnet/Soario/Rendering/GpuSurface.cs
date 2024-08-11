@@ -204,6 +204,16 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FGpuRt* AsRtPointer() => (FGpuRt*)m_inner;
+    public bool HasRtv
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => m_inner->has_rtv();
+    }
+    public bool HasDsv
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => m_inner->has_dsv();
+    }
 
     #endregion
 }

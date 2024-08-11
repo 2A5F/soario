@@ -27,86 +27,361 @@ public static class ClearFlagEx
 
 public sealed unsafe class GpuCmdList
 {
-    internal List<int> indexes = new();
-    internal List<byte> datas = new();
+    #region Fields
+
+    internal List<int> m_indexes = new();
+    internal List<byte> m_datas = new();
     /// <summary>
     /// 保留引用，避免释放
     /// </summary>
     // ReSharper disable once CollectionNeverQueried.Global
-    internal HashSet<object> objects = new();
+    internal HashSet<object> m_objects = new();
+
+    internal IRt? m_current_rtv;
+    internal IRt? m_current_dsv;
+
+    #endregion
 
     #region Reset
 
     internal void Reset()
     {
-        indexes.Clear();
-        datas.Clear();
-        objects.Clear();
+        m_indexes.Clear();
+        m_datas.Clear();
+        m_objects.Clear();
+        m_current_rtv = null;
+        m_current_dsv = null;
     }
 
     #endregion
 
     #region Cmds
 
-    #region Clear
+    #region SetRt
 
     /// <summary>
-    /// 用 0 清空 Rt
+    /// 设置渲染目标
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear(IRt rt) => Clear(rt, default, -1, 0);
+    public void SetRt(IRt rt)
+    {
+        var has_rtv = rt.HasRtv;
+        var has_dsv = rt.HasDsv;
+        if (has_rtv) m_current_rtv = rt;
+        if (has_dsv) m_current_dsv = rt;
+        if (!has_rtv && !has_dsv) throw new ArgumentException("Invalid rt", nameof(rt));
+        else
+        {
+            var old_state = rt.ReqState(ResourceState.RenderTarget);
+            if (old_state != ResourceState.RenderTarget) BarrierTransition(rt, old_state, ResourceState.RenderTarget);
+            else m_objects.Add(rt); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        }
+    }
+
+    /// <summary>
+    /// 设置渲染目标
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SetRt(IRt rtv, IRt dsv)
+    {
+        if (!rtv.HasRtv) throw new ArgumentException("Invalid rtv", nameof(rtv));
+        {
+            m_current_rtv = rtv;
+            var old_state = rtv.ReqState(ResourceState.RenderTarget);
+            if (old_state != ResourceState.RenderTarget) BarrierTransition(rtv, old_state, ResourceState.RenderTarget);
+            else m_objects.Add(rtv); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        }
+        if (!dsv.HasDsv) throw new ArgumentException("Invalid dsv", nameof(dsv));
+        {
+            m_current_dsv = dsv;
+            var old_state = dsv.ReqState(ResourceState.RenderTarget);
+            if (old_state != ResourceState.RenderTarget) BarrierTransition(dsv, old_state, ResourceState.RenderTarget);
+            else m_objects.Add(dsv); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        }
+    }
+
+    #endregion
+
+    #region Clear
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear(IRt rt, float4 color) =>
-        Clear(rt, ClearFlag.Color, color, -1, 0, []);
+    public void Clear(IRt rtv, IRt dsv) => Clear(rtv, dsv, default, -1, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear(IRt rt, float depth) =>
-        Clear(rt, ClearFlag.Depth, default, depth, 0, []);
+    public void Clear(IRt rt)
+    {
+        var has_rtv = rt.HasRtv;
+        var has_dsv = rt.HasDsv;
+        if (has_rtv && has_dsv) Clear(rt, default, -1, 0);
+        else if (has_rtv) Clear(rt, default(float4));
+        else if (has_dsv) Clear(rt, -1, 0);
+        else throw new ArgumentException("Invalid rt", nameof(rt));
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear(IRt rt, byte stencil) =>
-        Clear(rt, ClearFlag.Stencil, default, -1, stencil, []);
+    public void Clear(IRt rtv, float4 color) =>
+        Clear(rtv, color, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt dsv, float depth) =>
+        Clear(dsv, ClearFlag.Depth, depth, 0, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt dsv, byte stencil) =>
+        Clear(dsv, ClearFlag.Stencil, -1, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rt, float4 color, float depth) =>
-        Clear(rt, ClearFlag.ColorDepth, color, depth, 0, []);
+        Clear(rt, rt, ClearFlag.ColorDepth, color, depth, 0, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt rtv, IRt dsv, float4 color, float depth) =>
+        Clear(rtv, dsv, ClearFlag.ColorDepth, color, depth, 0, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rt, float4 color, byte stencil) =>
-        Clear(rt, ClearFlag.ColorStencil, color, -1, stencil, []);
+        Clear(rt, rt, ClearFlag.ColorStencil, color, -1, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear(IRt rt, float depth, byte stencil) =>
-        Clear(rt, ClearFlag.DepthStencil, default, depth, stencil, []);
+    public void Clear(IRt rtv, IRt dsv, float4 color, byte stencil) =>
+        Clear(rtv, dsv, ClearFlag.ColorStencil, color, -1, stencil, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt dsv, float depth, byte stencil) =>
+        Clear(dsv, ClearFlag.DepthStencil, depth, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rt, float4 color, float depth, byte stencil) =>
-        Clear(rt, ClearFlag.All, color, depth, stencil, []);
+        Clear(rt, rt, ClearFlag.All, color, depth, stencil, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt rtv, IRt dsv, float4 color, float depth, byte stencil) =>
+        Clear(rtv, dsv, ClearFlag.All, color, depth, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rt, ClearFlag flag, float4 color, float depth, byte stencil) =>
-        Clear(rt, flag, color, depth, stencil, []);
+        Clear(rt, rt, flag, color, depth, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear(IRt rt, ClearFlag flag, float4 color, float depth, byte stencil, ReadOnlySpan<int4> rects)
+    public void Clear(IRt rtv, IRt dsv, ClearFlag flag, float4 color, float depth, byte stencil) =>
+        Clear(rtv, dsv, flag, color, depth, stencil, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt rtv, float4 color, ReadOnlySpan<int4> rects)
     {
-        var old_state = rt.ReqState(ResourceState.RenderTarget);
-        if (old_state != ResourceState.RenderTarget) BarrierTransition(rt, old_state, ResourceState.RenderTarget);
-        else objects.Add(rt); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
-        indexes.Add(datas.Count);
+        if (!rtv.HasRtv) throw new ArgumentException("Invalid rtv", nameof(rtv));
+        {
+            var old_state = rtv.ReqState(ResourceState.RenderTarget);
+            if (old_state != ResourceState.RenderTarget) BarrierTransition(rtv, old_state, ResourceState.RenderTarget);
+            else m_objects.Add(rtv); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        }
+        m_indexes.Add(m_datas.Count);
+        var data = new FGpuCmdClearRt
+        {
+            type = FGpuCmdType.ClearRt,
+            flag = ClearFlag.Color.ToFFI(),
+            rtv = rtv.AsRtPointer(),
+            dsv = null,
+            color = Unsafe.BitCast<float4, FFloat4>(color),
+            depth = 0,
+            stencil = 0,
+            rect_len = rects.Length,
+        };
+        m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+        m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt dsv, ClearFlag flag, float depth, byte stencil, ReadOnlySpan<int4> rects)
+    {
+        if (!dsv.HasDsv) throw new ArgumentException("Invalid dsv", nameof(dsv));
+        {
+            var old_state = dsv.ReqState(ResourceState.RenderTarget);
+            if (old_state != ResourceState.RenderTarget) BarrierTransition(dsv, old_state, ResourceState.RenderTarget);
+            else m_objects.Add(dsv); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        }
+        m_indexes.Add(m_datas.Count);
         var data = new FGpuCmdClearRt
         {
             type = FGpuCmdType.ClearRt,
             flag = flag.ToFFI(),
-            rt = rt.AsRtPointer(),
+            rtv = null,
+            dsv = dsv.AsRtPointer(),
+            color = default,
+            depth = depth,
+            stencil = stencil,
+            rect_len = rects.Length,
+        };
+        m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+        m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(IRt rtv, IRt dsv, ClearFlag flag, float4 color, float depth, byte stencil,
+        ReadOnlySpan<int4> rects)
+    {
+        if (!rtv.HasRtv) throw new ArgumentException("Invalid rtv", nameof(rtv));
+        {
+            var old_state = rtv.ReqState(ResourceState.RenderTarget);
+            if (old_state != ResourceState.RenderTarget) BarrierTransition(rtv, old_state, ResourceState.RenderTarget);
+            else m_objects.Add(rtv); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        }
+        if (!dsv.HasDsv) throw new ArgumentException("Invalid dsv", nameof(dsv));
+        {
+            var old_state = dsv.ReqState(ResourceState.RenderTarget);
+            if (old_state != ResourceState.RenderTarget) BarrierTransition(dsv, old_state, ResourceState.RenderTarget);
+            else m_objects.Add(dsv); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        }
+        m_indexes.Add(m_datas.Count);
+        var data = new FGpuCmdClearRt
+        {
+            type = FGpuCmdType.ClearRt,
+            flag = flag.ToFFI(),
+            rtv = rtv.AsRtPointer(),
+            dsv = dsv.AsRtPointer(),
             color = Unsafe.BitCast<float4, FFloat4>(color),
             depth = depth,
             stencil = stencil,
             rect_len = rects.Length,
         };
-        datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
-        datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+        m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+        m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear() =>
+        Clear(ClearFlag.All, default, -1, 0, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(float4 color) =>
+        Clear(color, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(float depth) =>
+        Clear(ClearFlag.Depth, depth, 0, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(byte stencil) =>
+        Clear(ClearFlag.DepthStencil, -1, stencil, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(float depth, byte stencil) =>
+        Clear(ClearFlag.DepthStencil, depth, stencil, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(float4 color, float depth) =>
+        Clear(ClearFlag.ColorDepth, color, depth, 0, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(float4 color, byte stencil) =>
+        Clear(ClearFlag.ColorStencil, color, -1, stencil, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(ClearFlag flag, float4 color, float depth, byte stencil) =>
+        Clear(flag, color, depth, stencil, []);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(float4 color, ReadOnlySpan<int4> rects)
+    {
+        if (m_current_rtv is not null)
+        {
+            m_indexes.Add(m_datas.Count);
+            var data = new FGpuCmdClearRt
+            {
+                type = FGpuCmdType.ClearRt,
+                flag = ClearFlag.Color.ToFFI(),
+                rtv = m_current_rtv.AsRtPointer(),
+                dsv = null,
+                color = Unsafe.BitCast<float4, FFloat4>(color),
+                depth = 0,
+                stencil = 0,
+                rect_len = rects.Length,
+            };
+            m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+            m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+        }
+        else throw new ArgumentException("Rt not set");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(ClearFlag flag, float depth, byte stencil, ReadOnlySpan<int4> rects)
+    {
+        if (m_current_dsv is not null)
+        {
+            m_indexes.Add(m_datas.Count);
+            var data = new FGpuCmdClearRt
+            {
+                type = FGpuCmdType.ClearRt,
+                flag = flag.ToFFI(),
+                rtv = null,
+                dsv = m_current_dsv.AsRtPointer(),
+                color = default,
+                depth = depth,
+                stencil = stencil,
+                rect_len = rects.Length,
+            };
+            m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+            m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+        }
+        else throw new ArgumentException("Rt not set");
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void Clear(ClearFlag flag, float4 color, float depth, byte stencil,
+        ReadOnlySpan<int4> rects)
+    {
+        if (m_current_rtv is not null && m_current_dsv is not null)
+        {
+            m_indexes.Add(m_datas.Count);
+            var data = new FGpuCmdClearRt
+            {
+                type = FGpuCmdType.ClearRt,
+                flag = flag.ToFFI(),
+                rtv = m_current_rtv.AsRtPointer(),
+                dsv = m_current_dsv.AsRtPointer(),
+                color = Unsafe.BitCast<float4, FFloat4>(color),
+                depth = depth,
+                stencil = stencil,
+                rect_len = rects.Length,
+            };
+            m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+            m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+        }
+        else if (m_current_rtv is not null)
+        {
+            m_indexes.Add(m_datas.Count);
+            var data = new FGpuCmdClearRt
+            {
+                type = FGpuCmdType.ClearRt,
+                flag = flag.ToFFI(),
+                rtv = m_current_rtv.AsRtPointer(),
+                dsv = null,
+                color = Unsafe.BitCast<float4, FFloat4>(color),
+                depth = depth,
+                stencil = stencil,
+                rect_len = rects.Length,
+            };
+            m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+            m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+        }
+        else if (m_current_dsv is not null)
+        {
+            m_indexes.Add(m_datas.Count);
+            var data = new FGpuCmdClearRt
+            {
+                type = FGpuCmdType.ClearRt,
+                flag = flag.ToFFI(),
+                rtv = null,
+                dsv = m_current_dsv.AsRtPointer(),
+                color = Unsafe.BitCast<float4, FFloat4>(color),
+                depth = depth,
+                stencil = stencil,
+                rect_len = rects.Length,
+            };
+            m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdClearRt)));
+            m_datas.AddRange(MemoryMarshal.Cast<int4, byte>(rects));
+        }
+        else throw new ArgumentException("Rt not set");
     }
 
     #endregion
@@ -120,8 +395,8 @@ public sealed unsafe class GpuCmdList
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void BarrierTransition(IGpuRes res, uint sub_res, ResourceState old_state, ResourceState cur_state)
     {
-        objects.Add(res);
-        indexes.Add(datas.Count);
+        m_objects.Add(res);
+        m_indexes.Add(m_datas.Count);
         var data = new FGpuCmdBarrierTransition
         {
             type = FGpuCmdType.BarrierTransition,
@@ -130,7 +405,7 @@ public sealed unsafe class GpuCmdList
             pre_state = old_state.ToFFI(),
             cur_state = cur_state.ToFFI(),
         };
-        datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdBarrierTransition)));
+        m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdBarrierTransition)));
     }
 
     #endregion
@@ -141,7 +416,7 @@ public sealed unsafe class GpuCmdList
     {
         var old_state = rt.ReqState(ResourceState.Common);
         if (old_state != ResourceState.Common) BarrierTransition(rt, old_state, ResourceState.Common);
-        else objects.Add(rt); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+        else m_objects.Add(rt); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
     }
 
     #endregion

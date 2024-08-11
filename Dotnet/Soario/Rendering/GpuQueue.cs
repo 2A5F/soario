@@ -107,15 +107,15 @@ public sealed unsafe class GpuQueue : IDisposable
     /// </summary>
     public void Submit(GpuCmdList cmds)
     {
-        fixed (byte* datas = CollectionsMarshal.AsSpan(cmds.datas))
+        fixed (byte* datas = CollectionsMarshal.AsSpan(cmds.m_datas))
         {
-            fixed (int* indexes = CollectionsMarshal.AsSpan(cmds.indexes))
+            fixed (int* indexes = CollectionsMarshal.AsSpan(cmds.m_indexes))
             {
                 var list = new FGpuCmdList
                 {
                     datas = datas,
                     indexes = indexes,
-                    len = (nuint)cmds.indexes.Count,
+                    len = (nuint)cmds.m_indexes.Count,
                 };
                 FError err;
                 m_inner->submit(&list, &err);

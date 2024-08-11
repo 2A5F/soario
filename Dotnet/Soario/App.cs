@@ -43,7 +43,8 @@ public static class App
                 {
                     surface.ReadyFrame();
 
-                    cmd.Clear(surface, new float4(1, 1, 1, 1));
+                    cmd.SetRt(surface);
+                    cmd.Clear(new float4(1, 1, 1, 1));
 
                     surface.PresentFrame(cmd);
                 }

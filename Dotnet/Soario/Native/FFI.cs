@@ -1082,7 +1082,10 @@ namespace Soario.Native
         public int rect_len;
 
         [NativeTypeName("ccc::FGpuRt *")]
-        public FGpuRt* rt;
+        public FGpuRt* rtv;
+
+        [NativeTypeName("ccc::FGpuRt *")]
+        public FGpuRt* dsv;
 
         [NativeTypeName("ccc::FFloat4")]
         public FFloat4 color;

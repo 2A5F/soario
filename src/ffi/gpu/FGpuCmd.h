@@ -23,7 +23,8 @@ namespace ccc
         FGpuCmdType type;
         /* 可以尾随 n 个 int4 rect */
         int32_t rect_len;
-        FGpuRt* rt;
+        FGpuRt* rtv;
+        FGpuRt* dsv;
         FFloat4 color;
         float depth;
         uint8_t stencil;
