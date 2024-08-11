@@ -38,13 +38,17 @@ public static class App
                     new(shader_rect.GetPass(0), GpuTextureFormat.R8G8B8A8_UNorm));
                 Log.Information("{Pipeline}", pipeline);
 
-                var cmd = new GpuCmdList();
+                var cmd = new GpuCmdList(device);
                 while (true)
                 {
                     surface.ReadyFrame();
 
                     cmd.SetRt(surface);
+                    cmd.ReadyRasterizer(
+                        new RasterizerInfo(new(0, 0, MainWindow.Size), new(0, 1), new(0, 0, MainWindow.Size))
+                    );
                     cmd.Clear(new float4(1, 1, 1, 1));
+                    cmd.DispatchMesh(pipeline, new(1, 1, 1));
 
                     surface.PresentFrame(cmd);
                 }

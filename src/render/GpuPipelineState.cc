@@ -97,4 +97,14 @@ namespace ccc
             return nullptr;
         }
     }
+
+    FGpuPipelineLayout* GpuPipelineState::get_layout_ref() const noexcept
+    {
+        return m_layout.get();
+    }
+
+    void* GpuPipelineState::get_raw_ptr() const noexcept
+    {
+        return m_pipeline_state.get();
+    }
 } // ccc

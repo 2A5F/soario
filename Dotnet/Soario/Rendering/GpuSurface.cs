@@ -204,6 +204,15 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public FGpuRt* AsRtPointer() => (FGpuRt*)m_inner;
+
+    public GpuTextureFormat Format
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get;
+    } = GpuTextureFormat.R8G8B8A8_UNorm; // todo 允许设置格式
+
+    // todo 分离 Rtv 和 Dsv
+    
     public bool HasRtv
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

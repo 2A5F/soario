@@ -129,13 +129,50 @@ namespace Soario.Native
         public int W;
     }
 
+    public partial struct FUInt2
+    {
+        [NativeTypeName("uint32_t")]
+        public uint X;
+
+        [NativeTypeName("uint32_t")]
+        public uint Y;
+    }
+
+    public partial struct FUInt3
+    {
+        [NativeTypeName("uint32_t")]
+        public uint X;
+
+        [NativeTypeName("uint32_t")]
+        public uint Y;
+
+        [NativeTypeName("uint32_t")]
+        public uint Z;
+
+        [NativeTypeName("uint32_t")]
+        private uint _pad;
+    }
+
+    public partial struct FUInt4
+    {
+        [NativeTypeName("uint32_t")]
+        public uint X;
+
+        [NativeTypeName("uint32_t")]
+        public uint Y;
+
+        [NativeTypeName("uint32_t")]
+        public uint Z;
+
+        [NativeTypeName("uint32_t")]
+        public uint W;
+    }
+
     public partial struct FFloat2
     {
-        [NativeTypeName("int32_t")]
-        public int X;
+        public float X;
 
-        [NativeTypeName("int32_t")]
-        public int Y;
+        public float Y;
     }
 
     public partial struct FFloat3
@@ -1018,6 +1055,9 @@ namespace Soario.Native
     {
         BarrierTransition = 1,
         ClearRt,
+        SetRt,
+        ReadyRasterizer,
+        DispatchMesh,
     }
 
     public partial struct FGpuCmdClearRtFlag
@@ -1115,6 +1155,57 @@ namespace Soario.Native
 
         [NativeTypeName("ccc::FGpuResState")]
         public FGpuResState cur_state;
+    }
+
+    public unsafe partial struct FGpuCmdSetRt
+    {
+        [NativeTypeName("ccc::FGpuCmdType")]
+        public FGpuCmdType type;
+
+        [NativeTypeName("ccc::FGpuRt *")]
+        public FGpuRt* depth;
+
+        [NativeTypeName("int32_t")]
+        public int len;
+    }
+
+    public partial struct FGpuCmdRasterizerViewPort
+    {
+        [NativeTypeName("ccc::FFloat4")]
+        public FFloat4 rect;
+
+        [NativeTypeName("ccc::FFloat2")]
+        public FFloat2 depth_range;
+    }
+
+    public partial struct FGpuCmdRasterizerInfo
+    {
+        [NativeTypeName("ccc::FInt4")]
+        public FInt4 scissor_rect;
+
+        [NativeTypeName("ccc::FGpuCmdRasterizerViewPort")]
+        public FGpuCmdRasterizerViewPort view_port;
+    }
+
+    public partial struct FGpuCmdReadyRasterizer
+    {
+        [NativeTypeName("ccc::FGpuCmdType")]
+        public FGpuCmdType type;
+
+        [NativeTypeName("int32_t")]
+        public int len;
+    }
+
+    public unsafe partial struct FGpuCmdDispatchMesh
+    {
+        [NativeTypeName("ccc::FGpuCmdType")]
+        public FGpuCmdType type;
+
+        [NativeTypeName("ccc::FUInt3")]
+        public FUInt3 thread_groups;
+
+        [NativeTypeName("ccc::FGpuPipelineState *")]
+        public FGpuPipelineState* pipeline;
     }
 
     public unsafe partial struct FGpuCmdList
@@ -1812,6 +1903,19 @@ namespace Soario.Native
         public bool TryUpgrade()
         {
             return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, byte>)(lpVtbl[6]))((FGpuPipelineState*)Unsafe.AsPointer(ref this)) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("ccc::FGpuPipelineLayout *")]
+        public FGpuPipelineLayout* get_layout_ref()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, FGpuPipelineLayout*>)(lpVtbl[7]))((FGpuPipelineState*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void* get_raw_ptr()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuPipelineState*, void*>)(lpVtbl[8]))((FGpuPipelineState*)Unsafe.AsPointer(ref this));
         }
     }
 

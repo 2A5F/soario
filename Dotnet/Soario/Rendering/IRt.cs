@@ -8,6 +8,12 @@ public interface IRt : IGpuRes
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal unsafe FGpuRt* AsRtPointer();
 
+    public GpuTextureFormat Format
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get;
+    }
+
     public bool HasRtv
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

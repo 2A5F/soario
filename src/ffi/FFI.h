@@ -72,10 +72,34 @@ namespace ccc
         int32_t W;
     };
 
+    struct FUInt2
+    {
+        uint32_t X;
+        uint32_t Y;
+    };
+
+    struct FUInt3
+    {
+        uint32_t X;
+        uint32_t Y;
+        uint32_t Z;
+
+    private:
+        uint32_t _pad{};
+    };
+
+    struct FUInt4
+    {
+        uint32_t X;
+        uint32_t Y;
+        uint32_t Z;
+        uint32_t W;
+    };
+
     struct FFloat2
     {
-        int32_t X;
-        int32_t Y;
+        float X;
+        float Y;
     };
 
     struct FFloat3

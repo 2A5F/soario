@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "FGpuFormat.h"
+#include "FGpuPipelineLayout.h"
 #include "../FFI.h"
 
 namespace ccc
@@ -227,5 +228,9 @@ namespace ccc
 
     struct FGpuPipelineState : FObject
     {
+        // 不获取所有权
+        virtual FGpuPipelineLayout* get_layout_ref() const noexcept = 0;
+
+        virtual void* get_raw_ptr() const noexcept = 0;
     };
 } // ccc

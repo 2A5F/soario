@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using Coplt.ShaderReflections;
 using Soario.Native;
 
@@ -195,6 +196,27 @@ public sealed class ShaderPass : IDisposable
         /// 逻辑操作
         /// </summary>
         public ShaderRtLogicOp? LogicOp;
+    }
+
+    #endregion
+
+    #region PipeLineCache
+
+    internal readonly ConcurrentDictionary<(GpuDevice, GpuPipelineLayout, GpuTextureFormats, GpuDepthFormat),
+            GpuPipelineState>
+        m_pipeline_states = new();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuPipelineState GetOrCreatePipelineState(GpuDevice device, GpuTextureFormats rt_formats,
+        GpuDepthFormat depth_format)
+    {
+        if (!Meta.BindLess) throw new NotSupportedException();
+        return m_pipeline_states.GetOrAdd((device, device.BindLessPipelineLayout, rt_formats, depth_format),
+            static (data, self) =>
+            {
+                var (device, layout, rt_formats, depth_format) = data;
+                return device.CreatePipelineState(layout, new(self, rt_formats.AsSpan, depth_format));
+            }, this);
     }
 
     #endregion

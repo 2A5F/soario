@@ -23,5 +23,9 @@ namespace ccc
             Rc<GpuDevice> device, Rc<GpuPipelineLayout> layout, const FGpuPipelineStateCreateOptions& options,
             FError& err
         ) noexcept;
+
+        FGpuPipelineLayout* get_layout_ref() const noexcept override;
+
+        void* get_raw_ptr() const noexcept override;
     };
 } // ccc

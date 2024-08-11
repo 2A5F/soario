@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Soario.Native;
 
 namespace Soario.Rendering;
@@ -214,4 +215,175 @@ public static partial class GpuFormatEx
         GpuTextureFormat.BC7_UNorm_sRGB => FGpuTextureFormat.BC7_UNorm_sRGB,
         _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
     };
+}
+
+public readonly struct GpuTextureFormats : IEquatable<GpuTextureFormats>
+{
+    #region Fields
+
+    private readonly GpuTextureFormat8 m_inner;
+    private readonly int m_len;
+
+    #endregion
+
+    #region Props
+
+    public int Length
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => m_len;
+    }
+
+    #endregion
+
+    #region Ctor
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(GpuTextureFormat format0)
+    {
+        m_inner[0] = format0;
+        m_len = 1;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(GpuTextureFormat format0, GpuTextureFormat format1)
+    {
+        m_inner[0] = format0;
+        m_inner[1] = format1;
+        m_len = 2;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(GpuTextureFormat format0, GpuTextureFormat format1, GpuTextureFormat format2)
+    {
+        m_inner[0] = format0;
+        m_inner[1] = format1;
+        m_inner[2] = format2;
+        m_len = 3;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(
+        GpuTextureFormat format0, GpuTextureFormat format1, GpuTextureFormat format2, GpuTextureFormat format3
+    )
+    {
+        m_inner[0] = format0;
+        m_inner[1] = format1;
+        m_inner[2] = format2;
+        m_inner[3] = format3;
+        m_len = 4;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(
+        GpuTextureFormat format0, GpuTextureFormat format1, GpuTextureFormat format2,
+        GpuTextureFormat format3, GpuTextureFormat format4
+    )
+    {
+        m_inner[0] = format0;
+        m_inner[1] = format1;
+        m_inner[2] = format2;
+        m_inner[3] = format3;
+        m_inner[4] = format4;
+        m_len = 5;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(
+        GpuTextureFormat format0, GpuTextureFormat format1, GpuTextureFormat format2,
+        GpuTextureFormat format3, GpuTextureFormat format4, GpuTextureFormat format5
+    )
+    {
+        m_inner[0] = format0;
+        m_inner[1] = format1;
+        m_inner[2] = format2;
+        m_inner[3] = format3;
+        m_inner[4] = format4;
+        m_inner[5] = format5;
+        m_len = 6;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(
+        GpuTextureFormat format0, GpuTextureFormat format1, GpuTextureFormat format2,
+        GpuTextureFormat format3, GpuTextureFormat format4, GpuTextureFormat format5, GpuTextureFormat format6
+    )
+    {
+        m_inner[0] = format0;
+        m_inner[1] = format1;
+        m_inner[2] = format2;
+        m_inner[3] = format3;
+        m_inner[4] = format4;
+        m_inner[5] = format5;
+        m_inner[6] = format6;
+        m_len = 7;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuTextureFormats(
+        GpuTextureFormat format0, GpuTextureFormat format1, GpuTextureFormat format2, GpuTextureFormat format3,
+        GpuTextureFormat format4, GpuTextureFormat format5, GpuTextureFormat format6, GpuTextureFormat format7
+    )
+    {
+        m_inner[0] = format0;
+        m_inner[1] = format1;
+        m_inner[2] = format2;
+        m_inner[3] = format3;
+        m_inner[4] = format4;
+        m_inner[5] = format5;
+        m_inner[6] = format6;
+        m_inner[7] = format7;
+        m_len = 8;
+    }
+
+    #endregion
+
+    #region AsSpan
+
+    [UnscopedRef]
+    public ReadOnlySpan<GpuTextureFormat> AsSpan
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get
+        {
+            ReadOnlySpan<GpuTextureFormat> s = m_inner;
+            return s.Slice(0, m_len);
+        }
+    }
+
+    #endregion
+
+    #region Equals
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public bool Equals(GpuTextureFormats other) => AsSpan.SequenceEqual(other.AsSpan);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override bool Equals(object? obj) => obj is GpuTextureFormats other && Equals(other);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public override int GetHashCode()
+    {
+        var hash = new HashCode();
+        hash.Add(m_len);
+        foreach (var format in AsSpan)
+        {
+            hash.Add(format);
+        }
+        return hash.ToHashCode();
+    }
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator ==(GpuTextureFormats left, GpuTextureFormats right) => left.Equals(right);
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static bool operator !=(GpuTextureFormats left, GpuTextureFormats right) => !left.Equals(right);
+
+    #endregion
+
+    #region InlineArray
+
+    [InlineArray(8)]
+    private struct GpuTextureFormat8
+    {
+        private GpuTextureFormat _;
+    }
+
+    #endregion
 }

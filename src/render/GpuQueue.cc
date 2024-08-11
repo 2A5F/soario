@@ -99,7 +99,7 @@ namespace ccc
     }
 
     void submit_BarrierTransition(
-        const com_ptr<ID3D12GraphicsCommandList>& command_list, const FGpuCmdBarrierTransition& data
+        const com_ptr<ID3D12GraphicsCommandList6>& command_list, const FGpuCmdBarrierTransition& data
     )
     {
         D3D12_RESOURCE_BARRIER barrier = {};
@@ -112,7 +112,7 @@ namespace ccc
     }
 
     void submit_ClearRenderTarget(
-        const com_ptr<ID3D12GraphicsCommandList>& command_list, uint8_t* const ptr, const FGpuCmdClearRt& data,
+        const com_ptr<ID3D12GraphicsCommandList6>& command_list, uint8_t* const ptr, const FGpuCmdClearRt& data,
         FError& err
     )
     {
@@ -126,7 +126,7 @@ namespace ccc
             ))
                 return;
             const auto src = reinterpret_cast<FInt4*>(ptr + sizeof FGpuCmdClearRt);
-            const auto rects = static_cast<D3D12_RECT*>(_malloca(data.rect_len));
+            const auto rects = static_cast<D3D12_RECT*>(_malloca(data.rect_len * sizeof D3D12_RECT));
             for (int i = 0; i < data.rect_len; i++)
             {
                 const auto [X, Y, Z, W] = src[i];
@@ -188,6 +188,41 @@ namespace ccc
         }
     }
 
+    void submit_ReadyRasterizer(
+        const com_ptr<ID3D12GraphicsCommandList6>& command_list, uint8_t* const ptr, const FGpuCmdReadyRasterizer& data,
+        FError& err
+    )
+    {
+        const auto items = reinterpret_cast<FGpuCmdRasterizerInfo*>(ptr + sizeof FGpuCmdReadyRasterizer);
+        const auto viewports = static_cast<D3D12_VIEWPORT*>(_malloca(data.len * sizeof D3D12_VIEWPORT));
+        const auto rects = static_cast<D3D12_RECT*>(_malloca(data.len * sizeof D3D12_RECT));
+        for (int i = 0; i < data.len; i++)
+        {
+            const auto& item = items[i];
+            const auto& sr = item.scissor_rect;
+            const auto& vp_r = item.view_port.rect;
+            const auto& vp_d = item.view_port.depth_range;
+            viewports[i] = {vp_r.X, vp_r.Y, vp_r.Z, vp_r.W, vp_d.X, vp_d.Y};
+            rects[i] = {sr.X, sr.Y, sr.Z, sr.W};
+        }
+        command_list->RSSetViewports(data.len, viewports);
+        command_list->RSSetScissorRects(data.len, rects);
+    }
+
+    void submit_DispatchMesh(
+        const com_ptr<ID3D12GraphicsCommandList6>& command_list, uint8_t* const ptr, const FGpuCmdDispatchMesh& data,
+        FError& err
+    )
+    {
+        // todo
+        // command_list->SetDescriptorHeaps(0, nullptr);
+        command_list->SetGraphicsRootSignature(
+            static_cast<ID3D12RootSignature*>(data.pipeline->get_layout_ref()->get_raw_ptr())
+        );
+        command_list->SetPipelineState(static_cast<ID3D12PipelineState*>(data.pipeline->get_raw_ptr()));
+        command_list->DispatchMesh(data.thread_groups.X, data.thread_groups.Y, data.thread_groups.Z);
+    }
+
     void GpuQueue::submit_inner(const FGpuCmdList* cmd_list, FError& err)
     {
         winrt::check_hresult(m_command_list->Reset(m_command_allocators.get(), nullptr));
@@ -201,6 +236,14 @@ namespace ccc
                 break;
             case FGpuCmdType::ClearRt:
                 submit_ClearRenderTarget(m_command_list, ptr, *reinterpret_cast<FGpuCmdClearRt*>(ptr), err);
+                if (err.type != FErrorType::None) return;
+                break;
+            case FGpuCmdType::ReadyRasterizer:
+                submit_ReadyRasterizer(m_command_list, ptr, *reinterpret_cast<FGpuCmdReadyRasterizer*>(ptr), err);
+                if (err.type != FErrorType::None) return;
+                break;
+            case FGpuCmdType::DispatchMesh:
+                submit_DispatchMesh(m_command_list, ptr, *reinterpret_cast<FGpuCmdDispatchMesh*>(ptr), err);
                 if (err.type != FErrorType::None) return;
                 break;
             default:

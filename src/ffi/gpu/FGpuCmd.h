@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "FGpuRt.h"
+#include "FGpuPipelineState.h"
 
 namespace ccc
 {
@@ -7,6 +8,9 @@ namespace ccc
     {
         BarrierTransition = 1,
         ClearRt,
+        SetRt,
+        ReadyRasterizer,
+        DispatchMesh,
     };
 
     struct FGpuCmdClearRtFlag
@@ -38,6 +42,43 @@ namespace ccc
         FGpuRes* res;
         FGpuResState pre_state;
         FGpuResState cur_state;
+    };
+
+    struct FGpuCmdSetRt
+    {
+        FGpuCmdType type;
+        // todo 拆分 rtv 和 dsv
+        FGpuRt* depth;
+        /* 可以尾随 n 个 FGpuRt* */
+        int32_t len;
+    };
+
+    struct FGpuCmdRasterizerViewPort
+    {
+        // 左上角原点 x y w h
+        FFloat4 rect;
+        // min max
+        FFloat2 depth_range;
+    };
+
+    struct FGpuCmdRasterizerInfo
+    {
+        FInt4 scissor_rect;
+        FGpuCmdRasterizerViewPort view_port;
+    };
+
+    struct FGpuCmdReadyRasterizer
+    {
+        FGpuCmdType type;
+        /* 可以尾随 n 个 FGpuCmdRasterizerInfo */
+        int32_t len;
+    };
+
+    struct FGpuCmdDispatchMesh
+    {
+        FGpuCmdType type;
+        FUInt3 thread_groups;
+        FGpuPipelineState* pipeline;
     };
 
     struct FGpuCmdList

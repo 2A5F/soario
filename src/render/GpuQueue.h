@@ -28,7 +28,7 @@ namespace ccc
         com_ptr<ID3D12Device> m_dx_device{};
         com_ptr<ID3D12CommandAllocator> m_command_allocators{};
         com_ptr<ID3D12CommandQueue> m_command_queue{};
-        com_ptr<ID3D12GraphicsCommandList> m_command_list{};
+        com_ptr<ID3D12GraphicsCommandList6> m_command_list{};
 
         friend FrameContext;
 

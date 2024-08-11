@@ -25,20 +25,53 @@ public static class ClearFlagEx
         Unsafe.BitCast<ClearFlag, FGpuCmdClearRtFlag>(self);
 }
 
+[StructLayout(LayoutKind.Explicit, Size = 24)]
+public struct RasterizerViewPort(float4 rect, float2 depth_range)
+{
+    /// <summary>
+    /// 左上角原点 x y w h
+    /// </summary>
+    [FieldOffset(0)]
+    public float4 Rect = rect;
+    /// <summary>
+    /// min max
+    /// </summary>
+    [FieldOffset(16)]
+    public float2 DepthRange = depth_range;
+}
+
+[StructLayout(LayoutKind.Explicit, Size = 40)]
+public struct RasterizerInfo(float4 rect, float2 depth_range, int4 scissor_rect)
+{
+    [FieldOffset(0)]
+    public int4 ScissorRect = scissor_rect;
+    [FieldOffset(16)]
+    public RasterizerViewPort ViewPort = new(rect, depth_range);
+}
+
 public sealed unsafe class GpuCmdList
 {
     #region Fields
 
-    internal List<int> m_indexes = new();
-    internal List<byte> m_datas = new();
+    internal readonly GpuDevice m_device;
+    internal readonly List<int> m_indexes = new();
+    internal readonly List<byte> m_datas = new();
     /// <summary>
     /// 保留引用，避免释放
     /// </summary>
     // ReSharper disable once CollectionNeverQueried.Global
-    internal HashSet<object> m_objects = new();
+    internal readonly HashSet<object> m_objects = new();
 
     internal IRt? m_current_rtv;
     internal IRt? m_current_dsv;
+
+    internal bool m_is_bind_less = true;
+
+    public GpuCmdList(GpuDevice device)
+    {
+        m_device = device;
+        if (m_is_bind_less) StartBindLess();
+    }
 
     #endregion
 
@@ -51,6 +84,7 @@ public sealed unsafe class GpuCmdList
         m_objects.Clear();
         m_current_rtv = null;
         m_current_dsv = null;
+        if (m_is_bind_less) StartBindLess();
     }
 
     #endregion
@@ -105,16 +139,16 @@ public sealed unsafe class GpuCmdList
     #region Clear
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Clear(IRt rtv, IRt dsv) => Clear(rtv, dsv, default, -1, 0);
+    public void Clear(IRt rtv, IRt dsv) => Clear(rtv, dsv, default, 0, 0);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rt)
     {
         var has_rtv = rt.HasRtv;
         var has_dsv = rt.HasDsv;
-        if (has_rtv && has_dsv) Clear(rt, default, -1, 0);
+        if (has_rtv && has_dsv) Clear(rt, default, 0, 0);
         else if (has_rtv) Clear(rt, default(float4));
-        else if (has_dsv) Clear(rt, -1, 0);
+        else if (has_dsv) Clear(rt, 0, 0);
         else throw new ArgumentException("Invalid rt", nameof(rt));
     }
 
@@ -128,7 +162,7 @@ public sealed unsafe class GpuCmdList
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt dsv, byte stencil) =>
-        Clear(dsv, ClearFlag.Stencil, -1, stencil, []);
+        Clear(dsv, ClearFlag.Stencil, 0, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rt, float4 color, float depth) =>
@@ -140,11 +174,11 @@ public sealed unsafe class GpuCmdList
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rt, float4 color, byte stencil) =>
-        Clear(rt, rt, ClearFlag.ColorStencil, color, -1, stencil, []);
+        Clear(rt, rt, ClearFlag.ColorStencil, color, 0, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt rtv, IRt dsv, float4 color, byte stencil) =>
-        Clear(rtv, dsv, ClearFlag.ColorStencil, color, -1, stencil, []);
+        Clear(rtv, dsv, ClearFlag.ColorStencil, color, 0, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(IRt dsv, float depth, byte stencil) =>
@@ -250,7 +284,7 @@ public sealed unsafe class GpuCmdList
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear() =>
-        Clear(ClearFlag.All, default, -1, 0, []);
+        Clear(ClearFlag.All, default, 0, 0, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(float4 color) =>
@@ -262,7 +296,7 @@ public sealed unsafe class GpuCmdList
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(byte stencil) =>
-        Clear(ClearFlag.DepthStencil, -1, stencil, []);
+        Clear(ClearFlag.DepthStencil, 0, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(float depth, byte stencil) =>
@@ -274,7 +308,7 @@ public sealed unsafe class GpuCmdList
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(float4 color, byte stencil) =>
-        Clear(ClearFlag.ColorStencil, color, -1, stencil, []);
+        Clear(ClearFlag.ColorStencil, color, 0, stencil, []);
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear(ClearFlag flag, float4 color, float depth, byte stencil) =>
@@ -417,6 +451,83 @@ public sealed unsafe class GpuCmdList
         var old_state = rt.ReqState(ResourceState.Common);
         if (old_state != ResourceState.Common) BarrierTransition(rt, old_state, ResourceState.Common);
         else m_objects.Add(rt); // BarrierTransition 会缓存对象引用，所以只有不调用的时候需要 Add
+    }
+
+    #endregion
+
+    #region ReadyRasterizer
+
+    /// <summary>
+    /// 准备光栅
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadyRasterizer(RasterizerInfo rasterizer_infos) => ReadyRasterizer([rasterizer_infos]);
+
+    /// <summary>
+    /// 准备光栅
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void ReadyRasterizer(ReadOnlySpan<RasterizerInfo> rasterizer_infos)
+    {
+        m_indexes.Add(m_datas.Count);
+        var data = new FGpuCmdReadyRasterizer
+        {
+            type = FGpuCmdType.ReadyRasterizer,
+            len = rasterizer_infos.Length,
+        };
+        m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdReadyRasterizer)));
+        m_datas.AddRange(MemoryMarshal.Cast<RasterizerInfo, byte>(rasterizer_infos));
+    }
+
+    #endregion
+
+    #region BindLess
+
+    public void StartBindLess()
+    {
+        m_is_bind_less = true;
+        // todo set layout
+    }
+
+    public void StopBindLess()
+    {
+        throw new NotSupportedException();
+    }
+
+    #endregion
+
+    #region DispatchMesh
+
+    /// <summary>
+    /// 派发 Mesh Shader
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DispatchMesh(ShaderPass pass, uint3 thread_groups)
+    {
+        if (m_current_rtv is null) throw new ArgumentException("Rt not set");
+        var format = m_current_rtv.Format;
+        var formats = new GpuTextureFormats(format);
+        // todo depth
+        var pipeline = pass.GetOrCreatePipelineState(m_device, formats, GpuDepthFormat.Unknown);
+
+        DispatchMesh(pipeline, thread_groups);
+    }
+
+    /// <summary>
+    /// 派发 Mesh Shader
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void DispatchMesh(GpuPipelineState pipeline, uint3 thread_groups)
+    {
+        m_objects.Add(pipeline);
+        m_indexes.Add(m_datas.Count);
+        var data = new FGpuCmdDispatchMesh
+        {
+            type = FGpuCmdType.DispatchMesh,
+            pipeline = pipeline.m_inner,
+            thread_groups = Unsafe.BitCast<uint3, FUInt3>(thread_groups),
+        };
+        m_datas.AddRange(new Span<byte>(&data, sizeof(FGpuCmdDispatchMesh)));
     }
 
     #endregion
