@@ -34,6 +34,9 @@ namespace ccc
 
         void wait_reset_async_inner(void* obj, fn_action__voidp cb);
 
+        void do_before_reset();
+
+        void do_reset();
     public:
         static Rc<GpuTask> Create(
             Rc<GpuDevice> device, Rc<GpuQueue> queue, const FGpuTaskCreateOptions& options, FError& err

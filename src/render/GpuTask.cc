@@ -1,5 +1,6 @@
 #include "GpuTask.h"
 
+#include "GpuDescriptorSet.h"
 #include "GpuQueue.h"
 #include "State.h"
 #include "../utils/Err.h"
@@ -28,16 +29,23 @@ namespace ccc
             )
         );
 
-        winrt::check_hresult(m_command_list->Close());
-        m_closed = true;
-
         if (options.name.ptr != nullptr)
         {
             const auto allocator_name = fmt::format(
                 L"{} Allocator", reinterpret_cast<const wchar_t*>(options.name.ptr)
             );
             winrt::check_hresult(m_command_allocators->SetName(allocator_name.c_str()));
+
+            const auto fence_name = fmt::format(
+                L"{} Fence", reinterpret_cast<const wchar_t*>(options.name.ptr)
+            );
+            winrt::check_hresult(m_fence_pak.m_fence->SetName(fence_name.c_str()));
         }
+
+        winrt::check_hresult(m_command_list->Close());
+        m_closed = true;
+
+        do_reset();
     }
 
     void submit_BarrierTransition(
@@ -156,8 +164,6 @@ namespace ccc
         FError& err
     )
     {
-        // todo
-        // command_list->SetDescriptorHeaps(0, nullptr);
         command_list->SetGraphicsRootSignature(
             static_cast<ID3D12RootSignature*>(data.pipeline->get_layout_ref()->get_raw_ptr())
         );
@@ -205,36 +211,46 @@ namespace ccc
 
     void GpuTask::wait_reset_inner()
     {
-        if (!m_closed)
-        {
-            winrt::check_hresult(m_command_list->Close());
-            m_closed = true;
-        }
+        do_before_reset();
         m_fence_pak.wait();
-        winrt::check_hresult(m_command_allocators->Reset());
-        winrt::check_hresult(m_command_list->Reset(m_command_allocators.get(), nullptr));
-        m_closed = false;
+        do_reset();
     }
 
     void GpuTask::wait_reset_async_inner(void* obj, fn_action__voidp cb)
     {
-        if (!m_closed)
-        {
-            winrt::check_hresult(m_command_list->Close());
-            m_closed = true;
-        }
+        do_before_reset();
         m_fence_pak.wait_async(
             [
                 self = Rc<GpuTask>::UnsafeClone(this),
                 obj, cb
             ]
             {
-                winrt::check_hresult(self->m_command_allocators->Reset());
-                winrt::check_hresult(self->m_command_list->Reset(self->m_command_allocators.get(), nullptr));
-                self->m_closed = false;
+                self->do_reset();
                 cb(obj);
             }
         );
+    }
+
+    void GpuTask::do_before_reset()
+    {
+        if (!m_closed)
+        {
+            winrt::check_hresult(m_command_list->Close());
+            m_closed = true;
+        }
+    }
+
+    void GpuTask::do_reset()
+    {
+        winrt::check_hresult(m_command_allocators->Reset());
+        winrt::check_hresult(m_command_list->Reset(m_command_allocators.get(), nullptr));
+        m_closed = false;
+
+        ID3D12DescriptorHeap* descriptor_heaps[] = {
+            m_device->m_descriptor_list__resources->m_descriptor_heap.get(),
+            m_device->m_descriptor_list__sampler->m_descriptor_heap.get(),
+        };
+        m_command_list->SetDescriptorHeaps(2, descriptor_heaps);
     }
 
     Rc<GpuTask> GpuTask::Create(

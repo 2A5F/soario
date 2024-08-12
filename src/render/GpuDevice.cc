@@ -1,6 +1,7 @@
 ﻿#include "./GpuDevice.h"
 #include "./Gpu.h"
 #include "GpuBindLessPipelineLayout.h"
+#include "GpuDescriptorSet.h"
 #include "GpuPipelineState.h"
 #include "GpuSurfaceHwnd.h"
 #include "../utils/Err.h"
@@ -87,6 +88,23 @@ namespace ccc
                     logger::warn("register message callback failed");
                 }
             }
+        }
+
+        {
+            const auto name_ptr = reinterpret_cast<const wchar_t*>(options.name.ptr);
+
+            m_descriptor_list__resources = GpuDescriptorSet::Create(
+                m_device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, name_ptr, L"Resource"
+            );
+            m_descriptor_list__sampler = GpuDescriptorSet::Create(
+                m_device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, name_ptr, L"Sampler"
+            );
+            m_descriptor_list__rtv = GpuDescriptorSet::Create(
+                m_device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, name_ptr, L"Rtv"
+            );
+            m_descriptor_list__dsv = GpuDescriptorSet::Create(
+                m_device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, name_ptr, L"Dsv"
+            );
         }
     }
 

@@ -8,8 +8,12 @@
 
 namespace ccc
 {
+    class GpuTask;
+
     class GpuFencePak
     {
+        friend class GpuTask;
+
         UINT64 m_fence_value{};
         com_ptr<ID3D12Fence> m_fence{};
         HANDLE m_fence_event{};
@@ -33,6 +37,5 @@ namespace ccc
         void wait_async(std::function<void()> callback) const;
 
         void signal(const com_ptr<ID3D12CommandQueue>& queue);
-
     };
 } // ccc

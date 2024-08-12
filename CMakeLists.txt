@@ -65,10 +65,6 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         third_party/D3D12MemoryAllocator/src/D3D12MemAlloc.cpp
         src/render/GpuQueue.cc
         src/render/GpuQueue.h
-        src/render/FrameContext.cc
-        src/render/FrameContext.h
-        src/render/GpuCommandList.cc
-        src/render/GpuCommandList.h
         src/App.cc
         src/App.h
         src/render/Shader.cc
@@ -141,6 +137,8 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/ffi/gpu/FGpuTask.h
         src/render/GpuTask.cc
         src/render/GpuTask.h
+        src/render/GpuDescriptorSet.cc
+        src/render/GpuDescriptorSet.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

@@ -5,10 +5,11 @@
 #include <nethost.h>
 #include <coreclr_delegates.h>
 #include <hostfxr.h>
+#include <iostream>
+#include <spdlog/spdlog.h>
 
 #include "Time.h"
 #include "../ffi/Init.h"
-#include "../render/FrameContext.h"
 
 namespace ccc
 {

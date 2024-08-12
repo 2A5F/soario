@@ -15,6 +15,7 @@ namespace ccc
     class GpuBindLessPipelineLayout;
     class GpuPipelineState;
     class GpuTask;
+    class GpuDescriptorSet;
 
     class GpuDevice final : public FGpuDevice
     {
@@ -25,6 +26,7 @@ namespace ccc
         friend GpuBindLessPipelineLayout;
         friend GpuPipelineState;
         friend GpuTask;
+        friend GpuDescriptorSet;
 
         Rc<Gpu> m_gpu;
 
@@ -34,6 +36,11 @@ namespace ccc
         DWORD m_callback_cookie{};
 
         com_ptr<D3D12MA::Allocator> m_gpu_allocator{};
+
+        Rc<GpuDescriptorSet> m_descriptor_list__resources{};
+        Rc<GpuDescriptorSet> m_descriptor_list__sampler{};
+        Rc<GpuDescriptorSet> m_descriptor_list__rtv{};
+        Rc<GpuDescriptorSet> m_descriptor_list__dsv{};
 
         fn_func__voidp_FLogLevel_charp__void* m_logger;
         void* m_logger_object;

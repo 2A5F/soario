@@ -183,6 +183,7 @@ namespace ccc
         try
         {
             Rc r(new GpuSurfaceHwnd(std::move(device), queue, options, hwnd, size, err));
+            if (err.type != FErrorType::None) return nullptr;
             return r;
         }
         catch (std::exception ex)
