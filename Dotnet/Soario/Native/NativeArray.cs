@@ -1,10 +1,12 @@
 ﻿using System.Buffers;
 using System.Collections;
 using System.Runtime.CompilerServices;
+using Coplt.Dropping;
 
 namespace Soario.Native;
 
-public sealed unsafe class NativeArray<T> : IDisposable, IList<T>, IEquatable<NativeArray<T>> where T : unmanaged
+[Dropping(Unmanaged = true)]
+public sealed unsafe partial class NativeArray<T> : IList<T>, IEquatable<NativeArray<T>> where T : unmanaged
 {
     #region Fields
 
@@ -40,25 +42,15 @@ public sealed unsafe class NativeArray<T> : IDisposable, IList<T>, IEquatable<Na
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
         if (m_ptr == null) return;
         FFI.free(m_ptr);
         m_ptr = null;
     }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    ~NativeArray() => ReleaseUnmanagedResources();
 
     #endregion
 

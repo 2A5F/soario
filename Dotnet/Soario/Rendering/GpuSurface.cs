@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Coplt.Dropping;
 using Coplt.Mathematics;
 using Serilog;
 using Soario.Native;
@@ -13,7 +14,8 @@ public record struct GpuSurfaceCreateOptions()
     public bool VSync { get; set; } = false;
 }
 
-public sealed unsafe class GpuSurface : IDisposable, IRt
+[Dropping(Unmanaged = true)]
+public sealed unsafe partial class GpuSurface : IRt
 {
     #region Fields
 
@@ -105,24 +107,24 @@ public sealed unsafe class GpuSurface : IDisposable, IRt
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
         m_inner = null;
     }
-    public void Dispose()
+    
+    [Drop(Unmanaged = false)]
+    private void FreeDisposables()
     {
-        ReleaseUnmanagedResources();
         foreach (var disposable in m_disposables)
         {
             disposable();
         }
-        GC.SuppressFinalize(this);
     }
-    ~GpuSurface() => Dispose();
 
     #endregion
 

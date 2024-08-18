@@ -1,12 +1,14 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Coplt.Dropping;
 using Coplt.Mathematics;
 using Serilog;
 using Soario.Native;
 
 namespace Soario.Windowing;
 
-public class Window : IDisposable
+[Dropping(Unmanaged = true)]
+public partial class Window 
 {
     internal unsafe FWindow* m_inner;
     internal GCHandle m_self_handle;
@@ -46,9 +48,10 @@ public class Window : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private unsafe void ReleaseUnmanagedResources()
+    [Drop]
+    private unsafe void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
@@ -56,20 +59,7 @@ public class Window : IDisposable
         m_self_handle.Free();
         m_self_handle = default;
     }
-
-    protected virtual void Dispose(bool disposing)
-    {
-        ReleaseUnmanagedResources();
-    }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    ~Window() => Dispose(false);
-
+    
     #endregion
 
     #region GetSize

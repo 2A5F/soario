@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using Coplt.Dropping;
 using Serilog;
 using Serilog.Events;
 using Soario.Native;
@@ -8,7 +9,8 @@ using Soario.Windowing;
 
 namespace Soario.Rendering;
 
-public sealed unsafe class GpuDevice : IDisposable
+[Dropping(Unmanaged = true)]
+public sealed unsafe partial class GpuDevice
 {
     #region Fields
 
@@ -103,20 +105,15 @@ public sealed unsafe class GpuDevice : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
         m_inner = null;
     }
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-    ~GpuDevice() => Dispose();
 
     #endregion
 

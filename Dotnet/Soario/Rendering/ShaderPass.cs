@@ -1,11 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
+using Coplt.Dropping;
 using Coplt.ShaderReflections;
 using Soario.Native;
 
 namespace Soario.Rendering;
 
-public sealed class ShaderPass : IDisposable
+[Dropping]
+public sealed partial class ShaderPass
 {
     #region Fields
 
@@ -18,11 +20,16 @@ public sealed class ShaderPass : IDisposable
     }
 
     public int Index { get; }
-
+    
+    [Drop]
     public ShaderPassStage? Ps { get; }
+    [Drop]
     public ShaderPassStage? Vs { get; }
+    [Drop]
     public ShaderPassStage? Cs { get; }
+    [Drop]
     public ShaderPassStage? Ms { get; }
+    [Drop]
     public ShaderPassStage? Ts { get; }
 
     public ref readonly MetaData Meta
@@ -47,19 +54,6 @@ public sealed class ShaderPass : IDisposable
         Cs = data.Cs is { } c ? new(c) : null;
         Ms = data.Ms is { } m ? new(m) : null;
         Ts = data.Ts is { } a ? new(a) : null;
-    }
-
-    #endregion
-
-    #region Dispose
-
-    public void Dispose()
-    {
-        Ps?.Dispose();
-        Vs?.Dispose();
-        Cs?.Dispose();
-        Ms?.Dispose();
-        Ts?.Dispose();
     }
 
     #endregion
@@ -222,7 +216,8 @@ public sealed class ShaderPass : IDisposable
     #endregion
 }
 
-public sealed class ShaderPassStage : IDisposable
+[Dropping(Unmanaged = true)]
+public sealed partial class ShaderPassStage
 {
     #region Fields
 
@@ -249,22 +244,15 @@ public sealed class ShaderPassStage : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
-        if (!blob.IsNull)
-        {
-            blob.Dispose();
-            blob = default;
-        }
+        if (blob.IsNull) return;
+        blob.Dispose();
+        blob = default;
     }
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-    ~ShaderPassStage() => ReleaseUnmanagedResources();
 
     #endregion
 }

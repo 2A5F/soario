@@ -1,10 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Coplt.Dropping;
 using Soario.Native;
 
 namespace Soario.Rendering;
 
-public sealed unsafe class GpuQueue : IDisposable
+[Dropping(Unmanaged = true)]
+public sealed unsafe partial class GpuQueue
 {
     #region Fields
 
@@ -77,20 +79,15 @@ public sealed unsafe class GpuQueue : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
         m_inner = null;
     }
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-    ~GpuQueue() => Dispose();
 
     #endregion
 

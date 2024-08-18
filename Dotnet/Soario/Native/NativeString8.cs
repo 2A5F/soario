@@ -1,9 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
+using Coplt.Dropping;
 
 namespace Soario.Native;
 
-public sealed unsafe class NativeString8 : IDisposable
+[Dropping(Unmanaged = true)]
+public sealed unsafe partial class NativeString8
 {
     #region Fields
 
@@ -54,20 +56,15 @@ public sealed unsafe class NativeString8 : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
         m_inner = null;
     }
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-    ~NativeString8() => ReleaseUnmanagedResources();
 
     #endregion
 }

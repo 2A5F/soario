@@ -1,9 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
+using Coplt.Dropping;
 using Soario.Native;
 
 namespace Soario.Rendering;
 
-public abstract unsafe class GpuPipelineLayout : IDisposable
+[Dropping(Unmanaged = true)]
+public abstract unsafe partial class GpuPipelineLayout 
 {
     #region Fields
 
@@ -39,24 +41,15 @@ public abstract unsafe class GpuPipelineLayout : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
         m_inner = null;
     }
-    protected virtual void Dispose(bool disposing)
-    {
-        ReleaseUnmanagedResources();
-    }
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-    ~GpuPipelineLayout() => Dispose(false);
 
     #endregion
 

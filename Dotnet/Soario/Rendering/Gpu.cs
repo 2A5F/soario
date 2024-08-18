@@ -1,9 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
+using Coplt.Dropping;
 using Soario.Native;
 
 namespace Soario.Rendering;
 
-public sealed class Gpu : IDisposable
+[Dropping(Unmanaged = true)]
+public sealed partial class Gpu
 {
     #region Static Fields
 
@@ -57,22 +59,15 @@ public sealed class Gpu : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private unsafe void ReleaseUnmanagedResources()
+    [Drop]
+    private unsafe void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
         m_inner = null;
     }
-
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-
-    ~Gpu() => ReleaseUnmanagedResources();
 
     #endregion
 

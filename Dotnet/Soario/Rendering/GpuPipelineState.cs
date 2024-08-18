@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Text;
+using Coplt.Dropping;
 using Soario.Native;
 
 namespace Soario.Rendering;
@@ -64,7 +65,8 @@ public ref struct GpuPipelineStateCreateOptions
     #endregion
 }
 
-public sealed unsafe class GpuPipelineState : IDisposable
+[Dropping(Unmanaged = true)]
+public sealed unsafe partial class GpuPipelineState
 {
     #region Fields
 
@@ -290,20 +292,15 @@ public sealed unsafe class GpuPipelineState : IDisposable
 
     #endregion
 
-    #region Dispose
+    #region Drop
 
-    private void ReleaseUnmanagedResources()
+    [Drop]
+    private void Drop()
     {
         if (m_inner == null) return;
         m_inner->Release();
         m_inner = null;
     }
-    public void Dispose()
-    {
-        ReleaseUnmanagedResources();
-        GC.SuppressFinalize(this);
-    }
-    ~GpuPipelineState() => Dispose();
 
     #endregion
 
