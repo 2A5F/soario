@@ -149,4 +149,11 @@ public sealed unsafe partial class GpuDevice
         new(this, layout, options);
 
     #endregion
+
+    #region CreateBuffer
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public GpuBuffer CreateBuffer(in GpuBufferCreateOptions options) => new(this, options);
+
+    #endregion
 }

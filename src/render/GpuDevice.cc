@@ -1,6 +1,7 @@
 ﻿#include "./GpuDevice.h"
 #include "./Gpu.h"
 #include "GpuBindLessPipelineLayout.h"
+#include "GpuBuffer.h"
 #include "GpuDescriptorSet.h"
 #include "GpuPipelineState.h"
 #include "GpuSurfaceHwnd.h"
@@ -203,6 +204,15 @@ namespace ccc
         auto r = GpuPipelineState::Create(
             Rc<GpuDevice>::UnsafeClone(this),
             Rc<GpuPipelineLayout>::UnsafeClone(static_cast<GpuPipelineLayout*>(layout)),
+            options, err
+        );
+        return r.leak();
+    }
+
+    FGpuResource* GpuDevice::CreateBuffer(const FGpuResourceBufferCreateOptions& options, FError& err) noexcept
+    {
+        auto r = GpuBuffer::Create(
+            Rc<GpuDevice>::UnsafeClone(this),
             options, err
         );
         return r.leak();

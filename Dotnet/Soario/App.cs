@@ -38,6 +38,9 @@ public static class App
                     new(shader_rect.GetPass(0), GpuTextureFormat.R8G8B8A8_UNorm));
                 Log.Information("{Pipeline}", pipeline);
 
+                var buffer1 = device.CreateBuffer(new(4) { Name = "Test Buffer" });
+                Log.Information("{Buffer}", buffer1);
+
                 var cmd = new GpuCmdList(device);
                 while (true)
                 {

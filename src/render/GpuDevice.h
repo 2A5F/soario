@@ -16,6 +16,7 @@ namespace ccc
     class GpuPipelineState;
     class GpuTask;
     class GpuDescriptorSet;
+    class GpuBuffer;
 
     class GpuDevice final : public FGpuDevice
     {
@@ -27,6 +28,7 @@ namespace ccc
         friend GpuPipelineState;
         friend GpuTask;
         friend GpuDescriptorSet;
+        friend GpuBuffer;
 
         Rc<Gpu> m_gpu;
 
@@ -74,5 +76,7 @@ namespace ccc
         FGpuPipelineState* CreatePipelineState(
             FGpuPipelineLayout* layout, const FGpuPipelineStateCreateOptions& options, FError& err
         ) noexcept override;
+
+        FGpuResource* CreateBuffer(const FGpuResourceBufferCreateOptions& options, FError& err) noexcept override;
     };
 } // ccc

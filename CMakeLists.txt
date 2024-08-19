@@ -139,6 +139,16 @@ add_executable(${PROJECT_NAME} WIN32 src/main.cpp
         src/render/GpuTask.h
         src/render/GpuDescriptorSet.cc
         src/render/GpuDescriptorSet.h
+        src/ffi/gpu/FGpuResource.cc
+        src/ffi/gpu/FGpuResource.h
+        src/render/GpuResource.cc
+        src/render/GpuResource.h
+        src/render/GpuBuffer.cc
+        src/render/GpuBuffer.h
+        src/ffi/gpu/FGpuView.cc
+        src/ffi/gpu/FGpuView.h
+        src/render/GpuView.cc
+        src/render/GpuView.h
 )
 
 add_dependencies(${PROJECT_NAME} shaders)

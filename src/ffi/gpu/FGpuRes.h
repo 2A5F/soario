@@ -11,6 +11,7 @@ namespace ccc
 
     struct FGpuRes : FObject
     {
+        // ID3D12Resource*
         virtual void* get_res_raw_ptr() noexcept = 0;
     };
 } // ccc

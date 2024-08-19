@@ -2,6 +2,7 @@
 
 #include "FGpuPipelineLayout.h"
 #include "FGpuPipelineState.h"
+#include "FGpuResource.h"
 #include "../FFI.h"
 #include "../FnPtrs.h"
 #include "../FWindow.h"
@@ -43,5 +44,7 @@ namespace ccc
         virtual FGpuPipelineState* CreatePipelineState(
             FGpuPipelineLayout* layout, const FGpuPipelineStateCreateOptions& options, FError& err
         ) noexcept = 0;
+
+        virtual FGpuResource* CreateBuffer(const FGpuResourceBufferCreateOptions& options, FError& err) noexcept = 0;
     };
 } // ccc

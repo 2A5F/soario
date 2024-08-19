@@ -772,6 +772,13 @@ namespace Soario.Native
         {
             return ((delegate* unmanaged[Thiscall]<FGpuDevice*, FGpuPipelineLayout*, FGpuPipelineStateCreateOptions*, FError*, FGpuPipelineState*>)(lpVtbl[11]))((FGpuDevice*)Unsafe.AsPointer(ref this), layout, options, err);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("ccc::FGpuResource *")]
+        public FGpuResource* CreateBuffer([NativeTypeName("const FGpuResourceBufferCreateOptions &")] FGpuResourceBufferCreateOptions* options, [NativeTypeName("ccc::FError &")] FError* err)
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuDevice*, FGpuResourceBufferCreateOptions*, FError*, FGpuResource*>)(lpVtbl[12]))((FGpuDevice*)Unsafe.AsPointer(ref this), options, err);
+        }
     }
 
     [NativeTypeName("struct FGpu : ccc::FObject")]
@@ -886,6 +893,401 @@ namespace Soario.Native
         public void* get_res_raw_ptr()
         {
             return ((delegate* unmanaged[Thiscall]<FGpuRes*, void*>)(lpVtbl[7]))((FGpuRes*)Unsafe.AsPointer(ref this));
+        }
+    }
+
+    public enum FGpuResourceDimension
+    {
+        Unknown,
+        Buffer,
+        Texture1D,
+        Texture2D,
+        Texture3D,
+    }
+
+    public enum FGpuResourceLayout
+    {
+        Unknown,
+        RowMajor,
+        UndefinedSwizzle64KB,
+        StandardSwizzle64KB,
+    }
+
+    public partial struct FGpuResourceFlags
+    {
+        public uint _bitfield;
+
+        [NativeTypeName("uint32_t : 1")]
+        public uint rtv
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return _bitfield & 0x1u;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (_bitfield & ~0x1u) | (value & 0x1u);
+            }
+        }
+
+        [NativeTypeName("uint32_t : 1")]
+        public uint dsv
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (_bitfield >> 1) & 0x1u;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (_bitfield & ~(0x1u << 1)) | ((value & 0x1u) << 1);
+            }
+        }
+
+        [NativeTypeName("uint32_t : 1")]
+        public uint uav
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (_bitfield >> 2) & 0x1u;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (_bitfield & ~(0x1u << 2)) | ((value & 0x1u) << 2);
+            }
+        }
+
+        [NativeTypeName("uint32_t : 1")]
+        public uint srv
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (_bitfield >> 3) & 0x1u;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (_bitfield & ~(0x1u << 3)) | ((value & 0x1u) << 3);
+            }
+        }
+
+        [NativeTypeName("uint32_t : 1")]
+        public uint cross_gpu
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (_bitfield >> 4) & 0x1u;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (_bitfield & ~(0x1u << 4)) | ((value & 0x1u) << 4);
+            }
+        }
+
+        [NativeTypeName("uint32_t : 1")]
+        public uint shared_access
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (_bitfield >> 5) & 0x1u;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (_bitfield & ~(0x1u << 5)) | ((value & 0x1u) << 5);
+            }
+        }
+
+        [NativeTypeName("uint32_t : 1")]
+        public uint ray_tracing_acceleration_structure
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            readonly get
+            {
+                return (_bitfield >> 6) & 0x1u;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _bitfield = (_bitfield & ~(0x1u << 6)) | ((value & 0x1u) << 6);
+            }
+        }
+    }
+
+    public partial struct FGpuResourceBufferInfo
+    {
+        [NativeTypeName("ccc::FGpuResourceDimension")]
+        public FGpuResourceDimension dimension;
+
+        [NativeTypeName("int64_t")]
+        public long align;
+
+        [NativeTypeName("int64_t")]
+        public long size;
+
+        [NativeTypeName("ccc::FGpuResourceFlags")]
+        public FGpuResourceFlags flags;
+    }
+
+    public partial struct FGpuResourceTextureInfo
+    {
+        [NativeTypeName("ccc::FGpuResourceDimension")]
+        public FGpuResourceDimension dimension;
+
+        [NativeTypeName("int64_t")]
+        public long align;
+
+        [NativeTypeName("int64_t")]
+        public long width;
+
+        [NativeTypeName("int32_t")]
+        public int height;
+
+        [NativeTypeName("int16_t")]
+        public short depth_or_length;
+
+        [NativeTypeName("int16_t")]
+        public short mip_levels;
+
+        [NativeTypeName("ccc::FGpuTextureFormat")]
+        public FGpuTextureFormat format;
+
+        [NativeTypeName("uint32_t")]
+        public uint sample_count;
+
+        [NativeTypeName("uint32_t")]
+        public uint sample_quality;
+
+        [NativeTypeName("ccc::FGpuResourceLayout")]
+        public FGpuResourceLayout layout;
+
+        [NativeTypeName("ccc::FGpuResourceFlags")]
+        public FGpuResourceFlags flags;
+    }
+
+    [StructLayout(LayoutKind.Explicit)]
+    public partial struct FGpuResourceInfo
+    {
+        [FieldOffset(0)]
+        [NativeTypeName("ccc::FGpuResourceDimension")]
+        public FGpuResourceDimension dimension;
+
+        [FieldOffset(0)]
+        [NativeTypeName("ccc::FGpuResourceBufferInfo")]
+        public FGpuResourceBufferInfo buffer_info;
+
+        [FieldOffset(0)]
+        [NativeTypeName("ccc::FGpuResourceTextureInfo")]
+        public FGpuResourceTextureInfo texture_info;
+    }
+
+    public enum FGpuResourceUsage
+    {
+        GpuOnly,
+        CpuToGpu,
+        GpuToCpu,
+    }
+
+    public partial struct FGpuResourceBufferCreateOptions
+    {
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 name;
+
+        [NativeTypeName("ccc::FGpuResourceUsage")]
+        public FGpuResourceUsage usage;
+
+        [NativeTypeName("int64_t")]
+        public long size;
+
+        [NativeTypeName("ccc::FGpuResourceFlags")]
+        public FGpuResourceFlags flags;
+    }
+
+    public partial struct FGpuResourceTextureCreateOptions
+    {
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 name;
+
+        [NativeTypeName("ccc::FGpuResourceUsage")]
+        public FGpuResourceUsage usage;
+
+        [NativeTypeName("ccc::FGpuResourceDimension")]
+        public FGpuResourceDimension dimension;
+
+        [NativeTypeName("int64_t")]
+        public long align;
+
+        [NativeTypeName("int64_t")]
+        public long width;
+
+        [NativeTypeName("int32_t")]
+        public int height;
+
+        [NativeTypeName("int16_t")]
+        public short depth_or_length;
+
+        [NativeTypeName("int16_t")]
+        public short mip_levels;
+
+        [NativeTypeName("ccc::FGpuTextureFormat")]
+        public FGpuTextureFormat format;
+
+        [NativeTypeName("uint32_t")]
+        public uint sample_count;
+
+        [NativeTypeName("uint32_t")]
+        public uint sample_quality;
+
+        [NativeTypeName("ccc::FGpuResourceLayout")]
+        public FGpuResourceLayout layout;
+
+        [NativeTypeName("ccc::FGpuResourceFlags")]
+        public FGpuResourceFlags flags;
+    }
+
+    [NativeTypeName("struct FGpuResource : ccc::FGpuRes")]
+    public unsafe partial struct FGpuResource
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, nuint>)(lpVtbl[1]))((FGpuResource*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, nuint>)(lpVtbl[2]))((FGpuResource*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRefWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, nuint>)(lpVtbl[3]))((FGpuResource*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint ReleaseWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, nuint>)(lpVtbl[4]))((FGpuResource*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryDowngrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, byte>)(lpVtbl[5]))((FGpuResource*)Unsafe.AsPointer(ref this)) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryUpgrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, byte>)(lpVtbl[6]))((FGpuResource*)Unsafe.AsPointer(ref this)) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void* get_res_raw_ptr()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, void*>)(lpVtbl[7]))((FGpuResource*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("const FGpuResourceInfo *")]
+        public FGpuResourceInfo* get_info()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuResource*, FGpuResourceInfo*>)(lpVtbl[8]))((FGpuResource*)Unsafe.AsPointer(ref this));
+        }
+    }
+
+    public enum FGpuViewType
+    {
+        Unknown,
+        Rtv,
+        Dsv,
+        Uav,
+        Srv,
+    }
+
+    public partial struct FGpuViewCreateOptions
+    {
+        [NativeTypeName("ccc::FrStr16")]
+        public FrStr16 name;
+
+        [NativeTypeName("ccc::FGpuViewType")]
+        public FGpuViewType type;
+    }
+
+    [NativeTypeName("struct FGpuView : ccc::FObject")]
+    public unsafe partial struct FGpuView
+    {
+        public void** lpVtbl;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRef()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuView*, nuint>)(lpVtbl[1]))((FGpuView*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint Release()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuView*, nuint>)(lpVtbl[2]))((FGpuView*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint AddRefWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuView*, nuint>)(lpVtbl[3]))((FGpuView*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("size_t")]
+        public nuint ReleaseWeak()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuView*, nuint>)(lpVtbl[4]))((FGpuView*)Unsafe.AsPointer(ref this));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryDowngrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuView*, byte>)(lpVtbl[5]))((FGpuView*)Unsafe.AsPointer(ref this)) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryUpgrade()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuView*, byte>)(lpVtbl[6]))((FGpuView*)Unsafe.AsPointer(ref this)) != 0;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [return: NativeTypeName("ccc::FGpuViewType")]
+        public FGpuViewType type()
+        {
+            return ((delegate* unmanaged[Thiscall]<FGpuView*, FGpuViewType>)(lpVtbl[7]))((FGpuView*)Unsafe.AsPointer(ref this));
         }
     }
 
