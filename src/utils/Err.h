@@ -1,4 +1,5 @@
 #pragma once
+#include "logger.h"
 #include "../ffi/FFI.h"
 
 #include "SDL3/SDL.h"
@@ -73,5 +74,85 @@ namespace ccc
         e.msg.u16s.len = msg.size();
         // ReSharper disable once CppSomeObjectMembersMightNotBeInitialized
         return e;
+    }
+
+    template<class MsgT, const size_t N, std::invocable F> requires requires (F f) { typename decltype(f())::value_t; }
+    auto ffi_rc_catch(FError& err, const FErrorType type, const MsgT (&msg)[N], F f) -> Rc<typename decltype(f())::value_t>
+    {
+        try
+        {
+            return f();
+        }
+        catch (std::exception ex)
+        {
+            logger::error(ex.what());
+            err = make_error<N>(type, msg);
+            return nullptr;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            logger::error(ex.message());
+            err = make_hresult_error(ex);
+            return nullptr;
+        }
+    }
+
+    template<class MsgT, std::invocable F> requires requires (F f) { typename decltype(f())::value_t; }
+    auto ffi_rc_catch(FError& err, const FErrorType type, const MsgT msg, F f) -> Rc<typename decltype(f())::value_t>
+    {
+        try
+        {
+            return f();
+        }
+        catch (std::exception ex)
+        {
+            logger::error(ex.what());
+            err = make_error(type, msg);
+            return nullptr;
+        }
+        catch (winrt::hresult_error ex)
+        {
+            logger::error(ex.message());
+            err = make_hresult_error(ex);
+            return nullptr;
+        }
+    }
+
+    template<class MsgT, const size_t N, std::invocable F>
+    void ffi_void_catch(FError& err, const FErrorType type, const MsgT (&msg)[N], F f)
+    {
+        try
+        {
+            return f();
+        }
+        catch (std::exception ex)
+        {
+            logger::error(ex.what());
+            err = make_error<N>(type, msg);
+        }
+        catch (winrt::hresult_error ex)
+        {
+            logger::error(ex.message());
+            err = make_hresult_error(ex);
+        }
+    }
+
+    template<class MsgT, std::invocable F>
+    void ffi_void_catch(FError& err, const FErrorType type, const MsgT msg, F f)
+    {
+        try
+        {
+            return f();
+        }
+        catch (std::exception ex)
+        {
+            logger::error(ex.what());
+            err = make_error(type, msg);
+        }
+        catch (winrt::hresult_error ex)
+        {
+            logger::error(ex.message());
+            err = make_hresult_error(ex);
+        }
     }
 }

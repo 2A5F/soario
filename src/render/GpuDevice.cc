@@ -100,12 +100,12 @@ namespace ccc
             m_descriptor_list__sampler = GpuDescriptorSet::Create(
                 m_device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, name_ptr, L"Sampler"
             );
-            m_descriptor_list__rtv = GpuDescriptorSet::Create(
-                m_device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, name_ptr, L"Rtv"
-            );
-            m_descriptor_list__dsv = GpuDescriptorSet::Create(
-                m_device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, name_ptr, L"Dsv"
-            );
+            // m_descriptor_list__rtv = GpuDescriptorSet::Create(
+            //     m_device, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, name_ptr, L"Rtv"
+            // );
+            // m_descriptor_list__dsv = GpuDescriptorSet::Create(
+            //     m_device, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, name_ptr, L"Dsv"
+            // );
         }
     }
 

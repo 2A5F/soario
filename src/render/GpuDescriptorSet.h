@@ -2,6 +2,7 @@
 #include <directx/d3d12.h>
 
 #include "D3D12MemAlloc.h"
+#include "GpuResource.h"
 
 #include "../pch.h"
 #include "../ffi/FFI.h"
@@ -12,25 +13,51 @@ namespace ccc
     class GpuDevice;
     class GpuTask;
 
-    struct GpuDescriptorHandle : FObject
+    class GpuDescriptorSet;
+
+    struct GpuDescriptorHandleData final
     {
-        size_t index;
+        Rc<GpuResource> resource{};
+        size_t index{};
+
+        explicit GpuDescriptorHandleData(Rc<GpuResource> resource, size_t index);
+    };
+
+    class GpuDescriptorHandle final : public FObject
+    {
+        IMPL_RC(GpuDescriptorHandle);
+
+        friend GpuDescriptorSet;
+
+        Rc<GpuDescriptorSet> m_descriptor_set;
+        GpuDescriptorHandleData* m_data;
+
+        GpuDescriptorHandle(const Rc<GpuDescriptorSet>& descriptor_set, GpuDescriptorHandleData* data);
+
+    public:
+        D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle() const;
     };
 
     class GpuDescriptorSet final : public FObject
     {
         IMPL_RC(GpuDescriptorSet);
 
-        friend class GpuDevice;
-        friend class GpuTask;
+        friend GpuDevice;
+        friend GpuTask;
+        friend GpuDescriptorHandle;
 
         std::recursive_mutex mutex{};
 
         com_ptr<ID3D12Device2> m_device{};
 
-        com_ptr<ID3D12DescriptorHeap> m_descriptor_heap{};
+        D3D12_DESCRIPTOR_HEAP_TYPE m_type{};
+        com_ptr<ID3D12DescriptorHeap> m_cpu_descriptor_heap{};
+        com_ptr<ID3D12DescriptorHeap> m_gpu_descriptor_heap{};
+        size_t m_descriptor_size{};
+        bool has_gpu_heap{};
+        std::atomic_bool cpu_dirty{};
 
-        GpuDescriptorHandle** m_handles;
+        GpuDescriptorHandleData** m_handles;
 
         size_t m_len{0};
         size_t m_cap{1024};
@@ -40,6 +67,10 @@ namespace ccc
             const wchar_t* name
         );
 
+        void free(const GpuDescriptorHandleData* handle);
+
+        D3D12_CPU_DESCRIPTOR_HANDLE calc_cpu_handle(int index) const;
+
     public:
         ~GpuDescriptorSet() override;
 
@@ -48,8 +79,10 @@ namespace ccc
             const wchar_t* name
         );
 
-        // void Alloc(const Rc<GpuDescriptorHandle>& handle);
-        //
-        // void Free(const Rc<GpuDescriptorHandle>& handle);
+        const com_ptr<ID3D12DescriptorHeap>& ready_for_gpu();
+
+        Rc<GpuDescriptorHandle> alloc(Rc<GpuResource> resource);
+
+        void mark_cpu_dirty();
     };
 } // ccc

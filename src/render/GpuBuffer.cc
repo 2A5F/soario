@@ -3,6 +3,7 @@
 #include "D3D12MemAlloc.h"
 
 #include "./GpuDevice.h"
+#include "GpuBufferView.h"
 
 #include "../utils/Err.h"
 #include "../utils/logger.h"
@@ -75,5 +76,11 @@ namespace ccc
             err = make_hresult_error(ex);
             return nullptr;
         }
+    }
+
+    FGpuView* GpuBuffer::get_view(const FGpuViewCreateOptions& options, FError& err) noexcept
+    {
+        auto r = GpuBufferView::Create(Rc<GpuBuffer>::UnsafeClone(this), options, err);
+        return r.leak();
     }
 } // ccc

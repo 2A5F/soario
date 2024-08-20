@@ -55,11 +55,16 @@ namespace ccc
 
     void* GpuResource::get_res_raw_ptr() noexcept
     {
-        return m_allocation->GetResource();
+        return get_resource();
     }
 
     const FGpuResourceInfo* GpuResource::get_info() const noexcept
     {
         return &m_info;
+    }
+
+    ID3D12Resource* GpuResource::get_resource() const
+    {
+        return m_allocation->GetResource();
     }
 } // ccc

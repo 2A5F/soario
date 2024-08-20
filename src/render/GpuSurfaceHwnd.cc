@@ -107,7 +107,11 @@ namespace ccc
     {
         for (UINT n = 0; n < FrameCount; n++)
         {
-            m_tasks[n]->wait_reset_inner();
+            m_tasks[n]->ensure_ended();
+        }
+        for (UINT n = 0; n < FrameCount; n++)
+        {
+            m_tasks[n]->wait_reset_any_what();
         }
     }
 
@@ -142,8 +146,10 @@ namespace ccc
         {
             m_frame_index = m_swap_chain->GetCurrentBackBufferIndex();
 
-            m_tasks[m_frame_index]->wait_reset_inner();
+            m_tasks[m_frame_index]->wait_reset_any_what();
         }
+
+        m_tasks[m_frame_index]->do_start();
 
         m_current_cpu_handle = CD3DX12_CPU_DESCRIPTOR_HANDLE(
             m_rtv_heap->GetCPUDescriptorHandleForHeapStart(), m_frame_index, m_rtv_descriptor_size

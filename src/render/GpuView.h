@@ -5,18 +5,16 @@
 
 namespace ccc
 {
-    class GpuView final : public FGpuView
+    class GpuView : public FGpuView
     {
-        IMPL_RC(GpuView);
-
+    protected:
         FGpuViewType m_type;
-        Rc<GpuResource> m_resource;
 
-        explicit GpuView(Rc<GpuResource> resource, const FGpuViewCreateOptions& options, FError& err);
+        virtual GpuResource* get_resource() const = 0;
+
+        explicit GpuView(FGpuViewType type);
 
     public:
-        static Rc<GpuView> Create(Rc<GpuResource> resource, const FGpuViewCreateOptions& options, FError& err);
-
         FGpuViewType type() const noexcept override;
     };
 } // ccc

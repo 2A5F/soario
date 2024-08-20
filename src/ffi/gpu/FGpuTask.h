@@ -13,6 +13,9 @@ namespace ccc
 
     struct FGpuTask : FObject
     {
+        /* 开始任务 */
+        virtual void start(FError& err) noexcept = 0;
+
         /* 提交命令 */
         virtual void submit(const FGpuCmdList* cmd_list, FError& err) noexcept = 0;
 

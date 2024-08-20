@@ -1,4 +1,4 @@
-#include "GpuTask.h"
+﻿#include "GpuTask.h"
 
 #include "GpuDescriptorSet.h"
 #include "GpuQueue.h"
@@ -43,9 +43,38 @@ namespace ccc
         }
 
         winrt::check_hresult(m_command_list->Close());
-        m_closed = true;
+        m_state = State::Closed;
 
         do_reset();
+    }
+
+    void GpuTask::do_start()
+    {
+        // todo Task 持有自己的描述符堆，每次执行脏检测，复制
+
+        ID3D12DescriptorHeap* descriptor_heaps[] = {
+            m_device->m_descriptor_list__resources->ready_for_gpu().get(),
+            m_device->m_descriptor_list__sampler->ready_for_gpu().get(),
+        };
+        m_command_list->SetDescriptorHeaps(2, descriptor_heaps);
+        m_state = State::Started;
+    }
+
+    void GpuTask::start_inner(FError& err)
+    {
+        if (m_state != State::Closed)
+        {
+            err = make_error(FErrorType::Gpu, u"Cannot start on an not completed then rested gpu task");
+            return;
+        }
+        do_start();
+    }
+
+    void GpuTask::do_end()
+    {
+        winrt::check_hresult(m_command_list->Close());
+        m_state = State::Ended;
+        m_fence_pak.signal(m_queue->m_command_queue);
     }
 
     void submit_BarrierTransition(
@@ -173,9 +202,9 @@ namespace ccc
 
     void GpuTask::submit_inner(const FGpuCmdList* cmd_list, FError& err)
     {
-        if (m_closed)
+        if (m_state != State::Started)
         {
-            err = make_error(FErrorType::Gpu, u"Cannot submit on a completed task");
+            err = make_error(FErrorType::Gpu, u"Cannot submit on an unstarted gpu task");
             return;
         }
         for (int i = 0; i < cmd_list->len; ++i)
@@ -211,14 +240,12 @@ namespace ccc
 
     void GpuTask::wait_reset_inner()
     {
-        do_before_reset();
         m_fence_pak.wait();
         do_reset();
     }
 
     void GpuTask::wait_reset_async_inner(void* obj, fn_action__voidp cb)
     {
-        do_before_reset();
         m_fence_pak.wait_async(
             [
                 self = Rc<GpuTask>::UnsafeClone(this),
@@ -231,125 +258,112 @@ namespace ccc
         );
     }
 
-    void GpuTask::do_before_reset()
-    {
-        if (!m_closed)
-        {
-            winrt::check_hresult(m_command_list->Close());
-            m_closed = true;
-        }
-    }
-
     void GpuTask::do_reset()
     {
         winrt::check_hresult(m_command_allocators->Reset());
         winrt::check_hresult(m_command_list->Reset(m_command_allocators.get(), nullptr));
-        m_closed = false;
+        m_state = State::Closed;
+    }
 
-        ID3D12DescriptorHeap* descriptor_heaps[] = {
-            m_device->m_descriptor_list__resources->m_descriptor_heap.get(),
-            m_device->m_descriptor_list__sampler->m_descriptor_heap.get(),
-        };
-        m_command_list->SetDescriptorHeaps(2, descriptor_heaps);
+    void GpuTask::wait_reset_any_what()
+    {
+        if (m_state == State::Closed) return;
+        if (m_state == State::Ended) wait_reset_inner();
+        if (m_state == State::Started)
+        {
+            do_end();
+            wait_reset_inner();
+        }
+    }
+
+    void GpuTask::ensure_ended()
+    {
+        if (m_state == State::Started)
+        {
+            do_end();
+        }
+    }
+
+    GpuTask::~GpuTask()
+    {
+        wait_reset_any_what();
     }
 
     Rc<GpuTask> GpuTask::Create(
         Rc<GpuDevice> device, Rc<GpuQueue> queue, const FGpuTaskCreateOptions& options, FError& err
     ) noexcept
     {
-        try
-        {
-            Rc r(new GpuTask(std::move(device), std::move(queue), options, err));
-            return r;
-        }
-        catch (std::exception ex)
-        {
-            logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, u"Failed to submit command list!");
-            return nullptr;
-        }
-        catch (winrt::hresult_error ex)
-        {
-            logger::error(ex.message());
-            err = make_hresult_error(ex);
-            return nullptr;
-        }
+        return ffi_rc_catch(
+            err, FErrorType::Gpu, u"Failed to submit command list!", [&]
+            {
+                Rc r(new GpuTask(std::move(device), std::move(queue), options, err));
+                return r;
+            }
+        );
+    }
+
+    void GpuTask::start(FError& err) noexcept
+    {
+        ffi_void_catch(
+            err, FErrorType::Gpu, u"Failed to start gpu task", [&]
+            {
+                start_inner(err);
+            }
+        );
     }
 
     void GpuTask::submit(const FGpuCmdList* cmd_list, FError& err) noexcept
     {
-        try
-        {
-            submit_inner(cmd_list, err);
-        }
-        catch (std::exception ex)
-        {
-            logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, u"Failed to submit command list!");
-        }
-        catch (winrt::hresult_error ex)
-        {
-            logger::error(ex.message());
-            err = make_hresult_error(ex);
-        }
+        ffi_void_catch(
+            err, FErrorType::Gpu, u"Failed to submit command list!", [&]
+            {
+                submit_inner(cmd_list, err);
+            }
+        );
     }
 
     void GpuTask::end(FError& err) noexcept
     {
-        try
+        if (m_state != State::Started)
         {
-            if (!m_closed)
+            err = make_error(FErrorType::Gpu, u"Cannot end unstarted gpu task");
+            return;
+        }
+        ffi_void_catch(
+            err, FErrorType::Gpu, u"Failed to end gpu task!", [&]
             {
-                winrt::check_hresult(m_command_list->Close());
-                m_closed = true;
+                do_end();
             }
-            m_fence_pak.signal(m_queue->m_command_queue);
-        }
-        catch (std::exception ex)
-        {
-            logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, u"Failed to end task!");
-        }
-        catch (winrt::hresult_error ex)
-        {
-            logger::error(ex.message());
-            err = make_hresult_error(ex);
-        }
+        );
     }
 
     void GpuTask::wait_reset(FError& err) noexcept
     {
-        try
+        if (m_state != State::Ended)
         {
-            wait_reset_inner();
+            err = make_error(FErrorType::Gpu, u"Cannot wait for completion/reset on an unended task");
+            return;
         }
-        catch (std::exception ex)
-        {
-            logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, u"Failed to wait reset!");
-        }
-        catch (winrt::hresult_error ex)
-        {
-            logger::error(ex.message());
-            err = make_hresult_error(ex);
-        }
+        ffi_void_catch(
+            err, FErrorType::Gpu, u"Failed to wait reset!", [&]
+            {
+                wait_reset_inner();
+            }
+        );
     }
 
     void GpuTask::wait_reset_async(FError& err, void* obj, fn_action__voidp cb) noexcept
     {
-        try
+        if (m_state != State::Ended)
         {
-            wait_reset_async_inner(obj, cb);
+            err = make_error(FErrorType::Gpu, u"Cannot wait for completion/reset on an unended task");
+            return;
         }
-        catch (std::exception ex)
-        {
-            logger::error(ex.what());
-            err = make_error(FErrorType::Gpu, u"Failed to wait reset!");
-        }
-        catch (winrt::hresult_error ex)
-        {
-            logger::error(ex.message());
-            err = make_hresult_error(ex);
-        }
+        ffi_void_catch(
+            err, FErrorType::Gpu, u"Failed to wait reset!", [&]
+            {
+                wait_reset_async_inner(obj, cb);
+            }
+        );
     }
 } // ccc

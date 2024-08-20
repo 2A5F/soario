@@ -128,6 +128,8 @@ namespace ccc
         }
 
     public:
+        using value_t = T;
+
         ~Rc()
         {
             drop();
@@ -160,6 +162,11 @@ namespace ccc
 
         // null
         Rc() : m_ptr(nullptr)
+        {
+        }
+
+        // null
+        Rc(std::nullptr_t) : m_ptr(nullptr)
         {
         }
 
@@ -336,6 +343,8 @@ namespace ccc
         }
 
     public:
+        using value_t = T;
+
         ~Weak()
         {
             drop();
@@ -353,6 +362,11 @@ namespace ccc
 
         // null
         Weak() : m_ptr(nullptr)
+        {
+        }
+
+        // null
+        Weak(std::nullptr_t) : m_ptr(nullptr)
         {
         }
 

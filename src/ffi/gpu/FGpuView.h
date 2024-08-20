@@ -10,11 +10,11 @@ namespace ccc
         Dsv,
         Uav,
         Srv,
+        Cbv,
     };
 
     struct FGpuViewCreateOptions
     {
-        FrStr16 name;
         FGpuViewType type;
     };
 

@@ -1,6 +1,7 @@
 #pragma once
 #include "FGpuFormat.h"
 #include "FGpuRes.h"
+#include "FGpuView.h"
 
 namespace ccc
 {
@@ -97,5 +98,7 @@ namespace ccc
     struct FGpuResource : FGpuRes
     {
         virtual const FGpuResourceInfo* get_info() const noexcept = 0;
+
+        virtual FGpuView* get_view(const FGpuViewCreateOptions& options, FError& err) noexcept = 0;
     };
 } // ccc

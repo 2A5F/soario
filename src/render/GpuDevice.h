@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include <directx/d3d12.h>
 
 #include "D3D12MemAlloc.h"
@@ -17,6 +17,7 @@ namespace ccc
     class GpuTask;
     class GpuDescriptorSet;
     class GpuBuffer;
+    class GpuBufferView;
 
     class GpuDevice final : public FGpuDevice
     {
@@ -29,6 +30,7 @@ namespace ccc
         friend GpuTask;
         friend GpuDescriptorSet;
         friend GpuBuffer;
+        friend GpuBufferView;
 
         Rc<Gpu> m_gpu;
 
@@ -41,8 +43,10 @@ namespace ccc
 
         Rc<GpuDescriptorSet> m_descriptor_list__resources{};
         Rc<GpuDescriptorSet> m_descriptor_list__sampler{};
-        Rc<GpuDescriptorSet> m_descriptor_list__rtv{};
-        Rc<GpuDescriptorSet> m_descriptor_list__dsv{};
+
+        // todo 搞个 帧池对象继承 Task 管理 rtv dsv
+        // Rc<GpuDescriptorSet> m_descriptor_list__rtv{};
+        // Rc<GpuDescriptorSet> m_descriptor_list__dsv{};
 
         fn_func__voidp_FLogLevel_charp__void* m_logger;
         void* m_logger_object;

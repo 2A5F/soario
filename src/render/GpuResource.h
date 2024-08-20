@@ -5,6 +5,7 @@
 #include "../ffi/gpu/FGpuResource.h"
 
 #include "../pch.h"
+#include "../ffi/gpu/FGpuView.h"
 #include "../utils/Rc.h"
 
 namespace ccc
@@ -30,5 +31,7 @@ namespace ccc
         void* get_res_raw_ptr() noexcept override;
 
         const FGpuResourceInfo* get_info() const noexcept override;
+
+        ID3D12Resource* get_resource() const;
     };
 } // ccc
